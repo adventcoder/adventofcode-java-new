@@ -10,6 +10,7 @@ import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.IntMath;
+import adventofcode.utils.IntMath.BezoutTriple;
 import adventofcode.utils.collect.DefaultHashMap;
 import lombok.AllArgsConstructor;
 
@@ -20,8 +21,9 @@ public class Day13 extends AbstractDay {
     @Override
     public void parse(String input) {
         for (String line : input.split("\n")) {
-            int depth = Integer.parseInt(Fn.before(line, ":").trim());
-            int range = Integer.parseInt(Fn.after(line, ":").trim());
+            String[] pair = line.split(":");
+            int depth = Integer.parseInt(pair[0].trim());
+            int range = Integer.parseInt(pair[1].trim());
             scanners.computeIfAbsent(range).add(depth);
         }
     }
@@ -67,15 +69,17 @@ public class Day13 extends AbstractDay {
         }
 
         public Solution and(Solution other) {
-            var sol = IntMath.gcdExtended(period, other.period);
+            BezoutTriple triple = IntMath.extendedGcd(period, other.period);
             Set<Integer> newStarts = new HashSet<>();
-            int newPeriod = (period / sol.gcd) * other.period;
+            int newPeriod = (period / triple.gcd) * other.period;
             for (int a1 : delays) {
                 for (int a2 : other.delays) {
-                    if ((a2 - a1) % sol.gcd == 0) {
-                        int A = (a2 - a1) / sol.gcd;
-                        int k1 = Math.floorMod(A * sol.x, other.period);
-                        newStarts.add(Math.floorMod(a1 + k1*period, newPeriod));
+                    if ((a2 - a1) % triple.gcd == 0) {
+                        int k1 = Math.floorMod((a2 - a1) / triple.gcd * triple.x, other.period);
+                        // int k2 = Math.floorMod((a1 - a2) / triple.gcd * triple.y, period);
+                        int x = Math.floorMod(a1 + k1*period, newPeriod);
+                        // int x = Math.floorMod(a2 + k2*other.period, newPeriod);
+                        newStarts.add(x);
                     }
                 }
             }

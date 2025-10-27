@@ -28,12 +28,12 @@ public class IntMath {
         return (a / gcd(a, b)) * b;
     }
 
-    // solves d = gcd(a,b) = a x + b y
-    public static Bezout gcdExtended(int a, int b) {
-        Bezout A = new Bezout(a, 1, 0);
-        Bezout B = new Bezout(b, 0, 1);
+    // a x + b y = gcd(a,b)
+    public static BezoutTriple extendedGcd(int a, int b) {
+        BezoutTriple A = new BezoutTriple(a, 1, 0);
+        BezoutTriple B = new BezoutTriple(b, 0, 1);
         while (A.gcd != 0) {
-            Bezout tmp = A;
+            BezoutTriple tmp = A;
             A = B.subMul(A, B.gcd / A.gcd);
             B = tmp;
         }
@@ -43,13 +43,17 @@ public class IntMath {
     @AllArgsConstructor
     @EqualsAndHashCode
     @ToString
-    public static class Bezout {
+    public static class BezoutTriple {
         public final int gcd;
         public final int x;
         public final int y;
 
-        public Bezout subMul(Bezout other, int q) {
-            return new Bezout(gcd - other.gcd*q, x - other.x*q, y - other.y*q);
+        public BezoutTriple subMul(BezoutTriple other, int q) {
+            return new BezoutTriple(gcd - other.gcd*q, x - other.x*q, y - other.y*q);
         }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(extendedGcd(24504480, 38));
     }
 }

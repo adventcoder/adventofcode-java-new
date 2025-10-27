@@ -88,7 +88,7 @@ public abstract class AbstractDay implements Callable<Integer> {
         }
     }
 
-    public Callable<Object> partFunction(int part) {
+    public PartFunction partFunction(int part) {
         if (part == 1)
             return this::part1;
         if (part == 2)

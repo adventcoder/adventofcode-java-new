@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 
 @Puzzle(day = 15, name = "Dueling Generators")
 public class Day15 extends AbstractDay {
-    private static final long modulus = 2147483647;
+    private static final int modulus = 2147483647;
     private static final int aFactor = 16807;
     private static final int bFactor = 48271;
 
@@ -59,21 +59,20 @@ public class Day15 extends AbstractDay {
 
     @AllArgsConstructor
     private static class Generator implements IntSupplier {
-        private final long factor;
-        private long value;
+        private final int factor;
+        private int value;
 
         @Override
         public int getAsInt() {
-            value = value * factor % modulus;
-            return (int) value;
+            value = (int) ((long) value * factor % modulus);
+            return value;
         }
 
         public IntSupplier filter(IntPredicate pred) {
             return () -> {
-                int value;
-                do {
+                int value = getAsInt();
+                while (!pred.test(value))
                     value = getAsInt();
-                } while (!pred.test(value));
                 return value;
             };
         }

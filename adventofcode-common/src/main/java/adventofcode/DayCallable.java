@@ -18,14 +18,14 @@ public class DayCallable implements Callable<Integer> {
 
         System.out.println();
         System.out.println("- Parsing input");
-        var parseResult = stopwatch.resumeFor(() -> day.parse(input));
-        System.out.println("  Took " + formatTime(parseResult.time));
+        long parseTime = stopwatch.resumeFor(day::parse, input);
+        System.out.println("  Took " + formatTime(parseTime));
 
         for (int part : day.getAllParts()) {
             System.out.println();
             System.out.println("- Part " + part);
-            TimedResult<Object> partResult = stopwatch.resumeFor(day.partFunction(part));
-            System.out.println(formatAnswer("  Answer: ", partResult.value));
+            PartResult partResult = stopwatch.resumeFor(day.partFunction(part));
+            System.out.println(formatAnswer("  Answer: ", partResult.answer));
             System.out.println("  Took " + formatTime(partResult.time));
         }
 

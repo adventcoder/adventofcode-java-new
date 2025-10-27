@@ -1,7 +1,5 @@
 package adventofcode;
 
-import java.util.concurrent.Callable;
-
 public class Stopwatch {
     private long lastStartTime = -1;
     private long time = 0L; 
@@ -35,17 +33,17 @@ public class Stopwatch {
         return time;
     }
 
-    public TimedResult<Void> resumeFor(Runnable fn) throws Exception {
-        return resumeFor(() -> {
-            fn.run();
-            return null;
-        });
+    public long resumeFor(ParseFunction fn, String input) throws Exception {
+        long startTime = resume();
+        fn.call(input);
+        long endTime = pause();
+        return endTime - startTime;
     }
 
-    public <T> TimedResult<T> resumeFor(Callable<T> fn) throws Exception {
+    public PartResult resumeFor(PartFunction fn) throws Exception {
         long startTime = resume();
-        T result = fn.call();
+        Object answer = fn.call();
         long endTime = pause();
-        return new TimedResult<>(result, endTime - startTime);
+        return new PartResult(answer, endTime - startTime);
     }
 }

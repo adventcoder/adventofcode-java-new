@@ -3,7 +3,7 @@ package adventofcode;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class TimedResult<T> {
-    T value;
+public class PartResult {
+    Object answer;
     long time;
 }
