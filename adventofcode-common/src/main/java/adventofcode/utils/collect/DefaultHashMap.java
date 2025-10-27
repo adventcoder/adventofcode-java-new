@@ -14,10 +14,6 @@ public class DefaultHashMap<K, V> extends HashMap<K, V> {
         return new DefaultHashMap<>(k -> defaultSupplier.get());
     }
 
-    public V getOrDefault(K key) {
-        return getOrDefault(key, defaultMapping.apply(key));
-    }
-
     public V computeIfAbsent(K key) {
         return computeIfAbsent(key, defaultMapping);
     }
