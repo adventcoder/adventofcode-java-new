@@ -1,19 +1,14 @@
 package adventofcode.year2017;
 
-import java.util.Arrays;
-import java.util.NoSuchElementException;
 import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
+import lombok.AllArgsConstructor;
 import picocli.CommandLine.Option;
 
-@Puzzle(day = 16, name = "Permutation Promenage")
+@Puzzle(day = 16, name = "Permutation Promenade")
 public class Day16 extends AbstractDay {
-    public static void main(String[] args) throws Exception {
-        main(Day16.class, args);
-    }
-
     @Option(names = "--size", defaultValue = "16")
     private int size;
 
@@ -36,101 +31,117 @@ public class Day16 extends AbstractDay {
     }
     
     @Override
-    public String part1() {
-        return dance.apply();
+    public CharSequence part1() {
+        return dance.apply(start());
     }
 
     @Override
-    public String part2() {
-        dance.repeat(1_000_000_000);
-        return dance.apply();
+    public CharSequence part2() {
+        return dance.repeat(1_000_000_000).apply(start());
     }
 
+    private CharSequence start() {
+        StringBuilder seq = new StringBuilder(size);
+        for (int i = 0; i < size; i++)
+            seq.append((char) ('a' + i));
+        return seq;
+    }
+
+    @AllArgsConstructor
     private static class Dance {
-        private final int size;
-        private int[] indexPerm;
-        private int[] labelPerm;
+        // index -> original index
+        private Permutation indexPerm;
+        // label -> original label
+        private Permutation labelPerm;
 
         public Dance(int size) {
-            this.size = size;
-            indexPerm = IntStream.range(0, size).toArray();
-            labelPerm = IntStream.range(0, size).toArray();
+            indexPerm = Permutation.identity(size);
+            labelPerm = Permutation.identity(size);
         }
 
         public void spin(int x) {
-            rotateRight(indexPerm, x);
+            indexPerm.rotateRight(x);
         }
 
-        public void exchange(int i, int j) {
-            swap(indexPerm, i, j);
+        public void exchange(int index1, int index2) {
+            indexPerm.swap(index1, index2);
         }
 
-        public void partner(char a, char b) {
-            swap(labelPerm, a - 'a', b - 'a');
+        public void partner(char label1, char label2) {
+            labelPerm.swap(label1 - 'a', label2 - 'a');
         }
 
-        public void repeat(long n) {
-            indexPerm = pow(indexPerm, n);
-            labelPerm = pow(labelPerm, n);
+        public Dance repeat(long n) {
+            return new Dance(indexPerm.pow(n), labelPerm.pow(n));
         }
 
-        public String apply() {
-            char[] result = new char[size];
-            for (int i = 0; i < size; i++)
-                result[i] = (char) ('a' + index(labelPerm, indexPerm[i]));
-            return new String(result);
+        public CharSequence apply(CharSequence seq) {
+            StringBuilder newSeq = new StringBuilder(seq.length());
+            for (int newIndex = 0; newIndex < seq.length(); newIndex++) {
+                int originalIndex = indexPerm.apply(newIndex);
+                int originalLabel = seq.charAt(originalIndex) - 'a';
+                int newLabel = labelPerm.applyInverse(originalLabel);
+                newSeq.append((char) (newLabel + 'a'));
+            }
+            return newSeq;
+        }
+    }
+
+    @AllArgsConstructor
+    private static class Permutation {
+        private final int[] arr;
+
+        public static Permutation identity(int size) {
+            return new Permutation(IntStream.range(0, size).toArray());
         }
 
-        private static void rotateRight(int[] arr, int n) {
-            rotateLeft(arr, -n);
+        public int apply(int i) {
+            return arr[i];
         }
 
-        private static void rotateLeft(int[] arr, int n) {
-            n = Math.floorMod(n, arr.length);
-            reverse(arr, 0, n);
-            reverse(arr, n, arr.length);
-            reverse(arr, 0, arr.length);
+        public int applyInverse(int target) {
+            for (int i = 0; i < arr.length; i++)
+                if (arr[i] == target)
+                    return i;
+            throw new IndexOutOfBoundsException();
         }
 
-        private static void reverse(int[] arr, int start, int end) {
+        public void rotateRight(int n) {
+            n = Math.floorMod(-n, arr.length);
+            reverse(0, n);
+            reverse(n, arr.length);
+            reverse(0, arr.length);
+        }
+
+        public void reverse(int start, int end) {
             while (end - start > 1)
-                swap(arr, start++, --end);
+                swap(start++, --end);
         }
 
-        private static void swap(int[] arr, int i, int j) {
+        public void swap(int i, int j) {
             int t = arr[i];
             arr[i] = arr[j];
             arr[j] = t;
         }
 
-        private static final int index(int[] arr, int x) {
-            for (int i = 0; i < arr.length; i++)
-                if (arr[i] == x)
-                    return i;
-            throw new NoSuchElementException();
-        }
-
-        private static int[] pow(int[] perm, long n) {
-            int size = perm.length;
-            int[] result = IntStream.range(0, size).toArray(); // identity
-            int[] base = Arrays.copyOf(perm, size);
-
+        public Permutation pow(long n) {
+            Permutation result = Permutation.identity(arr.length);
+            Permutation base = this;
             while (n > 0) {
                 if ((n & 1) != 0) {
-                    result = compose(result, base);
+                    result = result.compose(base);
                 }
-                base = compose(base, base);
+                base = base.compose(base);
                 n >>= 1;
             }
             return result;
         }
 
-        private static int[] compose(int[] a, int[] b) {
-            // returns a ∘ b : apply b first, then a
-            int[] out = new int[a.length];
-            for (int i = 0; i < a.length; i++)
-                out[i] = a[b[i]];
-            return out;
+        private Permutation compose(Permutation other) {
+            int[] newArr = new int[arr.length];
+            for (int i = 0; i < arr.length; i++)
+                newArr[i] = arr[other.arr[i]];
+            return new Permutation(newArr);
         }
     }
 }
