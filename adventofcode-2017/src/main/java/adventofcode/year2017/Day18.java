@@ -45,7 +45,7 @@ public class Day18 extends AbstractDay {
         Queue<BigInteger> inbox1 = new ArrayDeque<>();
         DuetVM vm0 = new DuetVM(ops, inbox0, inbox1, 0);
         DuetVM vm1 = new DuetVM(ops, inbox1, inbox0, 1);
-        for (;;) {
+        while (true) {
             if (vm0.running() && !vm0.waiting()) {
                 vm0.step();
             } else if (vm1.running() && !vm1.waiting()) {
