@@ -38,14 +38,6 @@ public class Fn {
         return result;
     }
 
-    public static String before(String s, String sep) {
-        return s.substring(0, s.indexOf(sep));
-    }
-
-    public static String after(String s, String sep) {
-        return s.substring(s.indexOf(sep) + sep.length());
-    }
-
     public static <T> Stream<T> concat(Collection<T> xs, Collection<T> ys) {
         return Stream.concat(xs.stream(), ys.stream());
     }
@@ -124,24 +116,6 @@ public class Fn {
             if (!pred.test(x))
                 return false;
         return true;
-    }
-
-    public static int reduce(int[] arr, IntBinaryOperator op) {
-        if (arr.length > 0) {
-            int acc = arr[0];
-            for (int i = 1; i < arr.length; i++)
-                acc = op.applyAsInt(acc, i);
-            return acc;
-        }
-        throw new NoSuchElementException();
-    }
-
-    public static int min(int... arr) {
-        return reduce(arr, Math::min);
-    }
-
-    public static int max(int... arr) {
-        return reduce(arr, Math::max);
     }
 
     public static int bsearch(int start, int stop, IntUnaryOperator cmp) {

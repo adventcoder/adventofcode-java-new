@@ -52,7 +52,7 @@ public class Day11 extends AbstractDay {
         }
 
         public int abs() {
-            return Fn.max(Math.abs(2*nw), Math.abs(2*ne), Math.abs(nw + ne)) / 2;
+            return Math.max(Math.max(Math.abs(2*nw), Math.abs(2*ne)), Math.abs(nw + ne)) / 2;
         }
     }
 }

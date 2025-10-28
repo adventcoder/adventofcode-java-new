@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
@@ -11,7 +12,7 @@ import adventofcode.utils.Fn;
 
 @Puzzle(day = 2, name = "Corruption Checksum")
 public class Day2 extends AbstractDay {
-    List<int[]> rows = new ArrayList<>();
+    private List<int[]> rows = new ArrayList<>();
 
     @Override
     public void parse(String input) {
@@ -30,7 +31,9 @@ public class Day2 extends AbstractDay {
     }
 
     private int checksum1(int[] row) {
-        return Fn.max(row) - Fn.min(row);
+        int min = IntStream.of(row).min().orElseThrow();
+        int max = IntStream.of(row).max().orElseThrow();
+        return max - min;
     }
 
     private int checksum2(int[] row) {
