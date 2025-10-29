@@ -36,8 +36,7 @@ public class DayCallable implements Callable<Integer> {
     }
 
     private String formatAnswer(String prefix, Object answer) {
-        Optional<?> answerOpt = answer instanceof Optional ? (Optional<?>) answer : Optional.ofNullable(answer);
-        String answerString = answerOpt.map(Object::toString).orElse("<No answer>");
+        String answerString = answer == null ? "<No answer>" : answer.toString();
         return prefix + String.join("\n" + " ".repeat(prefix.length()), answerString.split("\n"));
     }
 

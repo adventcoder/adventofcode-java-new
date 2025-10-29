@@ -32,6 +32,10 @@ public class Vec2 implements Comparable<Vec2> {
         return new Vec2(x - other.x, y - other.y);
     }
 
+    public Vec2 multiply(int n) {
+        return new Vec2(x * n, y * n);
+    }
+
     public int dot(Vec2 other) {
         return x*other.x + y*other.y;
     }
