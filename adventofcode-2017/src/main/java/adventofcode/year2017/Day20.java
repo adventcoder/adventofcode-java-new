@@ -1,7 +1,6 @@
 package adventofcode.year2017;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,10 +18,6 @@ import lombok.ToString;
 
 @Puzzle(day = 20, name = "Particle Swarm")
 public class Day20 extends AbstractDay {
-    public static void main(String[] args) throws Exception {
-        main(Day20.class, args);
-    }
-
     private List<Particle> particles;
 
     @Override
@@ -34,22 +29,19 @@ public class Day20 extends AbstractDay {
 
     @Override
     public Integer part1() {
-        return IntStream.range(0, particles.size())
-            .boxed()
-            .min(Comparator.comparing(i -> particles.get(i)))
-            .orElse(null);
+        return IntStream.range(0, particles.size()).boxed()
+            .min(Comparator.comparing(i -> particles.get(i))).orElse(null);
     }
 
     @Override
     public Integer part2() {
-        //TODO: the time steps are tiny, in hindsight I should have just ran the simulation
-        Map<Integer, List<Collision>> collisions = new HashMap<>();
+        Map<Integer, List<int[]>> collisions = new HashMap<>();
         for (int i = 0; i < particles.size(); i++) {
             for (int j = i + 1; j < particles.size(); j++) {
                 for (int t : particles.get(i).collide(particles.get(j))) {
                     if (t >= 0) {
                         collisions.computeIfAbsent(t, k -> new ArrayList<>())
-                            .add(new Collision(i, j));
+                            .add(new int[] { i, j });
                     }
                 }
             }
@@ -61,10 +53,12 @@ public class Day20 extends AbstractDay {
 
         for (int t : Fn.sorted(collisions.keySet())) {
             Set<Integer> toRemove = new HashSet<>();
-            for (Collision coll : collisions.get(t)) {
-                if (alive.contains(coll.i) && alive.contains(coll.j)) {
-                    toRemove.add(coll.i);
-                    toRemove.add(coll.j);
+            for (int[] coll : collisions.get(t)) {
+                int i = coll[0];
+                int j = coll[1];
+                if (alive.contains(i) && alive.contains(j)) {
+                    toRemove.add(i);
+                    toRemove.add(j);
                 }
             }
             alive.removeAll(toRemove);
@@ -112,55 +106,41 @@ public class Day20 extends AbstractDay {
             return cmp;
         }
 
-        public List<Integer> collide(Particle other) {
-            // Solve for P1(t) - P2(t) = dA + dB t + dC t^2 = 0
-            Vec3 dA = pos.subtract(other.pos).multiply(2);
-            Vec3 dC = acc.subtract(other.acc);
-            Vec3 dB = vel.subtract(other.vel).multiply(2).add(dC);
-            return solveQuadratic(dA, dB, dC);
+        public Set<Integer> collide(Particle other) {
+            // Solve P1(t) - P2(t) = 0
+            //
+            // Where P(t) = acc/2 t^2 + (vel + acc/2) t + pos
+            //
+            return solveQuadratic(
+                acc.subtract(other.acc),
+                vel.subtract(other.vel).multiply(2).add(acc.subtract(other.acc)),
+                pos.subtract(other.pos).multiply(2)
+            );
         }
 
-        private static List<Integer> solveQuadratic(Vec3 A, Vec3 B, Vec3 C) {
-            // Solve A + B t + C t^2 = 0
-            if (C.abs() == 0)
-                return solveLinear(A, B);
-            //
-            // Crossing by C cancels the quadratic component giving:
-            //
-            // U + V t = 0, U=AxC, V=BxC
-            //
-            // Normally there is only one or no solution since the system is overspecified.
-            //
-            // Note however that if both U=0 and V=0 then A,B,C are all colinear and there could be two solutions, but we don't have to handle that case here.
-            //
-            return solveLinear(A.cross(C), B.cross(C));
-        }
-
-        private static List<Integer> solveLinear(Vec3 A, Vec3 B) {
-            // Solve A + B t = 0
-            //
-            // This has a solution when A and B are colinear, A x B = 0
-            //
-            // The solution is:
-            //
-            // A.B + B.B t = 0
-            //           t = -A.B / B.B
-            //
-            if (A.cross(B).abs() == 0) {
-                // careful these dot products were overflowing!
-                long n = -A.dot(B);
-                long d = B.dot(B);
-                // we have discrete integer time steps only
-                if (n % d == 0)
-                    return List.of((int) (n / d));
+        private static Set<Integer> solveQuadratic(Vec3 A, Vec3 B, Vec3 C) {
+            // A t^2 + B t + C = 0
+            if (A.abs() == 0) {
+                return solveLinear(B, C);
+            } else {
+                return solveLinear(A.cross(B), A.cross(C));
             }
-            return Collections.emptyList();
         }
-    }
 
-    @AllArgsConstructor
-    public static class Collision {
-        public final int i;
-        public final int j;
+        private static Set<Integer> solveLinear(Vec3 A, Vec3 B) {
+            // A t + B = 0
+            if (A.abs() == 0) {
+                if (B.abs() == 0)
+                    return null;
+            } else {
+                if (A.cross(B).abs() == 0) {
+                    long n = -A.dot(B);
+                    long d = A.dot(A);
+                    if (n % d == 0)
+                        return Set.of((int) (n / d));
+                }
+            }
+            return Set.of();
+        }
     }
 }

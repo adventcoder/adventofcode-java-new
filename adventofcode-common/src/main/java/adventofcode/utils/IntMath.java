@@ -52,8 +52,4 @@ public class IntMath {
             return new BezoutTriple(gcd - other.gcd*q, x - other.x*q, y - other.y*q);
         }
     }
-
-    public static void main(String[] args) {
-        System.out.println(extendedGcd(24504480, 38));
-    }
 }
