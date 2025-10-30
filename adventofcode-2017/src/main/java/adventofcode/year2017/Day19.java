@@ -3,26 +3,28 @@ package adventofcode.year2017;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.geom.Grid;
 import adventofcode.utils.geom.Vec2;
 
 @Puzzle(day = 19, name = "A Series of Tubes")
 public class Day19 extends AbstractDay {
-    private Grid grid;
+    private String[] grid;
+    private int startX;
 
     @Override
     public void parse(String input) {
-        grid = new Grid(input, ' ');
+        grid = input.split("\n");
+        startX = IntStream.range(0, grid[0].length()).filter(i -> grid[0].charAt(i) == '|').findFirst().orElseThrow();
     }
 
     @Override
     public String part1() {
         StringBuilder seq = new StringBuilder();
         traverse(pos -> {
-            char c = (char) grid.get(pos);
+            char c = charAt(pos);
             if (Character.isLetter(c))
                 seq.append(c);
         });
@@ -37,13 +39,17 @@ public class Day19 extends AbstractDay {
     }
 
     private void traverse(Consumer<Vec2> action) {
-        Vec2 pos = grid.findFirst('|');
+        Vec2 pos = new Vec2(startX, 0);
         Vec2 dir = Vec2.SOUTH;
-        while (grid.get(pos) != ' ') {
+        while (charAt(pos) != ' ') {
             action.accept(pos);
-            if (grid.get(pos) == '+')
-                dir = grid.get(pos.add(dir.perpLeft())) != ' ' ? dir.perpLeft() : dir.perpRight();
+            if (charAt(pos) == '+')
+                dir = charAt(pos.add(dir.perpLeft())) != ' ' ? dir.perpLeft() : dir.perpRight();
             pos = pos.add(dir);
         }
-    };
+    }
+
+    private char charAt(Vec2 pos) {
+        return grid[pos.y].charAt(pos.x);
+    }
 }

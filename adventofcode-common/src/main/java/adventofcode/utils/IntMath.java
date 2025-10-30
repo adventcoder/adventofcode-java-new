@@ -8,10 +8,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class IntMath {
-    public static int getBit(int x, int i) {
-        return (x >>> i) & 1;
-    }
-
     public static int sgn(int x) {
         return Integer.compare(x, 0);
     }

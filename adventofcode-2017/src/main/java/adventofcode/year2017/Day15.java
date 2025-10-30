@@ -1,6 +1,6 @@
 package adventofcode.year2017;
 
-import java.util.InputMismatchException;
+import java.util.NoSuchElementException;
 import java.util.function.IntPredicate;
 import java.util.function.IntSupplier;
 
@@ -20,15 +20,17 @@ public class Day15 extends AbstractDay {
     @Override
     public void parse(String input) {
         String[] lines = input.split("\n");
-        aSeed = parseSeed(lines[0], "A");
-        bSeed = parseSeed(lines[1], "B");
+        aSeed = parseSeed(lines, "A");
+        bSeed = parseSeed(lines, "B");
     }
 
-    private int parseSeed(String line, String name) {
-        String[] tokens = line.trim().split("\\s+");
-        if (!tokens[1].equals(name))
-            throw new InputMismatchException();
-        return Integer.parseInt(tokens[4]);
+    private int parseSeed(String[] lines, String name) {
+        for (String line : lines) {
+            String[] tokens = line.trim().split("\\s+");
+            if (tokens[1].equals(name))
+                return Integer.parseInt(tokens[4]);
+        }
+        throw new NoSuchElementException();
     }
 
     @Override

@@ -28,6 +28,14 @@ public class Vec2 implements Comparable<Vec2> {
         return new Vec2(-x, -y);
     }
 
+    public Vec2 perpLeft() {
+        return new Vec2(y, -x);
+    }
+
+    public Vec2 perpRight() {
+        return new Vec2(-y, x);
+    }
+
     public Vec2 add(Vec2 other) {
         return new Vec2(x + other.x, y + other.y);
     }
@@ -46,14 +54,6 @@ public class Vec2 implements Comparable<Vec2> {
 
     public int cross(Vec2 other) {
         return x*other.y - y*other.x;
-    }
-
-    public Vec2 perpLeft() {
-        return new Vec2(y, -x);
-    }
-
-    public Vec2 perpRight() {
-        return new Vec2(-y, x);
     }
 
     @Override

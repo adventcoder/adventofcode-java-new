@@ -116,6 +116,20 @@ public class IntArray implements Comparable<IntArray>, Iterable<Integer>, Clonea
         throw new NoSuchElementException();
     }
 
+    public IntArray add(IntArray other) {
+        int[] newArray = new int[arr.length + other.arr.length];
+        System.arraycopy(arr, 0, newArray, 0, arr.length);
+        System.arraycopy(other.arr, 0, newArray, arr.length, other.arr.length);
+        return new IntArray(newArray);
+    }
+
+    public IntArray multiply(int n) {
+        int[] newArray = new int[arr.length * n];
+        for (int i = 0; i < n; i++)
+            System.arraycopy(arr, 0, newArray, i * arr.length, arr.length);
+        return new IntArray(newArray);
+    }
+
     public int reduce(int identity, IntBinaryOperator op) {
         int acc = identity;
         for (int i = 0; i < arr.length; i++)
@@ -142,19 +156,5 @@ public class IntArray implements Comparable<IntArray>, Iterable<Integer>, Clonea
 
     public int max() {
         return reduce(Integer::max);
-    }
-
-    public IntArray add(IntArray other) {
-        int[] newArray = new int[arr.length + other.arr.length];
-        System.arraycopy(arr, 0, newArray, 0, arr.length);
-        System.arraycopy(other.arr, 0, newArray, arr.length, other.arr.length);
-        return new IntArray(newArray);
-    }
-
-    public IntArray multiply(int n) {
-        int[] newArray = new int[arr.length * n];
-        for (int i = 0; i < n; i++)
-            System.arraycopy(arr, 0, newArray, i * arr.length, arr.length);
-        return new IntArray(newArray);
     }
 }

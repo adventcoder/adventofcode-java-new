@@ -5,7 +5,6 @@ import java.util.stream.Stream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.IntMath;
 import adventofcode.year2017.utils.KnotHash;
 
 @Puzzle(day = 14, name = "Disk Defragmentation")
@@ -18,9 +17,13 @@ public class Day14 extends AbstractDay {
         for (int y = 0; y < grid.length; y++) {
             byte[] hash = KnotHash.standard(key + "-" + y).toByteArray();
             grid[y] = new int[128];
-            for (int i = 0; i < hash.length; i++)
-                for (int j = 0; j < 8; j++)
-                    grid[y][(i << 3) | j] = IntMath.getBit(Byte.toUnsignedInt(hash[i]), 7 - j);
+            for (int i = 0; i < hash.length; i++) {
+                int b = Byte.toUnsignedInt(hash[i]);
+                for (int j = 0; j < 8; j++) {
+                    int x = (i << 3) | j;
+                    grid[y][x] = (b >>> (7 - j)) & 1;
+                }
+            }
         }
     }
 
