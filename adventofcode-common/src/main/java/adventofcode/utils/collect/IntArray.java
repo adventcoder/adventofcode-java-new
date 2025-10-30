@@ -1,8 +1,8 @@
 package adventofcode.utils.collect;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.PrimitiveIterator;
 import java.util.function.IntBinaryOperator;
 
 import lombok.AllArgsConstructor;
@@ -42,8 +42,9 @@ public class IntArray implements Comparable<IntArray>, Iterable<Integer>, Clonea
     }
 
     public void incAll(int val) {
-        for (int i = 0; i < arr.length; i++)
-            arr[i] += val;
+        if (val != 0)
+            for (int i = 0; i < arr.length; i++)
+                arr[i] += val;
     }
 
     @Override
@@ -81,8 +82,8 @@ public class IntArray implements Comparable<IntArray>, Iterable<Integer>, Clonea
         return Arrays.binarySearch(arr, target);
     }
 
-    public Iterator<Integer> iterator() {
-        return new Iterator<Integer>() {
+    public PrimitiveIterator.OfInt iterator() {
+        return new PrimitiveIterator.OfInt() {
             private int i = 0;
 
             @Override
@@ -91,7 +92,7 @@ public class IntArray implements Comparable<IntArray>, Iterable<Integer>, Clonea
             }
 
             @Override
-            public Integer next() {
+            public int nextInt() {
                 return arr[i++];
             }
         };

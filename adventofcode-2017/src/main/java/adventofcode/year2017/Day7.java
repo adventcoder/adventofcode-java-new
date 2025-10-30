@@ -1,28 +1,29 @@
 package adventofcode.year2017;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.collect.DefaultHashMap;
 import lombok.RequiredArgsConstructor;
 
 @Puzzle(day = 7, name = "Recursive Circus")
 public class Day7 extends AbstractDay {
-    private static DefaultHashMap<String, Node> nodes = new DefaultHashMap<>(Node::new);
+    private Map<String, Node> nodes = new HashMap<>();
     private Node root;
 
     @Override
     public void parse(String input) {
         for (String line : input.split("\n")) {
             String[] tokens = line.trim().replaceAll("->", "").replace(",", "").split("\\s+");
-            Node node = nodes.computeIfAbsent(tokens[0]);
+            Node node = nodes.computeIfAbsent(tokens[0], Node::new);
             node.weight = Integer.parseInt(tokens[1].replaceAll("\\W", ""));
             for (int i = 2; i < tokens.length; i++) {
-                node.children.add(nodes.computeIfAbsent(tokens[i]));
+                node.children.add(nodes.computeIfAbsent(tokens[i], Node::new));
             }
         }
     }
@@ -61,12 +62,15 @@ public class Day7 extends AbstractDay {
         private Integer balance() {
             for (Node child : children) {
                 var result = child.balance();
-                if (result != null)
-                    return result;
+                if (result != null) return result;
             }
 
             if (children.size() >= 3) {
-                int correctChildTotalWeight = mostCommon(children.get(0).totalWeight, children.get(1).totalWeight, children.get(2).totalWeight);
+                int correctChildTotalWeight = mostCommon(
+                    children.get(0).totalWeight,
+                    children.get(1).totalWeight,
+                    children.get(2).totalWeight
+                );
                 for (Node child : children) {
                     if (child.totalWeight != correctChildTotalWeight) {
                         int deviation = totalWeight - weight - correctChildTotalWeight * children.size();

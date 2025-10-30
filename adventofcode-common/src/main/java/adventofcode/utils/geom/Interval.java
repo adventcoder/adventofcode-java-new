@@ -1,12 +1,9 @@
 package adventofcode.utils.geom;
 
-import java.util.Iterator;
-import java.util.stream.IntStream;
-
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class Interval implements Iterable<Integer> {
+public class Interval {
     public int min;
     public int max;
 
@@ -28,15 +25,6 @@ public class Interval implements Iterable<Integer> {
 
     public Interval and(Interval other) {
         return new Interval(Math.max(min, other.min),  Math.min(max, other.max));
-    }
-
-    public IntStream stream() {
-        return IntStream.rangeClosed(min, max);
-    }
-
-    @Override
-    public Iterator<Integer> iterator() {
-        return stream().iterator();
     }
 
     @Override

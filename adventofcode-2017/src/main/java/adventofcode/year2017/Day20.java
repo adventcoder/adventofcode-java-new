@@ -20,10 +20,6 @@ import lombok.ToString;
 
 @Puzzle(day = 20, name = "Particle Swarm")
 public class Day20 extends AbstractDay {
-    public static void main(String[] args) throws Exception {
-        main(Day20.class, args);
-    }
-
     private List<Path> paths;
 
     @Override

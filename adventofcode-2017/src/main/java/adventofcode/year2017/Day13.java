@@ -1,7 +1,9 @@
 package adventofcode.year2017;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.function.Function;
@@ -11,12 +13,11 @@ import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.IntMath;
 import adventofcode.utils.IntMath.BezoutTriple;
-import adventofcode.utils.collect.DefaultHashMap;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 13, name = "Packet Scanners")
 public class Day13 extends AbstractDay {
-    private DefaultHashMap<Integer, Set<Integer>> scanners = DefaultHashMap.ofSupplier(HashSet::new);
+    private Map<Integer, Set<Integer>> scanners = new HashMap<>();
 
     @Override
     public void parse(String input) {
@@ -24,7 +25,7 @@ public class Day13 extends AbstractDay {
             String[] pair = line.split(":");
             int depth = Integer.parseInt(pair[0].trim());
             int range = Integer.parseInt(pair[1].trim());
-            scanners.computeIfAbsent(range).add(depth);
+            scanners.computeIfAbsent(range, k -> new HashSet<>()).add(depth);
         }
     }
 
