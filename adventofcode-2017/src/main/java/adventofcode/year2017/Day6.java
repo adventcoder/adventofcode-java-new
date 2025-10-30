@@ -21,7 +21,7 @@ public class Day6 extends AbstractDay {
     @Override
     public Integer part1() {
         while (!seen.containsKey(curr)) {
-            seen.put(curr.copy(), seen.size());
+            seen.put(curr.clone(), seen.size());
             step(curr);
         }
         return seen.size();

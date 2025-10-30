@@ -12,6 +12,10 @@ public class Vec3 {
     public final int y;
     public final int z;
 
+    public boolean isZero() {
+        return x == 0 && y == 0 && z == 0;
+    }
+
     public int abs() {
         return Math.abs(x) + Math.abs(y) + Math.abs(z);
     }
@@ -32,8 +36,8 @@ public class Vec3 {
         return new Vec3(x * n, y * n, z * n);
     }
 
-    public long dot(Vec3 other) {
-        return (long) x*other.x + (long) y*other.y + (long) z*other.z;
+    public int dot(Vec3 other) {
+        return x*other.x + y*other.y + z*other.z;
     }
 
     public Vec3 cross(Vec3 other) {

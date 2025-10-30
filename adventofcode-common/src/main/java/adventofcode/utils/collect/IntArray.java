@@ -1,6 +1,7 @@
 package adventofcode.utils.collect;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.IntBinaryOperator;
 
@@ -9,114 +10,114 @@ import lombok.AllArgsConstructor;
 import java.util.stream.IntStream;
 
 @AllArgsConstructor
-public class IntArray implements Comparable<IntArray> {
+public class IntArray implements Comparable<IntArray>, Iterable<Integer>, Cloneable {
     private final int[] arr;
-    private final int start;
-    private final int end;
 
-    public IntArray(int... arr) {
-        this(arr, 0, arr.length);
+    public static IntArray of(int... arr) {
+        return new IntArray(arr);
     }
 
     public boolean isEmpty() {
-        return start >= end;
+        return arr.length == 0;
     }
 
     public int length() {
-        return end - start;
+        return arr.length;
     }
 
     public int get(int i) {
-        return arr[start + i];
+        return arr[i];
     }
 
     public void set(int i, int val) {
-        arr[start + i] = val;
+        arr[i] = val;
     }
 
-    public void setAll(int val) {
-        Arrays.fill(arr, start, end, val);
+    public void fill(int val) {
+        Arrays.fill(arr, val);
     }
 
     public void inc(int i, int val) {
-        arr[start + i] += val;
+        arr[i] += val;
     }
 
     public void incAll(int val) {
-        for (int i = start; i < end; i++)
+        for (int i = 0; i < arr.length; i++)
             arr[i] += val;
     }
 
-    public IntArray slice(int start, int end) {
-        return new IntArray(arr, this.start + start, this.start + end);
-    }
-
-    public IntArray copy() {
-        return new IntArray(Arrays.copyOfRange(arr, start, end));
+    @Override
+    public IntArray clone() {
+        return new IntArray(arr.clone());
     }
 
     @Override
     public int compareTo(IntArray other) {
-        return Arrays.compare(arr, start, end, other.arr, other.start, other.end);
+        return Arrays.compare(arr, other.arr);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof IntArray other)
-            return Arrays.equals(arr, start, end, other.arr, other.start, other.end);
+            return Arrays.equals(arr, other.arr);
         return false;
     }
 
     @Override
     public int hashCode() {
-        int result = 1;
-        for (int i = start; i < end; i++)
-            result = 31 * result + arr[i];
-        return result;
+        return Arrays.hashCode(arr);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append('[');
-        if (!isEmpty()) {
-            sb.append(arr[start]);
-            for (int i = start + 1; i < end; i++)
-                sb.append(", ").append(arr[i]);
-        }
-        sb.append("]");
-        return sb.toString();
+        return Arrays.toString(arr);
     }
 
     public void sort() {
-        Arrays.sort(arr, start, end);
+        Arrays.sort(arr);
     }
 
-    public int binarySearch(int val) {
-        return Arrays.binarySearch(arr, start, end, val);
+    public int binarySearch(int target) {
+        return Arrays.binarySearch(arr, target);
+    }
+
+    public Iterator<Integer> iterator() {
+        return new Iterator<Integer>() {
+            private int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < arr.length;
+            }
+
+            @Override
+            public Integer next() {
+                return arr[i++];
+            }
+        };
     }
 
     public IntStream stream() {
-        return Arrays.stream(arr, start, end);
+        return Arrays.stream(arr);
     }
 
     public boolean contains(int val) {
-        for (int i = start; i < end; i++)
+        for (int i = 0; i < arr.length; i++)
             if (arr[i] == val)
                 return true;
         return false;
     }
 
     public int index(int val) {
-        for (int i = start; i < end; i++)
+        for (int i = 0; i < arr.length; i++)
             if (arr[i] == val)
-                return i - start;
+                return i;
         throw new NoSuchElementException();
     }
 
     public int reduce(int identity, IntBinaryOperator op) {
         int acc = identity;
-        for (int i = start; i < end; i++)
+        for (int i = 0; i < arr.length; i++)
             acc = op.applyAsInt(acc, arr[i]);
         return acc;
     }
@@ -124,8 +125,8 @@ public class IntArray implements Comparable<IntArray> {
     public int reduce(IntBinaryOperator op) {
         if (isEmpty())
             throw new NoSuchElementException();
-        int acc = arr[start];
-        for (int i = start + 1; i < end; i++)
+        int acc = arr[0];
+        for (int i = 1; i < arr.length; i++)
             acc = op.applyAsInt(acc, arr[i]);
         return acc;
     }
@@ -140,5 +141,19 @@ public class IntArray implements Comparable<IntArray> {
 
     public int max() {
         return reduce(Integer::max);
+    }
+
+    public IntArray add(IntArray other) {
+        int[] newArray = new int[arr.length + other.arr.length];
+        System.arraycopy(arr, 0, newArray, 0, arr.length);
+        System.arraycopy(other.arr, 0, newArray, arr.length, other.arr.length);
+        return new IntArray(newArray);
+    }
+
+    public IntArray multiply(int n) {
+        int[] newArray = new int[arr.length * n];
+        for (int i = 0; i < n; i++)
+            System.arraycopy(arr, 0, newArray, i * arr.length, arr.length);
+        return new IntArray(newArray);
     }
 }

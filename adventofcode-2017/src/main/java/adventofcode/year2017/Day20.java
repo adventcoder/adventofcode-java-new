@@ -12,50 +12,69 @@ import java.util.stream.IntStream;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
+import adventofcode.utils.IntMath;
+import adventofcode.utils.collect.IntArray;
 import adventofcode.utils.geom.Vec3;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 
 @Puzzle(day = 20, name = "Particle Swarm")
 public class Day20 extends AbstractDay {
-    private List<Particle> particles;
+    public static void main(String[] args) throws Exception {
+        main(Day20.class, args);
+    }
+
+    private List<Path> paths;
 
     @Override
     public void parse(String input) {
-        particles = new ArrayList<>();
-        for (String line : input.split("\n"))
-            particles.add(Particle.parse(line));
+        paths = new ArrayList<>();
+        for (String line : input.split("\n")) {
+            Vec3 p = parseVec3(line, "p");
+            Vec3 v = parseVec3(line, "v");
+            Vec3 a = parseVec3(line, "a");
+            paths.add(Path.ofParticle(p, v, a));
+        }
+    }
+
+    private Vec3 parseVec3(String line, String name) {
+        String s = Fn.between(line, name + "=<", ">");
+        String tokens[] = s.split(",");
+        int x = Integer.parseInt(tokens[0].trim());
+        int y = Integer.parseInt(tokens[1].trim());
+        int z = Integer.parseInt(tokens[2].trim());
+        return new Vec3(x, y, z);
     }
 
     @Override
     public Integer part1() {
-        return IntStream.range(0, particles.size()).boxed()
-            .min(Comparator.comparing(i -> particles.get(i))).orElse(null);
+        return IntStream.range(0, paths.size()).boxed()
+            .min(Comparator.comparing(i -> paths.get(i))).orElse(null);
     }
 
     @Override
     public Integer part2() {
-        Map<Integer, List<int[]>> collisions = new HashMap<>();
-        for (int i = 0; i < particles.size(); i++) {
-            for (int j = i + 1; j < particles.size(); j++) {
-                for (int t : particles.get(i).collide(particles.get(j))) {
-                    if (t >= 0) {
+        Map<Integer, List<IntArray>> collisions = new HashMap<>();
+        for (int i = 0; i < paths.size(); i++) {
+            for (int j = i + 1; j < paths.size(); j++) {
+                Path relativePath = paths.get(i).subtract(paths.get(j));
+                for (int t : relativePath.findCandidateRoots()) {
+                    if (t >= 0 && relativePath.isRoot(t)) {
                         collisions.computeIfAbsent(t, k -> new ArrayList<>())
-                            .add(new int[] { i, j });
+                            .add(IntArray.of(i, j));
                     }
                 }
             }
         }
 
         Set<Integer> alive = new HashSet<>();
-        for (int i = 0; i < particles.size(); i++)
+        for (int i = 0; i < paths.size(); i++)
             alive.add(i);
 
         for (int t : Fn.sorted(collisions.keySet())) {
             Set<Integer> toRemove = new HashSet<>();
-            for (int[] coll : collisions.get(t)) {
-                int i = coll[0];
-                int j = coll[1];
+            for (IntArray coll : collisions.get(t)) {
+                int i = coll.get(0), j = coll.get(1);
                 if (alive.contains(i) && alive.contains(j)) {
                     toRemove.add(i);
                     toRemove.add(j);
@@ -69,78 +88,57 @@ public class Day20 extends AbstractDay {
 
     @AllArgsConstructor
     @ToString
-    public static class Particle implements Comparable<Particle> {
-        public Vec3 pos;
-        public Vec3 vel;
-        public Vec3 acc;
+    public static class Path implements Comparable<Path> {
+        private final Vec3 A;
+        private final Vec3 B;
+        private final Vec3 C;
 
-        public static Particle parse(String s) {
-            Map<String, Vec3> vals = new HashMap<>();
-            for (String subs : s.split(", ")) {
-                String[] pair = subs.split("=");
-                vals.put(pair[0].trim(), parseVec(pair[1].trim()));
-            }
-            return new Particle(vals.get("p"), vals.get("v"), vals.get("a"));
-        }
-
-        private static Vec3 parseVec(String s) {
-            s = s.substring(1, s.length() - 1);
-            String[] tokens = s.split(",");
-            return new Vec3(Integer.parseInt(tokens[0]), Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]));
+        public static Path ofParticle(Vec3 initialPos, Vec3 initialVel, Vec3 acc) {
+            // V(t) = V(t-1) + A
+            //      = ...
+            //      = V0 + A t
+            //
+            // P(t) = P(T-1) + V(t)
+            //      = P(T-1) + V0 + A t
+            //      = ...
+            //      = P0 + V0 t + A t(t+1)/2
+            //      = P0 + (V0+A/2) t + A/2 t^2
+            //
+            return new Path(acc, initialVel.multiply(2).add(acc), initialPos.multiply(2));
         }
 
         @Override
-        public int compareTo(Particle other) {
-            // compare by closeness to the origin as t tends to infinity
+        public int compareTo(Path other) {
+            // Compare by closeness to the origin as t tends to infinity.
             //
-            // The position at time t is P(t) = pos + (vel + acc/2) t + acc/2 t^2
-            // 
-            // The t^2 component will dominate in the long term, but in the case where there are multiple particles with the same acc then the t component needs to be considered and so forth.
+            // The t^2 term will dominate in the long term.
+            // But in the case where there are multiple paths with the same t^2 term, then the t term needs to be considered and so forth.
             //
-            int cmp = Integer.compare(acc.abs(), other.acc.abs());
+            int cmp = Integer.compare(A.abs(), other.A.abs());
             if (cmp == 0) {
-                cmp = Integer.compare(vel.multiply(2).add(acc).abs(), other.vel.multiply(2).add(other.acc).abs());
+                cmp = Integer.compare(B.abs(), other.B.abs());
                 if (cmp == 0)
-                    cmp = Integer.compare(pos.abs(), other.pos.abs());
+                    cmp = Integer.compare(C.abs(), other.C.abs());
             }
             return cmp;
         }
 
-        public Set<Integer> collide(Particle other) {
-            // Solve P1(t) - P2(t) = 0
-            //
-            // Where P(t) = acc/2 t^2 + (vel + acc/2) t + pos
-            //
-            return solveQuadratic(
-                acc.subtract(other.acc),
-                vel.subtract(other.vel).multiply(2).add(acc.subtract(other.acc)),
-                pos.subtract(other.pos).multiply(2)
-            );
+        public Path subtract(Path other) {
+            return new Path(A.subtract(other.A), B.subtract(other.B), C.subtract(other.C));
         }
 
-        private static Set<Integer> solveQuadratic(Vec3 A, Vec3 B, Vec3 C) {
-            // A t^2 + B t + C = 0
-            if (A.abs() == 0) {
-                return solveLinear(B, C);
+        public IntArray findCandidateRoots() {
+            if (!A.isZero()) {
+                return IntMath.solveQuadratic(A.dot(A), B.dot(A), C.dot(A));
+            } else if (!B.isZero()) {
+                return IntMath.solveLinear(B.dot(B), C.dot(B));
             } else {
-                return solveLinear(A.cross(B), A.cross(C));
+                return IntMath.solveConstant(C.dot(C));
             }
         }
 
-        private static Set<Integer> solveLinear(Vec3 A, Vec3 B) {
-            // A t + B = 0
-            if (A.abs() == 0) {
-                if (B.abs() == 0)
-                    return null;
-            } else {
-                if (A.cross(B).abs() == 0) {
-                    long n = -A.dot(B);
-                    long d = A.dot(A);
-                    if (n % d == 0)
-                        return Set.of((int) (n / d));
-                }
-            }
-            return Set.of();
+        public boolean isRoot(int t) {
+            return A.multiply(t*t).add(B.multiply(t)).add(C).isZero();
         }
     }
 }

@@ -1,5 +1,6 @@
 package adventofcode.utils;
 
+import adventofcode.utils.collect.IntArray;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -51,5 +52,36 @@ public class IntMath {
         public BezoutTriple subMul(BezoutTriple other, int q) {
             return new BezoutTriple(gcd - other.gcd*q, x - other.x*q, y - other.y*q);
         }
+    }
+
+    public static IntArray solveQuadratic(int a, int b, int c) {
+        // Solve for x in: a x^2 + b x + c = 0
+        if (a == 0)
+            return solveLinear(b, c);
+        long disc = (long) b*b - 4L*a*c;
+        if (disc == 0)
+            return solveLinear(2*a, b);
+        if (disc > 0) {
+            int k = (int) Math.sqrt(disc);
+            if (k * k == disc)
+                return solveLinear(2*a, b + k).add(solveLinear(2*a, b - k));
+        }
+        return IntArray.of();
+    }
+
+    public static IntArray solveLinear(int a, int b) {
+        // Solve for x in: a x + b = 0
+        if (a == 0)
+            return solveConstant(b);
+        if (-b % a == 0)
+            return IntArray.of(-b / a);
+        return IntArray.of();
+    }
+
+    public static IntArray solveConstant(int a) {
+        // Solve for x in: a = 0
+        if (a == 0)
+            throw new IllegalStateException("free variable");
+        return IntArray.of();
     }
 }

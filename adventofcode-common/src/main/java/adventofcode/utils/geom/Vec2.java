@@ -16,6 +16,10 @@ public class Vec2 implements Comparable<Vec2> {
     public final int x;
     public final int y;
 
+    public boolean isZero() {
+        return x == 0 && y == 0;
+    }
+
     public int abs() {
         return Math.abs(x) + Math.abs(y);
     }

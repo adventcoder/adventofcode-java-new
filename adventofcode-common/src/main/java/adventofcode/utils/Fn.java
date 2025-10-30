@@ -1,12 +1,10 @@
 package adventofcode.utils;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
@@ -37,16 +35,10 @@ public class Fn {
         return result;
     }
 
-    public static <T> Stream<T> concat(Collection<T> xs, Collection<T> ys) {
-        return Stream.concat(xs.stream(), ys.stream());
-    }
-
-    public static <T> Stream<T> intersection(Set<T> xs, Collection<T> ys) {
-        return ys.stream().filter(y -> xs.contains(y));
-    }
-
-    public static <T> Stream<T> union(Set<T> xs, Collection<T> ys) {
-        return Stream.concat(xs.stream(), ys.stream().filter(y -> !xs.contains(y)));
+    public static String between(String s, String prefix, String suffix) {
+        int start = s.indexOf(prefix) + prefix.length();
+        int end = s.indexOf(suffix, start);
+        return s.substring(start, end);
     }
 
     public static <T extends Comparable<T>> List<T> sorted(Iterable<T> xs) {
@@ -92,15 +84,6 @@ public class Fn {
             if (pred.test(x))
                 count++;
         return count;
-    }
-
-    public static <T, U> U firstNonNull(Iterable<T> domain, Function<? super T, ? extends U> expr) {
-        for (T x : domain) {
-            U y = expr.apply(x);
-            if (y != null)
-                return y;
-        }
-        return null;
     }
 
     public static <T> boolean any(Iterable<T> domain, Predicate<? super T> pred) {
