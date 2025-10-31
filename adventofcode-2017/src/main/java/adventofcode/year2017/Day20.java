@@ -14,6 +14,7 @@ import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.IntMath;
 import adventofcode.utils.collect.IntArray;
+import adventofcode.utils.collect.Range;
 import adventofcode.utils.geom.Vec3;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
@@ -63,10 +64,7 @@ public class Day20 extends AbstractDay {
             }
         }
 
-        Set<Integer> alive = new HashSet<>();
-        for (int i = 0; i < paths.size(); i++)
-            alive.add(i);
-
+        Set<Integer> alive = new HashSet<>(new Range(paths.size()));
         for (int t : Fn.sorted(collisions.keySet())) {
             Set<Integer> toRemove = new HashSet<>();
             for (IntArray coll : collisions.get(t)) {

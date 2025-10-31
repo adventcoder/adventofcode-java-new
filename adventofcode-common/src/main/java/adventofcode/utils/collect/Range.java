@@ -3,6 +3,8 @@ package adventofcode.utils.collect;
 import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.PrimitiveIterator;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Range extends AbstractList<Integer> {
     private final int start;
@@ -27,22 +29,29 @@ public class Range extends AbstractList<Integer> {
 
     @Override
     public boolean isEmpty() {
-        return step > 0 ? start >= stop : start <= stop;
+        return step > 0 ? stop <= start : start <= stop;
+    }
+
+    private int lastIndex() {
+        int n = step > 0 ? stop - start : start - stop;
+        if (n <= 0) return -1;
+        return (n - 1) / Math.abs(step);
     }
 
     @Override
     public int size() {
-        if (isEmpty()) return 0;
-        return (int) Math.max(0, (long)(stop - start + step - (step > 0 ? 1 : -1)) / step);
+        return lastIndex() + 1;
+    }
+
+    public Range reverse() {
+        return new Range(start + lastIndex() * step, start - step, -step);
     }
 
     @Override
-    public Integer get(int index) {
-        int val = start + step * index;
-        if (step > 0 ? val >= stop : val <= stop) {
-            throw new IndexOutOfBoundsException("Index " + index + " out of bounds for range");
-        }
-        return val;
+    public Integer get(int i) {
+        if (i < 0 || i > lastIndex())
+            throw new IndexOutOfBoundsException();
+        return start + i * step;
     }
 
     @Override
@@ -50,62 +59,56 @@ public class Range extends AbstractList<Integer> {
         if (!(obj instanceof Integer)) return false;
         int val = (Integer) obj;
         if (step > 0) {
-            if (val < start || val >= stop) return false;
+            if (val >= start && val < stop) return false;
         } else {
-            if (val > start || val <= stop) return false;
+            if (val <= start && val > stop) return false;
         }
         return (val - start) % step == 0;
     }
 
     @Override
-    public int indexOf(Object o) {
-        if (!(o instanceof Integer)) return -1;
-        int val = (Integer) o;
-
-        if (!contains(val)) return -1;
-
-        // Formula: index = (val - start) / step
+    public int indexOf(Object obj) {
+        if (!contains(obj)) return -1;
+        int val = (Integer) obj;
         return (val - start) / step;
     }
 
     @Override
-    public int lastIndexOf(Object o) {
-        return indexOf(o); // all elements are unique in a Range
+    public int lastIndexOf(Object obj) {
+        return indexOf(obj);
     }
 
     @Override
     public Iterator<Integer> iterator() {
         return new PrimitiveIterator.OfInt() {
-            int i = start;
+            int n = start;
 
             @Override
             public boolean hasNext() {
-                return step > 0 ? i < stop : i > stop;
+                return step > 0 ? n < stop : n > stop;
             }
 
             @Override
             public int nextInt() {
-                int curr = i;
-                i += step;
+                int curr = n;
+                n += step;
                 return curr;
             }
         };
     }
 
-    public Range reverse() {
-        int n = size();
-        if (n == 0) return new Range(0, 0, 1); // empty range
-        int newStart = start + step * (n - 1);
-        int newStop = start - (step > 0 ? 1 : -1); // ensures the new range stops just past the original start
-        int newStep = -step;
-        return new Range(newStart, newStop, newStep);
+    @Override
+    public Stream<Integer> stream() {
+        return primitiveStream().boxed();
+    }
+
+    public IntStream primitiveStream() {
+        return IntStream.iterate(start, n -> n + step)
+            .takeWhile(n -> step > 0 ? n < stop : n > stop);
     }
 
     public int sum() {
         int n = size();
-        if (n == 0) return 0;
-        int first = start;
-        int last = start + step * (n - 1);
-        return n * (first + last) / 2;  // sum of arithmetic sequence formula
+        return n*start + n*(n-1)/2 * step;
     }
 }
