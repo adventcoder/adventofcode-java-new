@@ -1,6 +1,7 @@
 package adventofcode.utils;
 
-import adventofcode.utils.collect.IntArray;
+import java.util.stream.IntStream;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -50,7 +51,7 @@ public class IntMath {
         }
     }
 
-    public static IntArray solveQuadratic(int a, int b, int c) {
+    public static IntStream solveQuadratic(int a, int b, int c) {
         // Solve for x in: a x^2 + b x + c = 0
         if (a == 0)
             return solveLinear(b, c);
@@ -60,24 +61,24 @@ public class IntMath {
         if (disc > 0) {
             int k = (int) Math.sqrt(disc);
             if (k * k == disc)
-                return solveLinear(2*a, b + k).add(solveLinear(2*a, b - k));
+                return IntStream.concat(solveLinear(2*a, b + k), solveLinear(2*a, b - k));
         }
-        return IntArray.of();
+        return IntStream.empty();
     }
 
-    public static IntArray solveLinear(int a, int b) {
+    public static IntStream solveLinear(int a, int b) {
         // Solve for x in: a x + b = 0
         if (a == 0)
             return solveConstant(b);
         if (-b % a == 0)
-            return IntArray.of(-b / a);
-        return IntArray.of();
+            return IntStream.of(-b / a);
+        return IntStream.empty();
     }
 
-    public static IntArray solveConstant(int a) {
+    public static IntStream solveConstant(int a) {
         // Solve for x in: a = 0
         if (a == 0)
-            throw new IllegalStateException("free variable");
-        return IntArray.of();
+            throw new UnsupportedOperationException();
+        return IntStream.empty();
     }
 }

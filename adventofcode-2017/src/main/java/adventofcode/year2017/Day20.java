@@ -13,11 +13,9 @@ import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.IntMath;
-import adventofcode.utils.collect.IntArray;
 import adventofcode.utils.collect.Range;
 import adventofcode.utils.geom.Vec3;
 import lombok.AllArgsConstructor;
-import lombok.ToString;
 
 @Puzzle(day = 20, name = "Particle Swarm")
 public class Day20 extends AbstractDay {
@@ -51,14 +49,14 @@ public class Day20 extends AbstractDay {
 
     @Override
     public Integer part2() {
-        Map<Integer, List<IntArray>> collisions = new HashMap<>();
+        Map<Integer, List<List<Integer>>> collisions = new HashMap<>();
         for (int i = 0; i < paths.size(); i++) {
             for (int j = i + 1; j < paths.size(); j++) {
                 Path relativePath = paths.get(i).subtract(paths.get(j));
-                for (int t : relativePath.findCandidateRoots()) {
-                    if (t >= 0 && relativePath.isRoot(t)) {
+                for (int t : relativePath.findRoots()) {
+                    if (t >= 0) {
                         collisions.computeIfAbsent(t, k -> new ArrayList<>())
-                            .add(IntArray.of(i, j));
+                            .add(List.of(i, j));
                     }
                 }
             }
@@ -67,12 +65,9 @@ public class Day20 extends AbstractDay {
         Set<Integer> alive = new HashSet<>(new Range(paths.size()));
         for (int t : Fn.sorted(collisions.keySet())) {
             Set<Integer> toRemove = new HashSet<>();
-            for (IntArray coll : collisions.get(t)) {
-                int i = coll.get(0), j = coll.get(1);
-                if (alive.contains(i) && alive.contains(j)) {
-                    toRemove.add(i);
-                    toRemove.add(j);
-                }
+            for (List<Integer> coll : collisions.get(t)) {
+                if (alive.containsAll(coll))
+                    toRemove.addAll(coll);
             }
             alive.removeAll(toRemove);
         }
@@ -81,7 +76,6 @@ public class Day20 extends AbstractDay {
     }
 
     @AllArgsConstructor
-    @ToString
     public static class Path implements Comparable<Path> {
         private final Vec3 A;
         private final Vec3 B;
@@ -121,7 +115,11 @@ public class Day20 extends AbstractDay {
             return new Path(A.subtract(other.A), B.subtract(other.B), C.subtract(other.C));
         }
 
-        public IntArray findCandidateRoots() {
+        public int[] findRoots() {
+            return findPotentialRoots().filter(this::isRoot).toArray();
+        }
+
+        private IntStream findPotentialRoots() {
             if (!A.isZero()) {
                 return IntMath.solveQuadratic(A.dot(A), B.dot(A), C.dot(A));
             } else if (!B.isZero()) {
