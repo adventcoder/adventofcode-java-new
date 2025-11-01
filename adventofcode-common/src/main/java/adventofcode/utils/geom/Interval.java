@@ -7,10 +7,6 @@ public class Interval {
     public int min;
     public int max;
 
-    public int length() {
-        return max - min + 1;
-    }
-
     public boolean overlaps(Interval other) {
         return min <= other.max && other.min <= max;
     }

@@ -7,7 +7,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @EqualsAndHashCode
 @ToString
-public class Vec2 implements Comparable<Vec2> {
+public class Vec2 {
     public static Vec2 NORTH = new Vec2(0, -1);
     public static Vec2 EAST = new Vec2(1, 0);
     public static Vec2 SOUTH = new Vec2(0, 1);
@@ -28,11 +28,11 @@ public class Vec2 implements Comparable<Vec2> {
         return new Vec2(-x, -y);
     }
 
-    public Vec2 perpLeft() {
+    public Vec2 rotateLeft() {
         return new Vec2(y, -x);
     }
 
-    public Vec2 perpRight() {
+    public Vec2 rotateRight() {
         return new Vec2(-y, x);
     }
 
@@ -48,19 +48,19 @@ public class Vec2 implements Comparable<Vec2> {
         return new Vec2(x * n, y * n);
     }
 
+    public Vec2 multiply(Rot2 r) {
+        return new Vec2(x*r.a - y*r.b, x*r.b + y*r.a);
+    }
+
+    public Rot2 multiply(Vec2 other) {
+        return new Rot2(dot(other), cross(other));
+    }
+
     public int dot(Vec2 other) {
         return x*other.x + y*other.y;
     }
 
     public int cross(Vec2 other) {
         return x*other.y - y*other.x;
-    }
-
-    @Override
-    public int compareTo(Vec2 other) {
-        int cmp = Integer.compare(y, other.y);
-        if (cmp == 0)
-            cmp = Integer.compare(x, other.x);
-        return cmp;
     }
 }

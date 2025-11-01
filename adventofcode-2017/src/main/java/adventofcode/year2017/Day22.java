@@ -39,10 +39,10 @@ public class Day22 extends AbstractDay {
         for (int i = 0; i < 10000; i++) {
             if (infected.contains(pos)) {
                 infected.remove(pos);
-                dir = dir.perpRight();
+                dir = dir.rotateRight();
             } else {
                 infected.add(pos);
-                dir = dir.perpLeft();
+                dir = dir.rotateLeft();
                 infections++;
             }
             pos = pos.add(dir);

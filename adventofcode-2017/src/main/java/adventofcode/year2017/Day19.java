@@ -44,7 +44,7 @@ public class Day19 extends AbstractDay {
         while (charAt(pos) != ' ') {
             action.accept(pos);
             if (charAt(pos) == '+')
-                dir = charAt(pos.add(dir.perpLeft())) != ' ' ? dir.perpLeft() : dir.perpRight();
+                dir = charAt(pos.add(dir.rotateLeft())) != ' ' ? dir.rotateLeft() : dir.rotateRight();
             pos = pos.add(dir);
         }
     }
