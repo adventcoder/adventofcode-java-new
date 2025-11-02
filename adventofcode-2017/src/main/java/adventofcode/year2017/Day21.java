@@ -3,17 +3,18 @@ package adventofcode.year2017;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
+import adventofcode.utils.Fn;
 import adventofcode.utils.geom.Vec2;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 21, name = "Fractal Art")
 public class Day21 extends AbstractDay {
     private Map<Grid, Grid> rules = new HashMap<>();
-    private Map<List<Object>, Integer> memo = new HashMap<>();
 
     @Override
     public void parse(String input) {
@@ -36,28 +37,19 @@ public class Day21 extends AbstractDay {
 
     @Override
     public Integer part2() {
-        return countMemoized(Grid.parse(".#./..#/###"), 18);
+        return count.apply(Grid.parse(".#./..#/###"), 18);
     }
 
-    private int countMemoized(Grid grid, int n) {
-        List<Object> key = List.of(grid, n);
-        if (memo.containsKey(key))
-            return memo.get(key);
-        int value = count(grid, n);
-        memo.put(key, value);
-        return value;
-    }
-
-    private int count(Grid grid, int n) {
+    private final BiFunction<Grid, Integer, Integer> count = Fn.memoize(self -> (grid, n) -> {
         if (n == 0)
             return grid.count('#');
         Grid newGrid = expand(expand(expand(grid)));
         int total = 0;
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 3; j++)
-                total += countMemoized(newGrid.slice(i * 3, j * 3, 3), n - 3);
+                total += self.apply(newGrid.slice(i * 3, j * 3, 3), n - 3);
         return total;
-    }
+    });
 
     private Grid expand(Grid grid) {
         int sliceSize = grid.size % 2 == 0 ? 2 : 3;
