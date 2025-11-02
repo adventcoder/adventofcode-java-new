@@ -111,8 +111,9 @@ public class Day21 extends AbstractDay {
 
         public int count(char target) {
             int count = 0;
-            for (char c : data)
-                count += c == target ? 1 : 0;
+            for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                    count += (get(x, y) == target ? 1 : 0);
             return count;
         }
 
