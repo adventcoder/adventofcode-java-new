@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
@@ -122,18 +121,18 @@ public class Fn {
         return start;
     }
 
-    public static <T1, T2, R> BiFunction<T1, T2, R> memoize(UnaryOperator<BiFunction<T1, T2, R>> op) {
-        return new BiFunction<>() {
-            private final Map<List<Object>, R> memo = new HashMap<>();
-            private final BiFunction<T1, T2, R> func = op.apply(this);
+    public static <T, R> Function<T, R> memoize(UnaryOperator<Function<T, R>> op) {
+        return new Function<>() {
+            private final Map<T, R> memo = new HashMap<>();
+            private final Function<T, R> func = op.apply(this);
 
             @Override
-            public R apply(T1 arg1, T2 arg2) {
-                List<Object> key = List.of(arg1, arg2);
-                if (memo.containsKey(key))
-                    return memo.get(key);
-                R value = func.apply(arg1, arg2);
-                memo.put(key, value);
+            public R apply(T arg) {
+                R value = memo.get(arg);
+                if (value == null && !memo.containsKey(arg)) {
+                    value = func.apply(arg);
+                    memo.put(arg, value);
+                }
                 return value;
             }
         };

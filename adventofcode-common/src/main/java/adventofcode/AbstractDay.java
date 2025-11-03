@@ -3,9 +3,11 @@ package adventofcode;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -71,15 +73,20 @@ public abstract class AbstractDay implements Callable<Integer> {
         }
     }
 
+    protected <K, V> V cache(Map<K, V> memo, K key, Supplier<? extends V> supplier) {
+        V val = memo.get(key);
+        if (val == null && !memo.containsKey(key)) {
+            val = supplier.get();
+            memo.put(key, val);
+        }
+        return val;
+    }
+
     public int[] getAllParts() {
-        //TODO: add target parameter
-        return IntStream.rangeClosed(1, 2)
-            .filter(this::supportsPart)
-            .toArray();
+        return IntStream.rangeClosed(1, 2).filter(this::supportsPart).toArray();
     }
 
     public boolean supportsPart(int part) {
-        //TODO: target parts to run should be driven by the command line, then this is not necessary (...except to determine all parts if that's an option)
         try {
             Method method = this.getClass().getMethod("part" + part);
             return !method.getDeclaringClass().equals(AbstractDay.class);
