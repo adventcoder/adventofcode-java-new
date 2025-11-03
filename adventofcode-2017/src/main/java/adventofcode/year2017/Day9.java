@@ -1,14 +1,12 @@
 package adventofcode.year2017;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
+import adventofcode.utils.Fn;
 
 @Puzzle(day = 9, name = "Stream Processing")
 public class Day9 extends AbstractDay {
-    String stream;
+    private String stream;
 
     @Override
     public void parse(String input) {
@@ -33,10 +31,8 @@ public class Day9 extends AbstractDay {
 
     @Override
     public Integer part2() {
-        int garbageCount = 0;
-        Matcher matcher = Pattern.compile("<([^>]*)>").matcher(stream);
-        while (matcher.find())
-            garbageCount += matcher.group(1).length();
-        return garbageCount;
+        return Fn.findall(stream, "<([^>]*)>")
+            .mapToInt(m -> m.group(1).length())
+            .sum();
     }
 }

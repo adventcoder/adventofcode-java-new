@@ -12,6 +12,8 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.function.UnaryOperator;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import lombok.experimental.UtilityClass;
@@ -44,6 +46,10 @@ public class Fn {
         int end = s.indexOf(suffix, start + prefix.length());
         if (end < 0) throw new IndexOutOfBoundsException();
         return s.substring(start + prefix.length(), end);
+    }
+
+    public static Stream<MatchResult> findall(String s, String regex) {
+        return Pattern.compile(regex).matcher(s).results();
     }
 
     public static <T extends Comparable<T>> List<T> sorted(Iterable<T> xs) {

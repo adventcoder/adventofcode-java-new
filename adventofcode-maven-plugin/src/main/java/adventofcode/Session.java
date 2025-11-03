@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 import lombok.AllArgsConstructor;
@@ -16,9 +16,9 @@ public class Session {
     private final String token;
 
     public void downloadInput(int year, int day, OutputStream out) throws IOException {
-        URL url = new URL(String.format("https://adventofcode.com/%d/day/%d/input", year, day));
+        URI uri = URI.create(String.format("https://adventofcode.com/%d/day/%d/input", year, day));
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
         conn.setRequestProperty("Cookie", "session=" + token);
         conn.setInstanceFollowRedirects(false);
 
