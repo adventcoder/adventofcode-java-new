@@ -36,8 +36,8 @@ public class Day24 extends AbstractDay {
 
     @Override
     public Integer part2() {
-        Comparator<Bridge> cmp = Comparator.comparingInt(bridge -> bridge.length);
-        cmp = cmp.thenComparingInt(bridge -> bridge.strength);
+        Comparator<Bridge> cmp = Comparator.comparingInt((Bridge bridge) -> bridge.length)
+                                           .thenComparingInt(bridge -> bridge.strength);
         return findBestBridge(0, 0L, cmp).strength;
     }
 
