@@ -17,7 +17,8 @@
 
     <modules>
         <module>adventofcode-maven-plugin</module>
-        <module>adventofcode-common</module>
+        <module>adventofcode-utils</module>
+        <module>adventofcode-core</module>
         <module>adventofcode-2017</module>
     </modules>
 
