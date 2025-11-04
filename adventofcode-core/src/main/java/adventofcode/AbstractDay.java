@@ -3,11 +3,9 @@ package adventofcode;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -71,15 +69,6 @@ public abstract class AbstractDay implements Callable<Integer> {
             String message = Stream.of(args).map(Object::toString).collect(Collectors.joining(" "));
             System.out.println("  [DEBUG] " + message);
         }
-    }
-
-    protected <K, V> V cache(Map<K, V> memo, K key, Supplier<? extends V> supplier) {
-        V val = memo.get(key);
-        if (val == null && !memo.containsKey(key)) {
-            val = supplier.get();
-            memo.put(key, val);
-        }
-        return val;
     }
 
     public int[] getAllParts() {

@@ -7,13 +7,14 @@ import java.util.function.UnaryOperator;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
+import adventofcode.utils.collect.ReentrantHashMap;
 import adventofcode.utils.geom.Vec2;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 21, name = "Fractal Art")
 public class Day21 extends AbstractDay {
     private Map<Grid, Grid> rules = new HashMap<>();
-    private Map<List<Object>, Integer> countMemo = new HashMap<>();
+    private Map<List<Object>, Integer> countMemo = new ReentrantHashMap<>();
 
     @Override
     public void parse(String input) {
@@ -40,7 +41,7 @@ public class Day21 extends AbstractDay {
     }
 
     private int count(Grid grid, int n) {
-        return cache(countMemo, List.of(grid, n), () -> {
+        return countMemo.computeIfAbsent(List.of(grid, n), k -> {
             if (n == 0)
                 return grid.count('#');
             Grid newGrid = expand(expand(expand(grid)));

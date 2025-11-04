@@ -2,16 +2,13 @@ package adventofcode.utils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
-import java.util.function.UnaryOperator;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -125,22 +122,5 @@ public class Fn {
             throw new NoSuchElementException();
         }
         return start;
-    }
-
-    public static <T, R> Function<T, R> memoize(UnaryOperator<Function<T, R>> op) {
-        return new Function<>() {
-            private final Map<T, R> memo = new HashMap<>();
-            private final Function<T, R> func = op.apply(this);
-
-            @Override
-            public R apply(T arg) {
-                R value = memo.get(arg);
-                if (value == null && !memo.containsKey(arg)) {
-                    value = func.apply(arg);
-                    memo.put(arg, value);
-                }
-                return value;
-            }
-        };
     }
 }

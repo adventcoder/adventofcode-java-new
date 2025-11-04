@@ -20,6 +20,7 @@
         <module>adventofcode-utils</module>
         <module>adventofcode-core</module>
         <module>adventofcode-2017</module>
+        <module>adventofcode-2018</module>
     </modules>
 
     <dependencies>

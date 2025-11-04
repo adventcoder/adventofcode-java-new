@@ -11,20 +11,11 @@ public class Interval {
         return min <= other.max && other.min <= max;
     }
 
-    public boolean contains(long value) {
-        return min <= value && value <= max;
-    }
-
     public Interval or(Interval other) {
         return new Interval(Math.min(min, other.min), Math.max(max, other.max));
     }
 
     public Interval and(Interval other) {
         return new Interval(Math.max(min, other.min),  Math.min(max, other.max));
-    }
-
-    @Override
-    public String toString() {
-        return "[" + min + ", " + max + "]";
     }
 }
