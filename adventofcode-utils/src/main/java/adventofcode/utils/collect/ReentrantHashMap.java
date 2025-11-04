@@ -1,16 +1,57 @@
 package adventofcode.utils.collect;
 
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class ReentrantHashMap<K, V> extends HashMap<K, V> {
     @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> func) {
-        V val = get(key);
-        if (val == null && !containsKey(key)) {
-            val = func.apply(key);
-            put(key, val);
+    public V computeIfAbsent(K k, Function<? super K, ? extends V> mappingFunction) {
+        V v = get(k);
+        if (v == null) {
+            v = mappingFunction.apply(k);
+            if (v != null)
+                put(k, v);
         }
-        return val;
+        return v;
+    }
+
+    @Override
+    public V computeIfPresent(K k, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        V v = get(k);
+        if (v != null) {
+            v = remappingFunction.apply(k, v);
+            if (v == null)
+                remove(k);
+            else
+                put(k, v);
+        }
+        return v;
+    }
+
+    @Override
+    public V compute(K k, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        V v = remappingFunction.apply(k, get(k));
+        if (v == null)
+            remove(k);
+        else
+            put(k, v);
+        return v;
+    }
+
+    @Override
+    public V merge(K k, V v, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        V oldV = get(k);
+        if (oldV == null) {
+            put(k, Objects.requireNonNull(v));
+        } else {
+            v = remappingFunction.apply(oldV, Objects.requireNonNull(v));
+            if (v == null)
+                remove(k);
+            else
+                put(k, v);
+        }
+        return v;
     }
 }

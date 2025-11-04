@@ -1,7 +1,6 @@
 package adventofcode.utils.collect;
 
 import java.util.AbstractList;
-import java.util.Iterator;
 import java.util.PrimitiveIterator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -79,9 +78,9 @@ public class Range extends AbstractList<Integer> {
     }
 
     @Override
-    public Iterator<Integer> iterator() {
+    public PrimitiveIterator.OfInt iterator() {
         return new PrimitiveIterator.OfInt() {
-            int n = start;
+            private int n = start;
 
             @Override
             public boolean hasNext() {
@@ -99,10 +98,10 @@ public class Range extends AbstractList<Integer> {
 
     @Override
     public Stream<Integer> stream() {
-        return primitiveStream().boxed();
+        return intStream().boxed();
     }
 
-    public IntStream primitiveStream() {
+    public IntStream intStream() {
         return IntStream.iterate(start, n -> n + step)
             .takeWhile(n -> step > 0 ? n < stop : n > stop);
     }

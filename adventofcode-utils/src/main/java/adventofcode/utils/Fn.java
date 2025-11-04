@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
@@ -57,6 +60,25 @@ public class Fn {
         return result;
     }
 
+    public static <T> T reduce(Iterable<T> domain, BinaryOperator<T> op) {
+        Iterator<T> it = domain.iterator();
+        T acc = it.next();
+        while (it.hasNext())
+            acc = op.apply(acc, it.next());
+        return acc;
+    }
+
+    public static <T, U, V> Iterable<V> map(Iterable<T> xs, Iterable<U> ys, BiFunction<? super T, ? super U, ? extends V> op) {
+        return () -> {
+            Iterator<T> xIt = xs.iterator();
+            Iterator<U> yIt = ys.iterator();
+            return new Iterator<>() {
+                @Override public boolean hasNext() { return xIt.hasNext() && yIt.hasNext(); }
+                @Override public V next() { return op.apply(xIt.next(), yIt.next()); }
+            };
+        };
+    }
+
     public static <T, U extends Comparable<U>> U min(Iterable<T> domain, Function<? super T, ? extends U> expr) {
         Iterator<T> it = domain.iterator();
         U min = expr.apply(it.next());
@@ -68,6 +90,10 @@ public class Fn {
         return min;
     }
 
+    public static <T extends Comparable<T>> T min(Iterable<T> domain) {
+        return min(domain, Function.identity());
+    }
+
     public static <T, U extends Comparable<U>> U max(Iterable<T> domain, Function<? super T, ? extends U> expr) {
         Iterator<T> it = domain.iterator();
         U max = expr.apply(it.next());
@@ -77,6 +103,48 @@ public class Fn {
                 max = next;
         }
         return max;
+    }
+
+    public static <T extends Comparable<T>> T max(Iterable<T> domain) {
+        return max(domain, Function.identity());
+    }
+
+    public static <T, U extends Comparable<U>> T argMin(Iterable<T> domain, Function<? super T, ? extends U> expr) {
+        Iterator<T> it = domain.iterator();
+        T argMin = it.next();
+        U min = expr.apply(argMin);
+        while (it.hasNext()) {
+            T argNext = it.next();
+            U next = expr.apply(argNext);
+            if (next.compareTo(min) < 0) {
+                argMin = argNext;
+                min = next;
+            }
+        }
+        return argMin;
+    }
+
+    public static <K, V extends Comparable<V>> K argMin(Map<K, V> map) {
+        return argMin(map.keySet(), map::get);
+    }
+
+    public static <T, U extends Comparable<U>> T argMax(Iterable<T> domain, Function<? super T, ? extends U> expr) {
+        Iterator<T> it = domain.iterator();
+        T argMax = it.next();
+        U max = expr.apply(argMax);
+        while (it.hasNext()) {
+            T argNext = it.next();
+            U next = expr.apply(argNext);
+            if (next.compareTo(max) > 0) {
+                argMax = argNext;
+                max = next;
+            }
+        }
+        return argMax;
+    }
+
+    public static <K, V extends Comparable<V>> K argMax(Map<K, V> map) {
+        return argMax(map.keySet(), map::get);
     }
 
     public static <T> int sum(Iterable<T> domain, ToIntFunction<? super T> expr) {
@@ -106,6 +174,13 @@ public class Fn {
             if (!pred.test(x))
                 return false;
         return true;
+    }
+
+    public static <T> T findFirst(Iterable<T> domain, Predicate<? super T> pred) {
+        for (T x : domain)
+            if (pred.test(x))
+                return x;
+        return null;
     }
 
     public static int bsearch(int start, int stop, IntUnaryOperator cmp) {

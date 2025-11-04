@@ -1,24 +1,36 @@
 package adventofcode.utils.geom;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @AllArgsConstructor
+@EqualsAndHashCode
+@ToString
 public class Rect {
     public final int xMin;
     public final int yMin;
     public final int xMax;
     public final int yMax;
 
+    public boolean isEmpty() {
+        return xMin > xMax || yMin > yMax;
+    }
+
     public int width() {
-        return yMax - yMin + 1;
+        return xMax - xMin + 1;
     }
 
     public int height() {
-        return xMax - xMin + 1;
+        return yMax - yMin + 1;
     }
 
     public boolean overlaps(Rect r) {
         return (xMin <= r.xMax && xMax >= r.xMin) && (yMin <= r.yMax && yMax >= r.yMin);
+    }
+
+    public boolean contains(Rect r) {
+        return (xMin <= r.xMin && xMax >= r.xMax) && (yMin <= r.yMin && yMax >= r.yMax);
     }
 
     public Rect or(Rect r) {
