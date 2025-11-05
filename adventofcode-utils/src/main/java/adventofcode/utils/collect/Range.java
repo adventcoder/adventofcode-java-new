@@ -31,24 +31,19 @@ public class Range extends AbstractList<Integer> {
         return step > 0 ? stop <= start : start <= stop;
     }
 
-    private int lastIndex() {
-        int n = step > 0 ? stop - start : start - stop;
-        if (n <= 0) return -1;
-        return (n - 1) / Math.abs(step);
-    }
-
     @Override
     public int size() {
-        return lastIndex() + 1;
+        int n = Math.max(step > 0 ? stop - start : start - stop, 0);
+        return -Math.floorDiv(-n, Math.abs(step));
     }
 
     public Range reverse() {
-        return new Range(start + lastIndex() * step, start - step, -step);
+        return new Range(start + (size() - 1) * step, start - step, -step);
     }
 
     @Override
     public Integer get(int i) {
-        if (i < 0 || i > lastIndex())
+        if (i < 0 || i >= size())
             throw new IndexOutOfBoundsException();
         return start + i * step;
     }

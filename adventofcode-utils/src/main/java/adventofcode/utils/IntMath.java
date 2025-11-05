@@ -1,10 +1,6 @@
 package adventofcode.utils;
 
-import java.util.stream.IntStream;
-
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -14,7 +10,9 @@ public class IntMath {
     }
 
     public static int gcd(int a, int b) {
-        while (a != 0) {
+        a = Math.abs(a);
+        b = Math.abs(b);
+        while (a > 0) {
             int tmp = a;
             a = b % a;
             b = tmp;
@@ -23,62 +21,72 @@ public class IntMath {
     }
 
     public static int lcm(int a, int b) {
-        return (a / gcd(a, b)) * b;
+        int g = gcd(a, b);
+        return g == 0 ? 0 : Math.abs(a * (b / g));
     }
 
-    // a x + b y = gcd(a,b)
     public static BezoutTriple extendedGcd(int a, int b) {
-        BezoutTriple A = new BezoutTriple(a, 1, 0);
-        BezoutTriple B = new BezoutTriple(b, 0, 1);
-        while (A.gcd != 0) {
-            BezoutTriple tmp = A;
-            A = B.subMul(A, B.gcd / A.gcd);
-            B = tmp;
+        int nextG = Math.abs(a), nextX = sgn(a), nextY = 0;
+        int g = Math.abs(b), x = 0, y = sgn(b);
+        while (nextG > 0) {
+            int q = g / nextG;
+            int oldG = g; g = nextG; nextG = oldG - q*nextG;
+            int oldX = x; x = nextX; nextX = oldX - q*nextX;
+            int oldY = y; y = nextY; nextY = oldY - q*nextY;
         }
-        return B;
+        return new BezoutTriple(g, x, y);
     }
 
     @AllArgsConstructor
-    @EqualsAndHashCode
-    @ToString
     public static class BezoutTriple {
         public final int gcd;
         public final int x;
         public final int y;
-
-        public BezoutTriple subMul(BezoutTriple other, int q) {
-            return new BezoutTriple(gcd - other.gcd*q, x - other.x*q, y - other.y*q);
-        }
     }
 
-    public static IntStream solveQuadratic(int a, int b, int c) {
-        // Solve for x in: a x^2 + b x + c = 0
+    public static int modInverse(int x, int m) {
+        var triple = extendedGcd(x, m);
+        if (triple.gcd != 1)
+            throw new ArithmeticException(x + " not invertible mod " + m);
+        return Math.floorMod(triple.x, m);
+    }
+
+    public static int[] findRoots(int a, int b, int c) {
         if (a == 0)
-            return solveLinear(b, c);
-        long disc = (long) b*b - 4L*a*c;
-        if (disc == 0)
-            return solveLinear(2*a, b);
-        if (disc > 0) {
+            return findRoots(b, c);
+        int disc = b*b - 4*a*c;
+        if (disc == 0) {
+            // (2 a x + b)^2 = 0
+            return findRoots(2*a, b);
+        } else if (disc > 0) {
             int k = (int) Math.sqrt(disc);
-            if (k * k == disc)
-                return IntStream.concat(solveLinear(2*a, b + k), solveLinear(2*a, b - k));
+            if (k * k == disc) {
+                // (2 a x + b + k)(2 a x + b - k) = 0
+                int[] r1 = findRoots(2*a, b + k);
+                int[] r2 = findRoots(2*a, b - k);
+                if (r1.length == 0) return r2;
+                if (r2.length == 0) return r1;
+                return new int[] { r1[0], r2[0] };
+            }
         }
-        return IntStream.empty();
+        return new int[0];
     }
 
-    public static IntStream solveLinear(int a, int b) {
-        // Solve for x in: a x + b = 0
+    public static int[] findRoots(int a, int b) {
         if (a == 0)
-            return solveConstant(b);
-        if (-b % a == 0)
-            return IntStream.of(-b / a);
-        return IntStream.empty();
+            return findRoots(b);
+        if (b % a == 0)
+            return new int[] { -b / a };
+        return new int[0];
     }
 
-    public static IntStream solveConstant(int a) {
-        // Solve for x in: a = 0
+    public static int[] findRoots(int a) {
         if (a == 0)
-            throw new UnsupportedOperationException();
-        return IntStream.empty();
+            return findRoots();
+        return new int[0];
+    }
+
+    public static int[] findRoots() {
+        throw new ArithmeticException("zero polynomial");
     }
 }

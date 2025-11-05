@@ -53,8 +53,8 @@ public class Day20 extends AbstractDay {
         for (int i = 0; i < paths.size(); i++) {
             for (int j = i + 1; j < paths.size(); j++) {
                 Path relativePath = paths.get(i).subtract(paths.get(j));
-                for (int t : relativePath.findRoots()) {
-                    if (t >= 0) {
+                for (int t : relativePath.findPotentialRoots()) {
+                    if (t >= 0 && relativePath.isRoot(t)) {
                         collisions.computeIfAbsent(t, k -> new ArrayList<>())
                             .add(List.of(i, j));
                     }
@@ -115,17 +115,13 @@ public class Day20 extends AbstractDay {
             return new Path(A.subtract(other.A), B.subtract(other.B), C.subtract(other.C));
         }
 
-        public int[] findRoots() {
-            return findPotentialRoots().filter(this::isRoot).toArray();
-        }
-
-        private IntStream findPotentialRoots() {
+        public int[] findPotentialRoots() {
             if (!A.isZero()) {
-                return IntMath.solveQuadratic(A.dot(A), B.dot(A), C.dot(A));
+                return IntMath.findRoots(A.dot(A), B.dot(A), C.dot(A));
             } else if (!B.isZero()) {
-                return IntMath.solveLinear(B.dot(B), C.dot(B));
+                return IntMath.findRoots(B.dot(B), C.dot(B));
             } else {
-                return IntMath.solveConstant(C.dot(C));
+                return IntMath.findRoots(C.dot(C));
             }
         }
 

@@ -1,13 +1,13 @@
 package adventofcode.year2017;
 
-import java.util.HashMap;
 import java.util.InputMismatchException;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 25, name = "The Halting Problem")
@@ -15,6 +15,13 @@ public class Day25 extends AbstractDay {
     private int initialState;
     private int targetSteps;
     private Rule[][] rules;
+
+    @AllArgsConstructor
+    private static class Rule {
+        public final int val;
+        public final int dir;
+        public final int nextState;
+    }
 
     @Override
     public void parse(String input) {
@@ -52,8 +59,8 @@ public class Day25 extends AbstractDay {
     private int findState(String s) { return find(s, "\\b[A-Z]\\b").charAt(0) - 'A'; }
 
     @Override
-    public Long part1() {
-        Map<Integer, Integer> tape = new HashMap<>();
+    public Integer part1() {
+        Int2IntMap tape = new Int2IntOpenHashMap();
         int pos = 0;
         int state = initialState;
         for (int i = 0; i < targetSteps; i++) {
@@ -62,13 +69,6 @@ public class Day25 extends AbstractDay {
             pos += rule.dir;
             state = rule.nextState;
         }
-        return tape.values().stream().filter(val -> val == 1).count();
-    }
-
-    @AllArgsConstructor
-    private static class Rule {
-        public final int val;
-        public final int dir;
-        public final int nextState;
+        return tape.values().intStream().sum();
     }
 }
