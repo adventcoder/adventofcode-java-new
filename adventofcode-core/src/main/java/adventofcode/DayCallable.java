@@ -1,6 +1,9 @@
 package adventofcode;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.concurrent.Callable;
 
 import lombok.AllArgsConstructor;
@@ -35,8 +38,18 @@ public class DayCallable implements Callable<Integer> {
     }
 
     private String formatAnswer(String prefix, Object answer) {
-        String answerString = answer == null ? "<No answer>" : answer.toString();
+        String answerString = answerToString(answer, "<No answer>");
         return prefix + String.join("\n" + " ".repeat(prefix.length()), answerString.split("\n"));
+    }
+
+    private String answerToString(Object answer, String defaultString) {
+        if (answer instanceof Optional<?> opt)
+            return opt.map(Object::toString).orElse(defaultString);
+        if (answer instanceof OptionalInt optInt)
+            return optInt.isPresent() ? Integer.toString(optInt.getAsInt()) : defaultString;
+        if (answer instanceof OptionalLong optLong)
+            return optLong.isPresent() ? Long.toString(optLong.getAsLong()) : defaultString;
+        return answer != null ? answer.toString() : defaultString;
     }
 
     private String formatTime(long time) {
