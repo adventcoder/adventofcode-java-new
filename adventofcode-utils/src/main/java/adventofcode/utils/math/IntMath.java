@@ -1,4 +1,4 @@
-package adventofcode.utils;
+package adventofcode.utils.math;
 
 import lombok.AllArgsConstructor;
 import lombok.experimental.UtilityClass;
@@ -82,11 +82,7 @@ public class IntMath {
 
     public static int[] findRoots(int a) {
         if (a == 0)
-            return findRoots();
+            throw new ArithmeticException("zero polynomial");
         return new int[0];
-    }
-
-    public static int[] findRoots() {
-        throw new ArithmeticException("zero polynomial");
     }
 }

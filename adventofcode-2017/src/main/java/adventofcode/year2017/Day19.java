@@ -7,7 +7,7 @@ import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.geom.Vec2;
+import adventofcode.utils.math.IntVec2;
 
 @Puzzle(day = 19, name = "A Series of Tubes")
 public class Day19 extends AbstractDay {
@@ -33,14 +33,14 @@ public class Day19 extends AbstractDay {
 
     @Override
     public Integer part2() {
-        List<Vec2> path = new ArrayList<>();
+        List<IntVec2> path = new ArrayList<>();
         traverse(path::add);
         return path.size();
     }
 
-    private void traverse(Consumer<Vec2> action) {
-        Vec2 pos = new Vec2(startX, 0);
-        Vec2 dir = Vec2.SOUTH;
+    private void traverse(Consumer<IntVec2> action) {
+        IntVec2 pos = new IntVec2(startX, 0);
+        IntVec2 dir = IntVec2.SOUTH;
         while (charAt(pos) != ' ') {
             action.accept(pos);
             if (charAt(pos) == '+')
@@ -49,7 +49,7 @@ public class Day19 extends AbstractDay {
         }
     }
 
-    private char charAt(Vec2 pos) {
+    private char charAt(IntVec2 pos) {
         return grid[pos.y].charAt(pos.x);
     }
 }

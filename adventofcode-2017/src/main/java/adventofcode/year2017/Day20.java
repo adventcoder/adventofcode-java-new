@@ -12,9 +12,9 @@ import java.util.stream.IntStream;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import adventofcode.utils.IntMath;
 import adventofcode.utils.collect.Range;
-import adventofcode.utils.geom.Vec3;
+import adventofcode.utils.math.IntMath;
+import adventofcode.utils.math.IntVec3;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 20, name = "Particle Swarm")
@@ -25,20 +25,11 @@ public class Day20 extends AbstractDay {
     public void parse(String input) {
         paths = new ArrayList<>();
         for (String line : input.split("\n")) {
-            Vec3 p = parseVec3(line, "p");
-            Vec3 v = parseVec3(line, "v");
-            Vec3 a = parseVec3(line, "a");
+            IntVec3 p = IntVec3.parse(Fn.between(line, "p=<", ">"), ",");
+            IntVec3 v = IntVec3.parse(Fn.between(line, "v=<", ">"), ",");
+            IntVec3 a = IntVec3.parse(Fn.between(line, "a=<", ">"), ",");
             paths.add(Path.ofParticle(p, v, a));
         }
-    }
-
-    private Vec3 parseVec3(String line, String name) {
-        String s = Fn.between(line, name + "=<", ">");
-        String tokens[] = s.split(",");
-        int x = Integer.parseInt(tokens[0].trim());
-        int y = Integer.parseInt(tokens[1].trim());
-        int z = Integer.parseInt(tokens[2].trim());
-        return new Vec3(x, y, z);
     }
 
     @Override
@@ -77,11 +68,11 @@ public class Day20 extends AbstractDay {
 
     @AllArgsConstructor
     public static class Path implements Comparable<Path> {
-        private final Vec3 A;
-        private final Vec3 B;
-        private final Vec3 C;
+        private final IntVec3 A;
+        private final IntVec3 B;
+        private final IntVec3 C;
 
-        public static Path ofParticle(Vec3 initialPos, Vec3 initialVel, Vec3 acc) {
+        public static Path ofParticle(IntVec3 initialPos, IntVec3 initialVel, IntVec3 acc) {
             // V(t) = V(t-1) + A
             //      = ...
             //      = V0 + A t
