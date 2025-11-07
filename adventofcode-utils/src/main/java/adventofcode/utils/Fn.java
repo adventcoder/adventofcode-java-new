@@ -176,26 +176,33 @@ public class Fn {
         return true;
     }
 
-    public static <T> T findFirst(Iterable<T> domain, Predicate<? super T> pred) {
-        for (T x : domain)
-            if (pred.test(x))
-                return x;
-        return null;
-    }
-
-    public static int bsearch(int start, int stop, IntUnaryOperator cmp) {
-        while (start < stop) {
-            int mid = start + (stop - start) / 2;
-            int val = cmp.applyAsInt(mid);
+    public static int bsearchFirst(int min, int max, IntUnaryOperator f) {
+        while (min <= max) {
+            int mid = min + (max - min) / 2;
+            int val = f.applyAsInt(mid);
             if (val < 0) {
-                start = mid + 1;
+                min = mid + 1;
             } else {
-                stop = mid;
+                max = mid - 1;
             }
         }
-        if (start >= stop || cmp.applyAsInt(start) != 0) {
-            throw new NoSuchElementException();
+        if (f.applyAsInt(min) == 0)
+            return min;
+        throw new NoSuchElementException();
+    }
+
+    public static int bsearchLast(int min, int max, IntUnaryOperator f) {
+        while (min <= max) {
+            int mid = min + (max - min) / 2;
+            int val = f.applyAsInt(mid);
+            if (val > 0) {
+                max = mid - 1;
+            } else {
+                min = mid + 1;
+            }
         }
-        return start;
+        if (f.applyAsInt(max) == 0)
+            return max;
+        throw new NoSuchElementException();
     }
 }

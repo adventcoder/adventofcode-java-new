@@ -46,7 +46,9 @@ public class Day3 extends AbstractDay {
 
     @Override
     public Integer part2() {
-        return Fn.findFirst(claims.keySet(), this::overlapsNone);
+        return claims.keySet().stream()
+            .filter(this::overlapsNone)
+            .findFirst().orElse(null);
     }
 
     private boolean overlapsNone(Integer id) {

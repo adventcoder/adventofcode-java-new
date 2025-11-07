@@ -1,5 +1,6 @@
 package adventofcode.utils.math;
 
+import adventofcode.utils.collect.IntArrays;
 import lombok.AllArgsConstructor;
 import lombok.experimental.UtilityClass;
 
@@ -55,19 +56,14 @@ public class IntMath {
         if (a == 0)
             return findRoots(b, c);
         int disc = b*b - 4*a*c;
-        if (disc == 0) {
+        if (disc == 0)
             // (2 a x + b)^2 = 0
             return findRoots(2*a, b);
-        } else if (disc > 0) {
+        if (disc > 0) {
             int k = (int) Math.sqrt(disc);
-            if (k * k == disc) {
+            if (k * k == disc)
                 // (2 a x + b + k)(2 a x + b - k) = 0
-                int[] r1 = findRoots(2*a, b + k);
-                int[] r2 = findRoots(2*a, b - k);
-                if (r1.length == 0) return r2;
-                if (r2.length == 0) return r1;
-                return new int[] { r1[0], r2[0] };
-            }
+                return IntArrays.concat(findRoots(2*a, b + k), findRoots(2*a, b - k));
         }
         return new int[0];
     }

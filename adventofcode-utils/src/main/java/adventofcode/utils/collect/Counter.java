@@ -1,10 +1,7 @@
 package adventofcode.utils.collect;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -16,11 +13,13 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @EqualsAndHashCode
 public class Counter<T> implements Iterable<Counter.Entry<T>> {
     @AllArgsConstructor
     @EqualsAndHashCode
+    @ToString
     public static class Entry<T> {
         public final T value;
         public final int count;
@@ -119,19 +118,6 @@ public class Counter<T> implements Iterable<Counter.Entry<T>> {
             }
         }
         return minVal;
-    }
-
-    public List<T> mostCommon(int n) {
-        List<T> list = new ArrayList<>(valueSet());
-        list.sort(Comparator.comparingInt(this::count).reversed());
-        return list.subList(0, Math.min(n, list.size()));
-    }
-
-
-    public List<T> leastCommon(int n) {
-        List<T> list = new ArrayList<>(valueSet());
-        list.sort(Comparator.comparingInt(this::count));
-        return list.subList(0, Math.min(n, list.size()));
     }
 
     public void add(T val) {
