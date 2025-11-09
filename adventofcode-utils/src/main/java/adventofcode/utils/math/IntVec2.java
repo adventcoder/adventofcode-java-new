@@ -72,4 +72,8 @@ public class IntVec2 {
     public int cross(IntVec2 other) {
         return x*other.y - y*other.x;
     }
+
+    public int distance(IntVec2 other) {
+        return Math.abs(x - other.x) + Math.abs(y - other.y);
+    }
 }
