@@ -37,16 +37,16 @@ public class Rect {
         return (xMin <= r.xMin && xMax >= r.xMax) && (yMin <= r.yMin && yMax >= r.yMax);
     }
 
-    public boolean contains(int x, int y) {
-        return (xMin <= x && xMax >= x) && (yMin <= y && yMax >= y);
+    public boolean contains(Point p) {
+        return (xMin <= p.x && xMax >= p.x) && (yMin <= p.y && yMax >= p.y);
     }
 
     public Rect or(Rect r) {
         return new Rect(Math.min(xMin, r.xMin), Math.min(yMin, r.yMin), Math.max(xMax, r.xMax), Math.max(yMax, r.yMax));
     }
 
-    public Rect or(int x, int y) {
-        return new Rect(Math.min(xMin, x), Math.min(yMin, y), Math.max(xMax, x), Math.max(yMax, y));
+    public Rect or(Point p) {
+        return new Rect(Math.min(xMin, p.x), Math.min(yMin, p.y), Math.max(xMax, p.x), Math.max(yMax, p.y));
     }
 
     public Rect and(Rect r) {

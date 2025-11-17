@@ -1,5 +1,6 @@
 package adventofcode.utils;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -40,12 +41,10 @@ public class Fn {
         return result;
     }
 
-    public static String between(String s, String prefix, String suffix) {
-        int start = s.indexOf(prefix);
-        if (start < 0) throw new IndexOutOfBoundsException();
-        int end = s.indexOf(suffix, start + prefix.length());
-        if (end < 0) throw new IndexOutOfBoundsException();
-        return s.substring(start + prefix.length(), end);
+    public static String strip(String s, String prefix, String suffix) {
+        int start = s.startsWith(prefix) ? prefix.length() : 0;
+        int end = s.endsWith(suffix) ? s.length() - suffix.length() : s.length();
+        return s.substring(start, end);
     }
 
     public static Stream<MatchResult> findall(String s, String regex) {
@@ -68,13 +67,34 @@ public class Fn {
         return acc;
     }
 
-    public static <T, U, V> Iterable<V> map(Iterable<T> xs, Iterable<U> ys, BiFunction<? super T, ? super U, ? extends V> op) {
+    public static <T, U> List<U> map(T[] vals, Function<? super T, ? extends U> op) {
+        return new AbstractList<U>() {
+            @Override
+            public int size() {
+                return vals.length;
+            }
+
+            @Override
+            public U get(int i) {
+                return op.apply(vals[i]);
+            }
+        };
+    }
+
+    public static <T, U, V> Iterable<V> zip(Iterable<T> xs, Iterable<U> ys, BiFunction<? super T, ? super U, ? extends V> zipper) {
         return () -> {
             Iterator<T> xIt = xs.iterator();
             Iterator<U> yIt = ys.iterator();
             return new Iterator<>() {
-                @Override public boolean hasNext() { return xIt.hasNext() && yIt.hasNext(); }
-                @Override public V next() { return op.apply(xIt.next(), yIt.next()); }
+                @Override
+                public boolean hasNext() {
+                    return xIt.hasNext() && yIt.hasNext();
+                }
+
+                @Override
+                public V next() {
+                    return zipper.apply(xIt.next(), yIt.next());
+                }
             };
         };
     }
@@ -176,32 +196,32 @@ public class Fn {
         return true;
     }
 
-    public static int bsearchFirst(int min, int max, IntUnaryOperator f) {
+    public static int bsearchFirst(int min, int max, IntUnaryOperator op) {
         while (min <= max) {
             int mid = min + (max - min) / 2;
-            int val = f.applyAsInt(mid);
+            int val = op.applyAsInt(mid);
             if (val < 0) {
                 min = mid + 1;
             } else {
                 max = mid - 1;
             }
         }
-        if (f.applyAsInt(min) == 0)
+        if (op.applyAsInt(min) == 0)
             return min;
         throw new NoSuchElementException();
     }
 
-    public static int bsearchLast(int min, int max, IntUnaryOperator f) {
+    public static int bsearchLast(int min, int max, IntUnaryOperator op) {
         while (min <= max) {
             int mid = min + (max - min) / 2;
-            int val = f.applyAsInt(mid);
+            int val = op.applyAsInt(mid);
             if (val > 0) {
                 max = mid - 1;
             } else {
                 min = mid + 1;
             }
         }
-        if (f.applyAsInt(max) == 0)
+        if (op.applyAsInt(max) == 0)
             return max;
         throw new NoSuchElementException();
     }

@@ -7,14 +7,13 @@ import java.util.Set;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.math.IntVec2;
+import adventofcode.utils.geom.Dir4;
+import adventofcode.utils.geom.Point;
 
 @Puzzle(day = 22, name = "Sporifica Virus")
 public class Day22 extends AbstractDay {
-    private static IntVec2[] dirs = { IntVec2.NORTH, IntVec2.EAST, IntVec2.SOUTH, IntVec2.WEST };
-
-    private Set<IntVec2> initialInfected;
-    private IntVec2 start;
+    private Set<Point> initialInfected;
+    private Point start;
 
     @Override
     public void parse(String input) {
@@ -24,28 +23,28 @@ public class Day22 extends AbstractDay {
         for (int y = 0; y < lines.length; y++)
             for (int x = 0; x < lines[y].length(); x++)
                 if (lines[y].charAt(x) == '#')
-                    initialInfected.add(new IntVec2(x, y));
+                    initialInfected.add(new Point(x, y));
 
-        start = new IntVec2((lines[0].length() - 1) / 2, (lines.length - 1) / 2);
+        start = new Point((lines[0].length() - 1) / 2, (lines.length - 1) / 2);
     }
 
     @Override
     public Integer part1() {
-        Set<IntVec2> infected = new HashSet<>(initialInfected);
+        Set<Point> infected = new HashSet<>(initialInfected);
         int infections = 0;
 
-        IntVec2 pos = start;
-        IntVec2 dir = IntVec2.NORTH;
+        Point pos = start;
+        Dir4 dir = Dir4.NORTH;
         for (int i = 0; i < 10000; i++) {
             if (infected.contains(pos)) {
                 infected.remove(pos);
-                dir = dir.rotateRight();
+                dir = dir.right();
             } else {
                 infected.add(pos);
-                dir = dir.rotateLeft();
+                dir = dir.left();
                 infections++;
             }
-            pos = pos.add(dir);
+            pos = pos.neighbour(dir);
         }
 
         return infections;
@@ -53,13 +52,13 @@ public class Day22 extends AbstractDay {
 
     @Override
     public Integer part2() {
-        Map<IntVec2, State> states = new HashMap<>();
-        for (IntVec2 pos : initialInfected)
+        Map<Point, State> states = new HashMap<>();
+        for (Point pos : initialInfected)
             states.put(pos, State.INFECTED);
         int infections = 0;
 
-        IntVec2 pos = start;
-        int dirIndex = 0;
+        Point pos = start;
+        Dir4 dir = Dir4.NORTH;
         for (int i = 0; i < 10000000; i++) {
             State state = states.getOrDefault(pos, State.CLEAN);
             State newState = State.values()[(state.ordinal() + 1) % 4];
@@ -68,8 +67,8 @@ public class Day22 extends AbstractDay {
             if (newState == State.INFECTED)
                 infections++;
 
-            dirIndex = (dirIndex + state.ordinal() + 3) % 4;
-            pos = pos.add(dirs[dirIndex]);
+            dir = dir.right(state.ordinal() - 1);
+            pos = pos.neighbour(dir);
         }
 
         return infections;

@@ -11,8 +11,8 @@ import java.util.function.Function;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import adventofcode.utils.math.IntMath;
-import adventofcode.utils.math.IntMath.BezoutTriple;
+import adventofcode.utils.IntMath;
+import adventofcode.utils.IntMath.BezoutTriple;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 13, name = "Packet Scanners")

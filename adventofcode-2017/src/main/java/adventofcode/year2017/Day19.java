@@ -1,13 +1,12 @@
 package adventofcode.year2017;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.math.IntVec2;
+import adventofcode.utils.collect.Traversable;
+import adventofcode.utils.geom.Dir4;
+import adventofcode.utils.geom.Point;
 
 @Puzzle(day = 19, name = "A Series of Tubes")
 public class Day19 extends AbstractDay {
@@ -23,7 +22,7 @@ public class Day19 extends AbstractDay {
     @Override
     public String part1() {
         StringBuilder seq = new StringBuilder();
-        traverse(pos -> {
+        path().forEach(pos -> {
             char c = charAt(pos);
             if (Character.isLetter(c))
                 seq.append(c);
@@ -32,24 +31,24 @@ public class Day19 extends AbstractDay {
     }
 
     @Override
-    public Integer part2() {
-        List<IntVec2> path = new ArrayList<>();
-        traverse(path::add);
-        return path.size();
+    public Long part2() {
+        return path().count();
     }
 
-    private void traverse(Consumer<IntVec2> action) {
-        IntVec2 pos = new IntVec2(startX, 0);
-        IntVec2 dir = IntVec2.SOUTH;
-        while (charAt(pos) != ' ') {
-            action.accept(pos);
-            if (charAt(pos) == '+')
-                dir = charAt(pos.add(dir.rotateLeft())) != ' ' ? dir.rotateLeft() : dir.rotateRight();
-            pos = pos.add(dir);
-        }
+    private Traversable<Point> path() {
+        return action -> {
+            Point pos = new Point(startX, 0);
+            Dir4 dir = Dir4.SOUTH;
+            while (charAt(pos) != ' ') {
+                action.accept(pos);
+                if (charAt(pos) == '+')
+                    dir = charAt(pos.neighbour(dir.left())) != ' ' ? dir.left() : dir.right();
+                pos = pos.neighbour(dir);
+            }
+        };
     }
 
-    private char charAt(IntVec2 pos) {
+    private char charAt(Point pos) {
         return grid[pos.y].charAt(pos.x);
     }
 }

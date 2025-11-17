@@ -8,7 +8,7 @@ import java.util.function.UnaryOperator;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.collect.ReentrantHashMap;
-import adventofcode.utils.math.IntVec2;
+import adventofcode.utils.geom.Point;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 21, name = "Fractal Art")
@@ -122,21 +122,21 @@ public class Day21 extends AbstractDay {
         public List<Grid> symmetries() {
             return List.of(
                 this,
-                transform(p -> new IntVec2(size - 1 - p.y, p.x)),            // rotate 90
-                transform(p -> new IntVec2(size - 1 - p.x, size - 1 - p.y)), // rotate 180
-                transform(p -> new IntVec2(p.y, size - 1 - p.x)),            // rotate 270
-                transform(p -> new IntVec2(size - 1 - p.x, p.y)),            // flip horizontal
-                transform(p -> new IntVec2(p.x, size - 1 - p.y)),            // flip vertical
-                transform(p -> new IntVec2(p.y, p.x)),                       // flip main diagonal
-                transform(p -> new IntVec2(size - 1 - p.y, size - 1 - p.x))  // flip anti-diagonal
+                transform(p -> new Point(size - 1 - p.y, p.x)),            // rotate 90
+                transform(p -> new Point(size - 1 - p.x, size - 1 - p.y)), // rotate 180
+                transform(p -> new Point(p.y, size - 1 - p.x)),            // rotate 270
+                transform(p -> new Point(size - 1 - p.x, p.y)),            // flip horizontal
+                transform(p -> new Point(p.x, size - 1 - p.y)),            // flip vertical
+                transform(p -> new Point(p.y, p.x)),                       // flip main diagonal
+                transform(p -> new Point(size - 1 - p.y, size - 1 - p.x))  // flip anti-diagonal
             );
         }
 
-        public Grid transform(UnaryOperator<IntVec2> op) {
+        public Grid transform(UnaryOperator<Point> op) {
             Grid result = new Grid(size);
             for (int y = 0; y < size; y++) {
                 for (int x = 0; x < size; x++) {
-                    IntVec2 mapped = op.apply(new IntVec2(x, y));
+                    Point mapped = op.apply(new Point(x, y));
                     result.set(mapped.x, mapped.y, get(x, y));
                 }
             }

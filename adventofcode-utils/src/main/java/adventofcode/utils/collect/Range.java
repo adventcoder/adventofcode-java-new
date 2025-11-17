@@ -1,11 +1,9 @@
 package adventofcode.utils.collect;
 
-import java.util.AbstractList;
-import java.util.PrimitiveIterator;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import it.unimi.dsi.fastutil.ints.AbstractIntList;
+import it.unimi.dsi.fastutil.ints.IntListIterator;
 
-public class Range extends AbstractList<Integer> {
+public class Range extends AbstractIntList {
     private final int start;
     private final int stop;
     private final int step;
@@ -42,39 +40,35 @@ public class Range extends AbstractList<Integer> {
     }
 
     @Override
-    public Integer get(int i) {
+    public int getInt(int i) {
         if (i < 0 || i >= size())
             throw new IndexOutOfBoundsException();
         return start + i * step;
     }
 
     @Override
-    public boolean contains(Object obj) {
-        if (!(obj instanceof Integer)) return false;
-        int val = (Integer) obj;
+    public boolean contains(int n) {
         if (step > 0) {
-            if (val >= start && val < stop) return false;
+            if (!(n >= start && n < stop)) return false;
         } else {
-            if (val <= start && val > stop) return false;
+            if (!(n <= start && n > stop)) return false;
         }
-        return (val - start) % step == 0;
+        return (n - start) % step == 0;
     }
 
     @Override
-    public int indexOf(Object obj) {
-        if (!contains(obj)) return -1;
-        int val = (Integer) obj;
-        return (val - start) / step;
+    public int indexOf(int n) {
+        return contains(n) ? (n - start) / step : -1;
     }
 
     @Override
-    public int lastIndexOf(Object obj) {
-        return indexOf(obj);
+    public int lastIndexOf(int n) {
+        return indexOf(n);
     }
 
     @Override
-    public PrimitiveIterator.OfInt iterator() {
-        return new PrimitiveIterator.OfInt() {
+    public IntListIterator iterator() {
+        return new IntListIterator() {
             private int n = start;
 
             @Override
@@ -83,22 +77,33 @@ public class Range extends AbstractList<Integer> {
             }
 
             @Override
+            public boolean hasPrevious() {
+                return n != start;
+            }
+
+            @Override
             public int nextInt() {
                 int curr = n;
                 n += step;
                 return curr;
             }
+
+            @Override
+            public int previousInt() {
+                n -= step;
+                return n;
+            }
+
+            @Override
+            public int nextIndex() {
+                return (n - start) / step;
+            }
+
+            @Override
+            public int previousIndex() {
+                return nextIndex() - 1;
+            }
         };
-    }
-
-    @Override
-    public Stream<Integer> stream() {
-        return intStream().boxed();
-    }
-
-    public IntStream intStream() {
-        return IntStream.iterate(start, n -> n + step)
-            .takeWhile(n -> step > 0 ? n < stop : n > stop);
     }
 
     public int sum() {

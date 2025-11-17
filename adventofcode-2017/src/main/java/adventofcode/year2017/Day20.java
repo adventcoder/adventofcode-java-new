@@ -3,62 +3,68 @@ package adventofcode.year2017;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
+import adventofcode.utils.IntMath;
+import adventofcode.utils.collect.DefaultHashMap;
+import adventofcode.utils.collect.DefaultMap;
+import adventofcode.utils.collect.IntArrays;
 import adventofcode.utils.collect.Range;
-import adventofcode.utils.math.IntMath;
-import adventofcode.utils.math.IntVec3;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntIntPair;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 20, name = "Particle Swarm")
 public class Day20 extends AbstractDay {
+    public static void main(String[] args) throws Exception {
+        main(Day20.class, args);
+    }
     private List<Path> paths;
 
     @Override
     public void parse(String input) {
         paths = new ArrayList<>();
-        for (String line : input.split("\n")) {
-            IntVec3 p = IntVec3.parse(Fn.between(line, "p=<", ">"), ",");
-            IntVec3 v = IntVec3.parse(Fn.between(line, "v=<", ">"), ",");
-            IntVec3 a = IntVec3.parse(Fn.between(line, "a=<", ">"), ",");
-            paths.add(Path.ofParticle(p, v, a));
-        }
+        for (String line : input.split("\n"))
+            paths.add(Path.parse(line));
     }
 
     @Override
     public Integer part1() {
         return IntStream.range(0, paths.size()).boxed()
-            .min(Comparator.comparing(i -> paths.get(i))).orElse(null);
+            .min(Comparator.comparing(i -> paths.get(i)))
+            .orElse(null);
     }
 
     @Override
     public Integer part2() {
-        Map<Integer, List<List<Integer>>> collisions = new HashMap<>();
+        DefaultMap<Integer, List<IntIntPair>> collisions = new DefaultHashMap<>(k -> new ArrayList<>());
         for (int i = 0; i < paths.size(); i++) {
             for (int j = i + 1; j < paths.size(); j++) {
-                Path relativePath = paths.get(i).subtract(paths.get(j));
-                for (int t : relativePath.findPotentialRoots()) {
-                    if (t >= 0 && relativePath.isRoot(t)) {
-                        collisions.computeIfAbsent(t, k -> new ArrayList<>())
-                            .add(List.of(i, j));
+                Path relPath = paths.get(i).subtract(paths.get(j));
+                for (int t : relPath.findPotentialRoots()) {
+                    if (t >= 0 && relPath.isRoot(t)) {
+                        collisions.getOrCompute(t).add(IntIntPair.of(i, j));
                     }
                 }
             }
         }
 
-        Set<Integer> alive = new HashSet<>(new Range(paths.size()));
-        for (int t : Fn.sorted(collisions.keySet())) {
-            Set<Integer> toRemove = new HashSet<>();
-            for (List<Integer> coll : collisions.get(t)) {
-                if (alive.containsAll(coll))
-                    toRemove.addAll(coll);
+        IntSet alive = new IntOpenHashSet(new Range(paths.size()));
+        for (Integer t : Fn.sorted(collisions.keySet())) {
+            IntList toRemove = new IntArrayList();
+            for (IntIntPair coll : collisions.get(t)) {
+                if (alive.contains(coll.leftInt()) && alive.contains(coll.rightInt())) {
+                    toRemove.add(coll.leftInt());
+                    toRemove.add(coll.rightInt());
+                }
             }
             alive.removeAll(toRemove);
         }
@@ -67,57 +73,113 @@ public class Day20 extends AbstractDay {
     }
 
     @AllArgsConstructor
-    public static class Path implements Comparable<Path> {
-        private final IntVec3 A;
-        private final IntVec3 B;
-        private final IntVec3 C;
+    private static class Path implements Comparable<Path> {
+        public Vector pos;
+        public Vector vel;
+        public Vector acc;
 
-        public static Path ofParticle(IntVec3 initialPos, IntVec3 initialVel, IntVec3 acc) {
-            // V(t) = V(t-1) + A
-            //      = ...
-            //      = V0 + A t
-            //
-            // P(t) = P(T-1) + V(t)
-            //      = P(T-1) + V0 + A t
-            //      = ...
-            //      = P0 + V0 t + A t(t+1)/2
-            //      = P0 + (V0+A/2) t + A/2 t^2
-            //
-            return new Path(acc, initialVel.multiply(2).add(acc), initialPos.multiply(2));
+        public static Path parse(String line) {
+            Map<String, Vector> vals = new HashMap<>();
+            for (String s : line.split(", ")) {
+                String[] parts = s.split("=");
+                vals.put(parts[0].trim(), Vector.parse(parts[1]));
+            }
+            return newton(vals.get("p"), vals.get("v"), vals.get("a"));
+        }
+
+        public static Path newton(Vector pos, Vector vel, Vector acc) {
+            // P(t) = P + V t + A t(t+1)/2
+            return new Path(pos.mul(2), acc.addMul(vel, 2), acc);
         }
 
         @Override
         public int compareTo(Path other) {
-            // Compare by closeness to the origin as t tends to infinity.
-            //
-            // The t^2 term will dominate in the long term.
-            // But in the case where there are multiple paths with the same t^2 term, then the t term needs to be considered and so forth.
-            //
-            int cmp = Integer.compare(A.abs(), other.A.abs());
+            int cmp = Integer.compare(acc.abs(), other.acc.abs());
             if (cmp == 0) {
-                cmp = Integer.compare(B.abs(), other.B.abs());
+                cmp = Integer.compare(vel.abs(), other.vel.abs());
                 if (cmp == 0)
-                    cmp = Integer.compare(C.abs(), other.C.abs());
+                    cmp = Integer.compare(pos.abs(), other.pos.abs());
             }
             return cmp;
         }
 
         public Path subtract(Path other) {
-            return new Path(A.subtract(other.A), B.subtract(other.B), C.subtract(other.C));
-        }
-
-        public int[] findPotentialRoots() {
-            if (!A.isZero()) {
-                return IntMath.findRoots(A.dot(A), B.dot(A), C.dot(A));
-            } else if (!B.isZero()) {
-                return IntMath.findRoots(B.dot(B), C.dot(B));
-            } else {
-                return IntMath.findRoots(C.dot(C));
-            }
+            return new Path(pos.subtract(other.pos), vel.subtract(other.vel), acc.subtract(other.acc));
         }
 
         public boolean isRoot(int t) {
-            return A.multiply(t*t).add(B.multiply(t)).add(C).isZero();
+            return pos.addMul(vel, t).addMul(acc, t*t).abs() == 0;
+        }
+
+        public int[] findPotentialRoots() {
+            // it's much faster to solve the projection and filter out invalid roots afterwards
+            if (acc.abs() != 0) {
+                return solveQuadratic(acc.dot(acc), vel.dot(acc), pos.dot(acc));
+            } else if (vel.abs() != 0) {
+                return solveLinear(vel.dot(vel), pos.dot(vel));
+            } else {
+                return solveConstant(pos.dot(pos));
+            }
+        }
+
+        private static int[] solveQuadratic(int a, int b, int c) {
+            int disc = b*b - 4*a*c;
+            if (disc == 0) {
+                return solveLinear(2*a, b);
+            } else if (disc > 0) {
+                int k = IntMath.floorSqrt(disc);
+                if (k * k == disc)
+                    return IntArrays.concat(solveLinear(2*a, b + k), solveLinear(2*a, b - k));
+            }
+            return new int[0];
+        }
+
+        private static int[] solveLinear(int a, int b) {
+            if (-b % a == 0)
+                return new int[] { -b / a };
+            return new int[0];
+        }
+
+        private static int[] solveConstant(int a) {
+            if (a == 0)
+                throw new IllegalArgumentException("zero polynomial");
+            return new int[0];
+        }
+    }
+
+    //TODO: move into utils math package?
+    @AllArgsConstructor
+    private static class Vector {
+        public final int x;
+        public final int y;
+        public final int z;
+
+        public static Vector parse(String s) {
+            String[] tokens = Fn.strip(s.trim(), "<", ">").split(",");
+            int x = Integer.parseInt(tokens[0]);
+            int y = Integer.parseInt(tokens[1]);
+            int z = Integer.parseInt(tokens[2]);
+            return new Vector(x, y, z);
+        }
+
+        public int abs() {
+            return Math.abs(x) + Math.abs(y) + Math.abs(z);
+        } 
+
+        public Vector subtract(Vector o) {
+            return new Vector(x - o.x, y - o.y, z - o.z);
+        }
+
+        public Vector addMul(Vector v, int n) {
+            return new Vector(x + v.x*n, y + v.y*n, z + v.z*n);
+        }
+
+        public Vector mul(int n) {
+            return new Vector(x * n, y * n, z * n);
+        }
+
+        public int dot(Vector v) {
+            return x*v.x + y*v.y + z*v.z;
         }
     }
 }
