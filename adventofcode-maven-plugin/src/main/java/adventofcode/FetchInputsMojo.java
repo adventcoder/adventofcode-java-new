@@ -27,7 +27,7 @@ public class FetchInputsMojo extends AbstractMojo {
     private int year;
 
     @Parameter(defaultValue = "${aoc.session}", required = true, readonly = true)
-    private String sessionToken;
+    private String session;
 
     @Parameter(defaultValue = "adventofcode/**/Day*.java", required = true, readonly = true)
     private String sourceFilePattern;
@@ -37,10 +37,9 @@ public class FetchInputsMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
-        SourceFileParser sourceFileParser = new SourceFileParser();
-        Session session = new Session(sessionToken);
-
         try {
+            SourceFileParser sourceFileParser = new SourceFileParser();
+
             List<File> sourceFiles = FileUtils.getFiles(sourceDirectory, sourceFilePattern, null);
             for (File sourceFile : sourceFiles) {
 
@@ -49,14 +48,14 @@ public class FetchInputsMojo extends AbstractMojo {
 
                 PuzzleInfo puzzleInfo = parsedSourceFile.getPuzzleInfo();
                 if (puzzleInfo != null)
-                    fetchInput(session, puzzleInfo.getDay());
+                    fetchInput(puzzleInfo.getDay());
             }
         } catch (Exception e) {
-            throw new MojoExecutionException("Failed downloading inputs", e);
+            throw new MojoExecutionException("Failed fetching inputs", e);
         }
     }
 
-    private void fetchInput(Session session, int day) throws IOException {
+    private void fetchInput(int day) throws IOException {
         Path inputPath = resourceDirectory.toPath().resolve(String.format(inputPathFormat, year, day));
         if (Files.exists(inputPath)) {
             getLog().info("Input already exists: " + inputPath);
@@ -67,7 +66,7 @@ public class FetchInputsMojo extends AbstractMojo {
 
         Files.createDirectories(inputPath.getParent());
         try (OutputStream out = Files.newOutputStream(inputPath)) {
-            session.downloadInput(year, day, out);
+            new Client(session).downloadInput(year, day, out);
         } catch (IOException ioe) {
             Files.deleteIfExists(inputPath);
             throw ioe;

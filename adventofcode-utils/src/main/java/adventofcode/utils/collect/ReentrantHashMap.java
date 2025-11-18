@@ -5,7 +5,8 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-// A version of HashMap that doesn't throw ConcurrentModificationException on compute methods.
+//TODO: I don't particular like this. ideally i could implement an @Memoization annotation somehow but that seems impossible in java.
+// A version of HashMap that doesn't throw ConcurrentModificationException when 'compute' methods are reentered.
 public class ReentrantHashMap<K, V> extends HashMap<K, V> {
     @Override
     public V computeIfAbsent(K k, Function<? super K, ? extends V> mappingFunction) {

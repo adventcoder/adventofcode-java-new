@@ -46,7 +46,7 @@ public class IntArrays {
 
     public static void rotateLeft(int[] arr, int n) {
         if (n == 0) return;
-        n = Math.floorMod(arr.length, n);
+        n = Math.floorMod(n, arr.length);
         reverse(arr, 0, n);
         reverse(arr, n, arr.length);
         reverse(arr, 0, arr.length);

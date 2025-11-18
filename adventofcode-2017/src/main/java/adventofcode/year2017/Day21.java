@@ -70,6 +70,7 @@ public class Day21 extends AbstractDay {
         return newGrid;
     }
 
+    //TODO: create strided array utils class?
     @AllArgsConstructor
     public static class Grid {
         private final char[] data;

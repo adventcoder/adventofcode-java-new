@@ -12,14 +12,14 @@ import java.nio.charset.StandardCharsets;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class Session {
-    private final String token;
+public class Client {
+    private final String session;
 
     public void downloadInput(int year, int day, OutputStream out) throws IOException {
         URI uri = URI.create(String.format("https://adventofcode.com/%d/day/%d/input", year, day));
 
         HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
-        conn.setRequestProperty("Cookie", "session=" + token);
+        conn.setRequestProperty("Cookie", "session=" + session);
         conn.setInstanceFollowRedirects(false);
 
         if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
