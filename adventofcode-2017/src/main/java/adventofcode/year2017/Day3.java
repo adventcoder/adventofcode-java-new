@@ -5,7 +5,6 @@ import java.util.HashMap;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import adventofcode.utils.IntMath;
 import adventofcode.utils.geom.Point;
 
 @Puzzle(day = 3, name = "Spiral Memory")
@@ -36,7 +35,7 @@ public class Day3 extends AbstractDay {
     }
 
     private Point pos(int i) {
-        int r = (IntMath.floorSqrt(i) + 1) / 2;
+        int r = ((int) Math.sqrt(i) + 1) / 2;
         int size = 2*r;
         int offset = i - (size - 1)*(size - 1);
         int side = offset / size;

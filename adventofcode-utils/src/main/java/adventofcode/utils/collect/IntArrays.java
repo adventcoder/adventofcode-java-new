@@ -55,4 +55,45 @@ public class IntArrays {
     public static void rotateRight(int[] arr, int n) {
         rotateLeft(arr, -n);
     }
+
+    public static boolean nextPermutation(int[] arr) {
+        if (arr.length < 2) return false;
+
+        // Find the longest non-increasing suffix
+        int i = arr.length - 2;
+        while (i >= 0 && arr[i] >= arr[i + 1])
+            i--;
+        if (i < 0)
+            return false;
+
+        // Find the rightmost element larger than the pivot
+        int j = arr.length - 1;
+        while (arr[j] <= arr[i])
+            j--;
+
+        swap(arr, i, j);
+        reverse(arr, i + 1, arr.length);
+        return true;
+    }
+
+    public static boolean prevPermutation(int[] arr) {
+        if (arr.length < 2) return false;
+
+        // Find the longest non-decreasing suffix
+        int i = arr.length - 2;
+        while (i >= 0 && arr[i] <= arr[i + 1])
+            i--;
+        if (i < 0)
+            return false;
+
+        // Find the rightmost element smaller than the pivot
+        int j = arr.length - 1;
+        while (arr[j] >= arr[i])
+            j--;
+
+        swap(arr, i, j);
+        reverse(arr, i + 1, arr.length);
+
+        return true;
+    }
 }

@@ -3,16 +3,17 @@ package adventofcode.year2018;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.collect.Counter;
-import adventofcode.utils.collect.DefaultHashMap;
-import adventofcode.utils.collect.DefaultMap;
+import adventofcode.utils.collect.Range;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 4, name = "Repose Record")
@@ -22,7 +23,7 @@ public class Day4 extends AbstractDay {
     }
 
     private Counter<Integer> totalMinutes = new Counter<>();
-    private DefaultMap<Integer, Counter<Integer>> minutes = new DefaultHashMap<>(k -> new Counter<>());
+    private Map<Integer, Counter<Integer>> minutes = new HashMap<>();
 
     @Override
     public void parse(String input) {
@@ -47,21 +48,21 @@ public class Day4 extends AbstractDay {
 
     private void addNap(Integer guardId, int startMinute, int endMinute) {
         totalMinutes.add(guardId, endMinute - startMinute);
-        for (int m = startMinute; m < endMinute; m++)
-            minutes.getOrCompute(guardId).add(m);
+        minutes.computeIfAbsent(guardId, k -> new Counter<>())
+            .addAll(new Range(startMinute, endMinute));
     }
 
     @Override
     public Integer part1() {
-        int guardId = totalMinutes.mostCommon();
-        int minute = minutes.get(guardId).mostCommon();
+        int guardId = totalMinutes.mostCommonValue();
+        int minute = minutes.get(guardId).mostCommonValue();
         return guardId * minute;
     }
 
     @Override
     public Integer part2() {
         int guardId = Fn.argMax(minutes.keySet(), gid -> Fn.max(minutes.get(gid).counts()));
-        int minute = minutes.get(guardId).mostCommon();
+        int minute = minutes.get(guardId).mostCommonValue();
         return guardId * minute;
     }
 

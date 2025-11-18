@@ -94,7 +94,7 @@ public class Counter<T> implements Iterable<Counter.Entry<T>> {
         return counts.getInt(val);
     }
 
-    public T mostCommon() {
+    public T mostCommonValue() {
         int maxCount = 0;
         T maxVal = null;
         for (T val : valueSet()) {
@@ -107,7 +107,7 @@ public class Counter<T> implements Iterable<Counter.Entry<T>> {
         return maxVal;
     }
 
-    public T leastCommon() {
+    public T leastCommonValue() {
         int minCount = Integer.MAX_VALUE;
         T minVal = null;
         for (T val : valueSet()) {

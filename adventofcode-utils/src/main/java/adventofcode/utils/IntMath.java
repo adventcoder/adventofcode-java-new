@@ -50,8 +50,4 @@ public class IntMath {
         public final int x;
         public final int y;
     }
-
-    public static int floorSqrt(int x) {
-        return (int) Math.sqrt(x);
-    }
 }
