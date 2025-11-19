@@ -27,9 +27,20 @@ public abstract class AbstractDay implements Callable<Integer> {
     private File inputFile;
 
     public AbstractDay() {
-        Puzzle puzzle = Objects.requireNonNull(getClass().getAnnotation(Puzzle.class));
+        Puzzle puzzle = Objects.requireNonNull(getPuzzle());
         day = puzzle.day();
         name = puzzle.name();
+    }
+
+    private Puzzle getPuzzle() {
+        Class<?> curr = getClass();
+        while (curr != AbstractDay.class) {
+            Puzzle puzzle = curr.getAnnotation(Puzzle.class);
+            if (puzzle != null)
+                return puzzle;
+            curr = curr.getSuperclass();
+        }
+        return null;
     }
 
     public String title() {
@@ -48,12 +59,11 @@ public abstract class AbstractDay implements Callable<Integer> {
         System.out.println("  Took " + formatTime(parseTime));
 
         PartFunction[] partFunctions = { this::part1, this::part2 };
-        for (int i = 0; i < partFunctions.length; i++) {
-            int part = i + 1;
+        for (int part = 1; part <= 2; part++) {
             if (partSupported(part)) {
                 System.out.println();
                 System.out.println("- Part " + part);
-                PartResult partResult = stopwatch.resumeFor(partFunctions[i]);
+                PartResult partResult = stopwatch.resumeFor(partFunctions[part - 1]);
                 System.out.println(formatAnswer("  Answer: ", partResult.answer));
                 System.out.println("  Took " + formatTime(partResult.time));
             }
@@ -82,7 +92,7 @@ public abstract class AbstractDay implements Callable<Integer> {
 
     private String formatTime(long time) {
         if (time >= 1000_000_000L) {
-            return String.format("%.3f s", time * 1e-9);
+            return String.format("%d s %d ms", time / 1000_000_000L, time % 1000_000_000L / 1000_000L);
         } else {
             return String.format("%.3f ms", time * 1e-6);
         }
@@ -99,7 +109,7 @@ public abstract class AbstractDay implements Callable<Integer> {
     }
 
     public String getInputName() {
-        return getClass().getSimpleName() + ".txt";
+        return String.format("Day%d.txt", day);
     }
 
     public void parse(String input) {
@@ -125,16 +135,16 @@ public abstract class AbstractDay implements Callable<Integer> {
         }
     }
 
-    public static void main(Class<? extends AbstractDay> dayClass, String[] args) throws Exception {
-        AbstractDay day = dayClass.getConstructor().newInstance();
-        System.exit(new CommandLine(day).execute(args));
-    }
-
     public static void main(String[] args) throws Exception {
-        main(getMainClass(), args);
+        Class<?> mainClass = Class.forName(System.getProperty("sun.java.command"));
+        main(mainClass.asSubclass(AbstractDay.class), args);
     }
 
-    private static Class<? extends AbstractDay> getMainClass() throws ClassNotFoundException {
-        return Class.forName(System.getProperty("sun.java.command")).asSubclass(AbstractDay.class);
+    public static void main(Class<? extends AbstractDay> dayClass, String[] args) throws Exception {
+        System.exit(new CommandLine(newInstance(dayClass)).execute(args));
+    }
+
+    public static AbstractDay newInstance(Class<? extends AbstractDay> dayClass) throws Exception {
+        return Memoized.Interceptor.subclass(dayClass).getConstructor().newInstance();
     }
 }

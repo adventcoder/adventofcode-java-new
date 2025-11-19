@@ -21,15 +21,18 @@ public class Day1 extends AbstractDay {
 
     @Override
     public Integer part1() {
-        freqs = new int[diffs.length + 1];
-        for (int i = 0; i < diffs.length; i++)
-            freqs[i + 1] = freqs[i] + diffs[i];
-        return freqs[diffs.length];
+        freqs = new int[diffs.length];
+        int freq = 0;
+        for (int i = 0; i < diffs.length; i++) {
+            freq += diffs[i];
+            freqs[i] = freq;
+        }
+        return freq;
     }
 
     @Override
     public Integer part2() {
-        int step = freqs[diffs.length];
+        int step = freqs[freqs.length - 1];
 
         // Every value increases by step every cycle.
         // Assuming there are no duplicate values in the first cycle, then our job is to find the first pair of frequencies such that freq1 + n*step = freq2, which can only happen if freq1 = freq2 mod step.

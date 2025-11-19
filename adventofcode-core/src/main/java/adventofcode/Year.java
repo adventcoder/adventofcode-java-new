@@ -25,7 +25,7 @@ public class Year implements Callable<Integer> {
 
         List<AbstractDay> days = new ArrayList<>();
         for (Class<? extends AbstractDay> dayClass : dayClasses)
-            days.add(dayClass.getConstructor().newInstance());
+            days.add(AbstractDay.newInstance(dayClass));
 
         days.sort(Comparator.comparing(day -> day.day));
 

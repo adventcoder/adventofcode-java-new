@@ -6,15 +6,18 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 
 import adventofcode.AbstractDay;
+import adventofcode.Memoized;
 import adventofcode.Puzzle;
-import adventofcode.utils.collect.ReentrantHashMap;
 import adventofcode.utils.geom.Point;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 21, name = "Fractal Art")
 public class Day21 extends AbstractDay {
+    public static void main(String[] args) throws Exception {
+        main(Day21.class, args);
+    }
+
     private Map<Grid, Grid> rules = new HashMap<>();
-    private Map<List<Object>, Integer> countMemo = new ReentrantHashMap<>();
 
     @Override
     public void parse(String input) {
@@ -40,17 +43,19 @@ public class Day21 extends AbstractDay {
         return count(Grid.parse(".#./..#/###"), 18);
     }
 
-    private int count(Grid grid, int n) {
-        return countMemo.computeIfAbsent(List.of(grid, n), k -> {
-            if (n == 0)
-                return grid.count('#');
-            Grid newGrid = expand(expand(expand(grid)));
-            int total = 0;
-            for (int i = 0; i < 3; i++)
-                for (int j = 0; j < 3; j++)
-                    total += count(newGrid.slice(i * 3, j * 3, 3), n - 3);
-            return total;
-        });
+    @Memoized
+    protected int count(Grid grid, int n) {
+        if (n < 3) {
+            while (n > 0)
+                grid = expand(grid);
+            return grid.count('#');
+        }
+        Grid newGrid = expand(expand(expand(grid)));
+        int total = 0;
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                total += count(newGrid.slice(i * 3, j * 3, 3), n - 3);
+        return total;
     }
 
     private Grid expand(Grid grid) {
