@@ -3,11 +3,12 @@ package adventofcode;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import picocli.CommandLine;
@@ -36,7 +37,55 @@ public abstract class AbstractDay implements Callable<Integer> {
     }
 
     public Integer call() throws Exception {
-        return new DayCallable(this).call();
+        System.out.println(title());
+
+        String input = getInput();
+        Stopwatch stopwatch = new Stopwatch();
+
+        System.out.println();
+        System.out.println("- Parsing input");
+        long parseTime = stopwatch.resumeFor(this::parse, input);
+        System.out.println("  Took " + formatTime(parseTime));
+
+        PartFunction[] partFunctions = { this::part1, this::part2 };
+        for (int i = 0; i < partFunctions.length; i++) {
+            int part = i + 1;
+            if (partSupported(part)) {
+                System.out.println();
+                System.out.println("- Part " + part);
+                PartResult partResult = stopwatch.resumeFor(partFunctions[i]);
+                System.out.println(formatAnswer("  Answer: ", partResult.answer));
+                System.out.println("  Took " + formatTime(partResult.time));
+            }
+        }
+
+        System.out.println();
+        System.out.println("Took in total " + formatTime(stopwatch.time()));
+
+        return 0;
+    }
+
+    private String formatAnswer(String prefix, Object answer) {
+        String answerString = answerToString(answer, "<No answer>");
+        return prefix + String.join("\n" + " ".repeat(prefix.length()), answerString.split("\n"));
+    }
+
+    private String answerToString(Object answer, String defaultString) {
+        if (answer instanceof Optional<?> opt)
+            return opt.map(Object::toString).orElse(defaultString);
+        if (answer instanceof OptionalInt optInt)
+            return optInt.isPresent() ? Integer.toString(optInt.getAsInt()) : defaultString;
+        if (answer instanceof OptionalLong optLong)
+            return optLong.isPresent() ? Long.toString(optLong.getAsLong()) : defaultString;
+        return answer != null ? answer.toString() : defaultString;
+    }
+
+    private String formatTime(long time) {
+        if (time >= 1000_000_000L) {
+            return String.format("%.3f s", time * 1e-9);
+        } else {
+            return String.format("%.3f ms", time * 1e-6);
+        }
     }
 
     public String getInput() throws IOException {
@@ -64,32 +113,16 @@ public abstract class AbstractDay implements Callable<Integer> {
         throw new UnsupportedOperationException();
     }
 
+    public boolean partSupported(int part) throws NoSuchMethodException {
+        Method method = getClass().getMethod("part" + part);
+        return !method.getDeclaringClass().equals(AbstractDay.class);
+    }
+
     protected void debug(Object... args) {
         if (debug) {
             String message = Stream.of(args).map(Object::toString).collect(Collectors.joining(" "));
             System.out.println("  [DEBUG] " + message);
         }
-    }
-
-    public int[] getAllParts() {
-        return IntStream.rangeClosed(1, 2).filter(this::supportsPart).toArray();
-    }
-
-    public boolean supportsPart(int part) {
-        try {
-            Method method = this.getClass().getMethod("part" + part);
-            return !method.getDeclaringClass().equals(AbstractDay.class);
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
-    }
-
-    public PartFunction partFunction(int part) {
-        if (part == 1)
-            return this::part1;
-        if (part == 2)
-            return this::part2;
-        throw new NoSuchElementException();
     }
 
     public static void main(Class<? extends AbstractDay> dayClass, String[] args) throws Exception {
