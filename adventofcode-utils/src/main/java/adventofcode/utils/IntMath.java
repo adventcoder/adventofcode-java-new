@@ -50,4 +50,33 @@ public class IntMath {
         public final int x;
         public final int y;
     }
+
+    public static int rowReduce(int[][] M, int maxRank) {
+        for (int r = 0; r < maxRank; r++) {
+            boolean foundPivot = false;
+            for (int i = r; i < M.length; i++) {
+                if (M[i][r] != 0) {
+                    int[] t = M[r];
+                    M[r] = M[i];
+                    M[i] = t;
+                    foundPivot = true;
+                    break;
+                }
+            }
+            if (!foundPivot)
+                return r;
+            for (int i = 0; i < M.length; i++) {
+                if (i != r && M[i][r] != 0) {
+                    int g = gcd(M[r][r], M[i][r]);
+                    int a = M[r][r] / g;
+                    int b = M[i][r] / g;
+                    if (i < r)
+                        M[i][i] *= a;
+                    for (int j = r; j < M[i].length; j++)
+                        M[i][j] = a * M[i][j] - b * M[r][j];
+                }
+            }
+        }
+        return maxRank;
+    }
 }
