@@ -1,5 +1,6 @@
 package adventofcode;
 
+import com.github.javaparser.ParserConfiguration.LanguageLevel;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
@@ -10,10 +11,19 @@ import com.github.javaparser.ast.expr.Name;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class AstUtils {
+public class ParseUtils {
+    public static LanguageLevel mapLanguageLevel(Runtime.Version sourceVersion) {
+        return switch (sourceVersion.feature()) {
+            case 11 -> LanguageLevel.JAVA_11;
+            case 17 -> LanguageLevel.JAVA_17;
+            case 21 -> LanguageLevel.JAVA_21;
+            default -> throw new IllegalArgumentException("Unsupported source version: " + sourceVersion);
+        };
+    }
+
     public static AnnotationExpr getPuzzleAnnotation(TypeDeclaration<?> type, CompilationUnit cu) {
         for (AnnotationExpr anno : type.getAnnotations())
-            if (AstUtils.nameMatches(anno.getName(), "adventofcode.Puzzle", cu))
+            if (ParseUtils.nameMatches(anno.getName(), "adventofcode.Puzzle", cu))
                 return anno;
         return null;
     }
