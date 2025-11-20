@@ -11,6 +11,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import adventofcode.decorators.Decorators;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -33,18 +34,11 @@ public abstract class AbstractDay implements Callable<Integer> {
     }
 
     private Puzzle getPuzzle() {
-        Class<?> curr = getClass();
-        while (curr != AbstractDay.class) {
-            Puzzle puzzle = curr.getAnnotation(Puzzle.class);
-            if (puzzle != null)
-                return puzzle;
-            curr = curr.getSuperclass();
-        }
-        return null;
+        return Decorators.undecorate(getClass()).getAnnotation(Puzzle.class);
     }
 
     public String title() {
-        return "Day " + day + ": " + name;
+        return String.format("Day %d: %s", day, name);
     }
 
     public Integer call() throws Exception {
@@ -109,7 +103,7 @@ public abstract class AbstractDay implements Callable<Integer> {
     }
 
     public String getInputName() {
-        return String.format("Day%d.txt", day);
+        return Decorators.undecorate(getClass()).getSimpleName() + ".txt";
     }
 
     public void parse(String input) {
@@ -141,10 +135,7 @@ public abstract class AbstractDay implements Callable<Integer> {
     }
 
     public static void main(Class<? extends AbstractDay> dayClass, String[] args) throws Exception {
-        System.exit(new CommandLine(newInstance(dayClass)).execute(args));
-    }
-
-    public static AbstractDay newInstance(Class<? extends AbstractDay> dayClass) throws Exception {
-        return Memoized.Interceptor.subclass(dayClass).getConstructor().newInstance();
+        AbstractDay day = Decorators.decorate(dayClass).getConstructor().newInstance();
+        System.exit(new CommandLine(day).execute(args));
     }
 }

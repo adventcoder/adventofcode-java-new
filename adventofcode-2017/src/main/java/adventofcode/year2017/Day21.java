@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 
 import adventofcode.AbstractDay;
-import adventofcode.Memoized;
 import adventofcode.Puzzle;
+import adventofcode.decorators.Memoized;
 import adventofcode.utils.geom.Point;
 import lombok.AllArgsConstructor;
 

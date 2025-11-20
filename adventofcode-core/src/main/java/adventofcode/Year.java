@@ -4,6 +4,8 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import org.reflections.Reflections;
 
+import adventofcode.decorators.Decorators;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -15,7 +17,7 @@ public class Year implements Callable<Integer> {
     public static void main(String[] args) throws Exception {
         CommandLine cmd = new CommandLine(new Year());
         for (AbstractDay day : getDays())
-            cmd.addSubcommand(day.getClass().getSimpleName(), day);
+            cmd.addSubcommand(Decorators.undecorate(day.getClass()).getSimpleName(), day);
         System.exit(cmd.execute(args));
     }
 
@@ -25,7 +27,7 @@ public class Year implements Callable<Integer> {
 
         List<AbstractDay> days = new ArrayList<>();
         for (Class<? extends AbstractDay> dayClass : dayClasses)
-            days.add(AbstractDay.newInstance(dayClass));
+            days.add(Decorators.decorate(dayClass).getConstructor().newInstance());
 
         days.sort(Comparator.comparing(day -> day.day));
 
