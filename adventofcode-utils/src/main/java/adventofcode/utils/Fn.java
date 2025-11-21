@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -144,10 +143,6 @@ public class Fn {
         return argMin;
     }
 
-    public static <K, V extends Comparable<V>> K argMin(Map<K, V> map) {
-        return argMin(map.keySet(), map::get);
-    }
-
     public static <T, U extends Comparable<U>> T argMax(Iterable<T> domain, Function<? super T, ? extends U> expr) {
         Iterator<T> it = domain.iterator();
         T argMax = it.next();
@@ -161,10 +156,6 @@ public class Fn {
             }
         }
         return argMax;
-    }
-
-    public static <K, V extends Comparable<V>> K argMax(Map<K, V> map) {
-        return argMax(map.keySet(), map::get);
     }
 
     public static <T> int sum(Iterable<T> domain, ToIntFunction<? super T> expr) {

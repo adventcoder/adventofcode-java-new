@@ -49,20 +49,20 @@ public class Day4 extends AbstractDay {
     private void addNap(Integer guardId, int startMinute, int endMinute) {
         totalMinutes.add(guardId, endMinute - startMinute);
         minutes.computeIfAbsent(guardId, k -> new Counter<>())
-            .addAll(new Range(startMinute, endMinute));
+            .addAll(new Range(startMinute, endMinute), 1);
     }
 
     @Override
     public Integer part1() {
-        int guardId = totalMinutes.mostCommonValue();
-        int minute = minutes.get(guardId).mostCommonValue();
+        int guardId = totalMinutes.mostFrequentKey();
+        int minute = minutes.get(guardId).mostFrequentKey();
         return guardId * minute;
     }
 
     @Override
     public Integer part2() {
-        int guardId = Fn.argMax(minutes.keySet(), gid -> Fn.max(minutes.get(gid).counts()));
-        int minute = minutes.get(guardId).mostCommonValue();
+        int guardId = Fn.argMax(minutes.keySet(), gid -> Fn.max(minutes.get(gid).values()));
+        int minute = minutes.get(guardId).mostFrequentKey();
         return guardId * minute;
     }
 

@@ -1,10 +1,8 @@
 package adventofcode.year2018;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -12,7 +10,7 @@ import java.util.Set;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import lombok.AllArgsConstructor;
+import adventofcode.utils.collect.Counter;
 import picocli.CommandLine.Option;
 
 @Puzzle(day = 7, name = "The Sum of Its Parts")
@@ -40,71 +38,67 @@ public class Day7 extends AbstractDay {
 
     @Override
     public String part1() {
-        List<String> seq = new ArrayList<>();
-        StepQueue queue = new StepQueue();
+        Counter<String> inDegree = new Counter<>();
+        for (String a : edges.keySet())
+            for (String b : edges.get(a))
+                inDegree.add(b, 1);
+
+        PriorityQueue<String> queue = new PriorityQueue<>();
+        for (String step : edges.keySet())
+            if (inDegree.getInt(step) == 0)
+                queue.add(step);
+
+        StringBuilder seq = new StringBuilder();
         while (!queue.isEmpty()) {
             String step = queue.poll();
-            seq.add(step);
-            queue.finished(step);
+            seq.append(step);
+
+            for (String out : edges.getOrDefault(step, Collections.emptySet()))
+                if (inDegree.subtract(out, 1) == 0)
+                    queue.add(out);
         }
-        return String.join("", seq);
+
+        return seq.toString();
     }
 
     @Override
     public Integer part2() {
-        StepQueue queue = new StepQueue();
+        Counter<String> inDegree = new Counter<>();
+        for (String a : edges.keySet())
+            for (String b : edges.get(a))
+                inDegree.add(b, 1);
+
+        PriorityQueue<String> queue = new PriorityQueue<>();
+        for (String step : edges.keySet())
+            if (inDegree.getInt(step) == 0)
+                queue.add(step);
+
         int totalTime = 0;
 
-        List<Job> jobs = new ArrayList<>();
-        addJobs(queue, jobs);
+        Counter<String> tasks = new Counter<>();
+        addTasks(queue, tasks);
 
-        while (!jobs.isEmpty()) {
-            int timeStep = Fn.min(jobs, t -> t.timeRemaining);
+        while (!tasks.isEmpty()) {
+            int timeStep = Fn.min(tasks.values());
             totalTime += timeStep;
-            jobs.removeIf(job -> {
-                job.timeRemaining -= timeStep;
-                if (job.timeRemaining == 0) {
-                    queue.finished(job.step);
-                    return true;
+            for (String step : tasks.keySet()) {
+                if (tasks.subtract(step, timeStep) == 0) {
+                    tasks.removeInt(step);
+                    for (String out : edges.getOrDefault(step, Collections.emptySet()))
+                        if (inDegree.subtract(out, 1) == 0)
+                            queue.add(out);
                 }
-                return false;
-            });
-            addJobs(queue, jobs);
+            }
+            addTasks(queue, tasks);
         }
 
         return totalTime;
     }
 
-    private void addJobs(StepQueue queue, List<Job> jobs) {
-        while (jobs.size() < workers && !queue.isEmpty()) {
+    private void addTasks(PriorityQueue<String> queue, Counter<String> tasks) {
+        while (tasks.size() < workers && !queue.isEmpty()) {
             String step = queue.poll();
-            jobs.add(new Job(step, baseDuration + step.charAt(0) - 'A' + 1));
-        }
-    }
-
-    @AllArgsConstructor
-    public static class Job {
-        public final String step;
-        public int timeRemaining;
-    }
-
-    public class StepQueue extends PriorityQueue<String> {
-        private Map<String, Integer> inDegree = new HashMap<>();
-
-        public StepQueue() {
-            for (String in : edges.keySet())
-                for (String out : edges.get(in))
-                    inDegree.merge(out, 1, (a, b) -> a + b);
-            for (String step : edges.keySet())
-                if (!inDegree.containsKey(step))
-                    add(step);
-        }
-
-        public void finished(String step) {
-            for (String out : edges.getOrDefault(step, Collections.emptySet())) {
-                if (inDegree.merge(out, -1, (a, b) -> a  + b) == 0)
-                    add(out);
-            }
+            tasks.put(step, baseDuration + step.charAt(0) - 'A' + 1);
         }
     }
 }
