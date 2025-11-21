@@ -13,6 +13,7 @@ import adventofcode.utils.Fn;
 import adventofcode.utils.collect.Counter;
 import picocli.CommandLine.Option;
 
+//TODO: cleanup
 @Puzzle(day = 7, name = "The Sum of Its Parts")
 public class Day7 extends AbstractDay {
     public static void main(String[] args) throws Exception {

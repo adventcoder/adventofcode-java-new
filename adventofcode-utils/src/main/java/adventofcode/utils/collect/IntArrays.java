@@ -1,6 +1,7 @@
 package adventofcode.utils.collect;
 
 import java.util.NoSuchElementException;
+import java.util.PrimitiveIterator;
 
 import lombok.experimental.UtilityClass;
 
@@ -13,6 +14,22 @@ public class IntArrays {
         System.arraycopy(a, 0, res, 0, a.length);
         System.arraycopy(b, 0, res, a.length, b.length);
         return res;
+    }
+
+    public static PrimitiveIterator.OfInt iterator(int[] arr) {
+        return new PrimitiveIterator.OfInt() {
+            private int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < arr.length;
+            }
+
+            @Override
+            public int nextInt() {
+                return arr[i++];
+            }
+        };
     }
 
     public static int index(int[] arr, int val) {
