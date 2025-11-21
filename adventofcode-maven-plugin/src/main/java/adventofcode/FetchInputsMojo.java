@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -21,6 +22,7 @@ import org.codehaus.plexus.util.Scanner;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
+import com.github.javaparser.ParserConfiguration.LanguageLevel;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
@@ -43,16 +45,16 @@ public class FetchInputsMojo extends AbstractMojo {
     @Parameter(defaultValue = "${maven.compiler.source}", readonly = true)
     private String compilerSource;
 
-    @Parameter(defaultValue = "${aoc.year}", required = true, readonly = true)
+    @Parameter(defaultValue = "${aoc.year}", required = true)
     private int year;
 
-    @Parameter(defaultValue = "${aoc.session}", required = true, readonly = true)
+    @Parameter(defaultValue = "${aoc.session}", required = true)
     private String session;
 
-    @Parameter(defaultValue = "adventofcode/**/Day*.java", required = true, readonly = true)
+    @Parameter(defaultValue = "adventofcode/**/Day*.java", required = true)
     private String sourceFilePattern;
 
-    @Parameter(defaultValue = "adventofcode/year%d/Day%d.txt", required = true, readonly = true)
+    @Parameter(defaultValue = "adventofcode/year%d/Day%d.txt", required = true)
     private String inputPathFormat;
 
     private File getInputFile(int day) {
@@ -60,12 +62,19 @@ public class FetchInputsMojo extends AbstractMojo {
     }
 
     private Runtime.Version getSourceVersion() {
-        if (compilerRelease != null && !compilerRelease.isBlank()) {
+        if (compilerRelease != null && !compilerRelease.isBlank())
             return Runtime.Version.parse(compilerRelease.trim());
-        }
-        if (compilerSource != null && !compilerSource.isBlank()) {
+        if (compilerSource != null && !compilerSource.isBlank())
             return Runtime.Version.parse(compilerSource.trim());
-        }
+        return null;
+    }
+
+    private LanguageLevel getLanguageLevel() {
+        Runtime.Version sourceVersion = getSourceVersion();
+        if (sourceVersion != null)
+            return LanguageLevel.valueOf("JAVA_" + sourceVersion.version().stream()
+                .map(Object::toString)
+                .collect(Collectors.joining("_")));
         return null;
     }
 
@@ -131,12 +140,11 @@ public class FetchInputsMojo extends AbstractMojo {
     }
 
     private void configureParser(ParserConfiguration config) {
-        Runtime.Version sourceVersion = getSourceVersion();
-        if (sourceVersion == null) {
+        LanguageLevel languageLevel = getLanguageLevel();
+        if (languageLevel == null) {
             getLog().warn("Using default language level of " + config.getLanguageLevel());
         } else {
-            config.setLanguageLevel(ParseUtils.mapLanguageLevel(sourceVersion));
-            getLog().debug("Using language level of " + config.getLanguageLevel());
+            config.setLanguageLevel(languageLevel);
         }
     }
 
