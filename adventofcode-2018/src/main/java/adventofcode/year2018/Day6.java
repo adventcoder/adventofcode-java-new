@@ -56,7 +56,7 @@ public class Day6 extends AbstractDay {
         // Since the centroid minimizes the total distance, it's guaranteed to be inside the shape for any possible valid radius.
         Point center = findCentroid();
 
-        // find a point on the left edge
+        // Find a point on the left edge
         Point start = center;
         while (contains(start.neighbour(Dir4.WEST)))
             start = start.neighbour(Dir4.WEST);

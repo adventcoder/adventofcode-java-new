@@ -29,7 +29,7 @@ public class Year implements Callable<Integer> {
         for (Class<? extends AbstractDay> dayClass : dayClasses)
             days.add(Decorators.decorate(dayClass).getConstructor().newInstance());
 
-        days.sort(Comparator.comparing(day -> day.day));
+        days.sort(Comparator.comparingInt(day -> day.day));
 
         return days;
     }

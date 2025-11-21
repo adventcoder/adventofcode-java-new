@@ -84,11 +84,13 @@ public abstract class AbstractDay implements Callable<Integer> {
         return answer != null ? answer.toString() : defaultString;
     }
 
-    private String formatTime(long time) {
-        if (time >= 1000_000_000L) {
-            return String.format("%d s %d ms", time / 1000_000_000L, time % 1000_000_000L / 1000_000L);
+    private String formatTime(long nanos) {
+        long seconds = nanos / 1000_000_000;
+        nanos %= 1000_000_000;
+        if (seconds != 0) {
+            return String.format("%d s %d ms", seconds, nanos / 1000_000);
         } else {
-            return String.format("%.3f ms", time * 1e-6);
+            return String.format("%.3f ms", (double) nanos / 1000_000);
         }
     }
 
