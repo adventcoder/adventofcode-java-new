@@ -77,7 +77,7 @@ public class IntArrays {
         return reduce(arr, Integer::max);
     }
 
-    public int indexOfMin(int[] arr) {
+    public int minIndex(int[] arr) {
         int min = arr[0];
         int minIndex = 0;
         for (int i = 1; i < arr.length; i++) {
@@ -89,7 +89,7 @@ public class IntArrays {
         return minIndex;
     }
 
-    public int indexOfMax(int[] arr) {
+    public int maxIndex(int[] arr) {
         int max = arr[0];
         int maxIndex = 0;
         for (int i = 1; i < arr.length; i++) {

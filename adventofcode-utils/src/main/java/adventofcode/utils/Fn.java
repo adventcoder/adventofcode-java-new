@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
@@ -81,24 +80,6 @@ public class Fn {
             public U get(int i) {
                 return op.apply(vals[i]);
             }
-        };
-    }
-
-    public static <T, U, V> Iterable<V> zip(Iterable<T> xs, Iterable<U> ys, BiFunction<? super T, ? super U, ? extends V> zipper) {
-        return () -> {
-            Iterator<T> xIt = xs.iterator();
-            Iterator<U> yIt = ys.iterator();
-            return new Iterator<>() {
-                @Override
-                public boolean hasNext() {
-                    return xIt.hasNext() && yIt.hasNext();
-                }
-
-                @Override
-                public V next() {
-                    return zipper.apply(xIt.next(), yIt.next());
-                }
-            };
         };
     }
 

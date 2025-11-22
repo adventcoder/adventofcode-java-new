@@ -52,14 +52,14 @@ public class Day4 extends AbstractDay {
     @Override
     public Integer part1() {
         Integer guardId = Fn.argMax(counts.keySet(), gid -> IntArrays.sum(counts.get(gid)));
-        int minute = IntArrays.indexOfMax(counts.get(guardId));
+        int minute = IntArrays.maxIndex(counts.get(guardId));
         return guardId * minute;
     }
 
     @Override
     public Integer part2() {
         Integer guardId = Fn.argMax(counts.keySet(), gid -> IntArrays.max(counts.get(gid)));
-        int minute = IntArrays.indexOfMax(counts.get(guardId));
+        int minute = IntArrays.maxIndex(counts.get(guardId));
         return guardId * minute;
     }
 

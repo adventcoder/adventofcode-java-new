@@ -9,6 +9,10 @@ public class IntMath {
         return Integer.compare(x, 0);
     }
 
+    public static int product(int x, int y) {
+        return x * y;
+    }
+
     public static int gcd(int a, int b) {
         a = Math.abs(a);
         b = Math.abs(b);
