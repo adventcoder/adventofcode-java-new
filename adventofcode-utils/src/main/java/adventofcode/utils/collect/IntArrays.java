@@ -1,6 +1,5 @@
 package adventofcode.utils.collect;
 
-import java.util.NoSuchElementException;
 import java.util.function.IntBinaryOperator;
 
 import it.unimi.dsi.fastutil.ints.AbstractIntList;
@@ -43,7 +42,7 @@ public class IntArrays {
         for (int i = 0; i < arr.length; i++)
             if (arr[i] == val)
                 return i;
-        throw new NoSuchElementException();
+        throw new IndexOutOfBoundsException();
     }
 
     public static boolean contains(int[] arr, int val) {
@@ -76,6 +75,30 @@ public class IntArrays {
 
     public static int max(int[] arr) {
         return reduce(arr, Integer::max);
+    }
+
+    public int indexOfMin(int[] arr) {
+        int min = arr[0];
+        int minIndex = 0;
+        for (int i = 1; i < arr.length; i++) {
+            if (arr[i] < min) {
+                arr[i] = min;
+                minIndex = i;
+            }
+        }
+        return minIndex;
+    }
+
+    public int indexOfMax(int[] arr) {
+        int max = arr[0];
+        int maxIndex = 0;
+        for (int i = 1; i < arr.length; i++) {
+            if (arr[i] > max) {
+                arr[i] = max;
+                maxIndex = i;
+            }
+        }
+        return maxIndex;
     }
 
     public void swap(int[] arr, int i, int j) {

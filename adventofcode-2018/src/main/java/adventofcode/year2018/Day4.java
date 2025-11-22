@@ -3,7 +3,6 @@ package adventofcode.year2018;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +11,7 @@ import java.util.Objects;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
+import adventofcode.utils.collect.DefaultHashMap;
 import adventofcode.utils.collect.IntArrays;
 import lombok.AllArgsConstructor;
 
@@ -21,7 +21,7 @@ public class Day4 extends AbstractDay {
         main(Day4.class, args);
     }
 
-    private Map<Integer, int[]> counts = new HashMap<>();
+    private Map<Integer, int[]> counts = new DefaultHashMap<>(() -> new int[60]);
 
     @Override
     public void parse(String input) {
@@ -45,26 +45,22 @@ public class Day4 extends AbstractDay {
     }
 
     private void addNap(Integer guardId, int startMinute, int endMinute) {
-        int[] guardCounts = counts.computeIfAbsent(guardId, k -> new int[60]);
         for (int m = startMinute; m < endMinute; m++)
-            guardCounts[m]++;
+            counts.get(guardId)[m]++;
     }
 
     @Override
     public Integer part1() {
         Integer guardId = Fn.argMax(counts.keySet(), gid -> IntArrays.sum(counts.get(gid)));
-        return guardId * maxGuardMinute(guardId);
+        int minute = IntArrays.indexOfMax(counts.get(guardId));
+        return guardId * minute;
     }
 
     @Override
     public Integer part2() {
         Integer guardId = Fn.argMax(counts.keySet(), gid -> IntArrays.max(counts.get(gid)));
-        return guardId * maxGuardMinute(guardId);
-    }
-
-    private int maxGuardMinute(Integer gid) {
-        int[] guardCounts = counts.get(gid);
-        return IntArrays.index(guardCounts, IntArrays.max(guardCounts));
+        int minute = IntArrays.indexOfMax(counts.get(guardId));
+        return guardId * minute;
     }
 
     @AllArgsConstructor

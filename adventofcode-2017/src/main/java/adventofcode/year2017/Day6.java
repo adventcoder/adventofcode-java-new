@@ -35,7 +35,7 @@ public class Day6 extends AbstractDay {
     }
 
     private static void redistribute(int[] banks) {
-        int i = findBankToRedistribute(banks);
+        int i = IntArrays.indexOfMax(banks);
 
         int remaining = banks[i];
         banks[i] = 0;
@@ -48,18 +48,6 @@ public class Day6 extends AbstractDay {
             banks[i]++;
             remaining--;
         }
-    }
-
-    private static int findBankToRedistribute(int[] banks) {
-        int maxBlocks = banks[0];
-        int targetIndex = 0;
-        for (int i = 1; i < banks.length; i++) {
-            if (banks[i] > maxBlocks) {
-                maxBlocks = banks[i];
-                targetIndex = i;
-            }
-        }
-        return targetIndex;
     }
 
     private static void addAll(int[] banks, int amount) {

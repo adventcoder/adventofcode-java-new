@@ -2,7 +2,6 @@ package adventofcode.year2018;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +11,8 @@ import java.util.Set;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
+import adventofcode.utils.collect.Counter;
+import adventofcode.utils.collect.DefaultHashMap;
 import lombok.AllArgsConstructor;
 import picocli.CommandLine.Option;
 
@@ -31,23 +32,23 @@ public class Day7 extends AbstractDay {
 
     @Override
     public void parse(String input) {
-        edges = new HashMap<>();
+        edges = new DefaultHashMap<>(HashSet::new);
         for (String line : input.split("\n")) {
             String[] tokens = line.split("\\s+");
-            edges.computeIfAbsent(tokens[1], k -> new HashSet<>()).add(tokens[7]);
+            edges.get(tokens[1]).add(tokens[7]);
         }
     }
 
     @Override
     public String part1() {
         StepQueue queue = new StepQueue();
-        StringBuilder seq = new StringBuilder();
+        List<String> seq = new ArrayList<>();
         while (!queue.isEmpty()) {
             String step = queue.poll();
-            seq.append(step);
+            seq.add(step);
             queue.finished(step);
         }
-        return seq.toString();
+        return String.join("", seq);
     }
 
     @Override
@@ -86,23 +87,22 @@ public class Day7 extends AbstractDay {
     }
 
     private class StepQueue extends PriorityQueue<String> {
-        private final Map<String, Integer> inDegree = new HashMap<>();
+        private final Counter<String> inDegree = new Counter<>();
 
         public StepQueue() {
             for (String a : edges.keySet())
                 for (String b : edges.get(a))
-                    inDegree.put(b, inDegree.getOrDefault(b, 0) + 1);
+                    inDegree.inc(b);
 
             for (String a : edges.keySet())
-                if (inDegree.getOrDefault(a, 0) == 0)
+                if (!inDegree.containsKey(a))
                     add(a);
         }
 
         public void finished(String a) {
-            for (String b : edges.getOrDefault(a, Collections.emptySet())) {
-                if (inDegree.put(b, inDegree.get(b) - 1) == 1)
+            for (String b : edges.getOrDefault(a, Collections.emptySet()))
+                if (inDegree.dec(b) == 0)
                     add(b);
-            }
         }
     }
 }
