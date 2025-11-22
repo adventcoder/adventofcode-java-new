@@ -1,8 +1,10 @@
 package adventofcode.utils.collect;
 
 import java.util.NoSuchElementException;
-import java.util.PrimitiveIterator;
+import java.util.function.IntBinaryOperator;
 
+import it.unimi.dsi.fastutil.ints.AbstractIntList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -16,18 +18,23 @@ public class IntArrays {
         return res;
     }
 
-    public static PrimitiveIterator.OfInt iterator(int[] arr) {
-        return new PrimitiveIterator.OfInt() {
-            private int i = 0;
-
+    public static IntList asList(int... arr) {
+        return new AbstractIntList() {
             @Override
-            public boolean hasNext() {
-                return i < arr.length;
+            public int size() {
+                return arr.length;
             }
 
             @Override
-            public int nextInt() {
-                return arr[i++];
+            public int getInt(int i) {
+                return arr[i];
+            }
+
+            @Override
+            public int set(int i, int val) {
+                int oldVal = arr[i];
+                arr[i] = val;
+                return oldVal;
             }
         };
     }
@@ -44,6 +51,31 @@ public class IntArrays {
             if (arr[i] == val)
                 return true;
         return false;
+    }
+
+    public static int reduce(int[] arr, int acc, IntBinaryOperator op) {
+        for (int i = 0; i < arr.length; i++)
+            acc = op.applyAsInt(acc, arr[i]);
+        return acc;
+    }
+
+    public static int reduce(int[] arr, IntBinaryOperator op) {
+        int acc = arr[0];
+        for (int i = 1; i < arr.length; i++)
+            acc = op.applyAsInt(acc, arr[i]);
+        return acc;
+    }
+
+    public static int sum(int[] arr) {
+        return reduce(arr, 0, Integer::sum);
+    }
+
+    public static int min(int[] arr) {
+        return reduce(arr, Integer::min);
+    }
+
+    public static int max(int[] arr) {
+        return reduce(arr, Integer::max);
     }
 
     public void swap(int[] arr, int i, int j) {

@@ -12,8 +12,7 @@ import java.util.Objects;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import adventofcode.utils.collect.Counter;
-import adventofcode.utils.collect.Range;
+import adventofcode.utils.collect.IntArrays;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 4, name = "Repose Record")
@@ -22,8 +21,7 @@ public class Day4 extends AbstractDay {
         main(Day4.class, args);
     }
 
-    private Counter<Integer> totalMinutes = new Counter<>();
-    private Map<Integer, Counter<Integer>> minutes = new HashMap<>();
+    private Map<Integer, int[]> counts = new HashMap<>();
 
     @Override
     public void parse(String input) {
@@ -47,23 +45,26 @@ public class Day4 extends AbstractDay {
     }
 
     private void addNap(Integer guardId, int startMinute, int endMinute) {
-        totalMinutes.add(guardId, endMinute - startMinute);
-        minutes.computeIfAbsent(guardId, k -> new Counter<>())
-            .addAll(new Range(startMinute, endMinute), 1);
+        int[] guardCounts = counts.computeIfAbsent(guardId, k -> new int[60]);
+        for (int m = startMinute; m < endMinute; m++)
+            guardCounts[m]++;
     }
 
     @Override
     public Integer part1() {
-        int guardId = totalMinutes.mostFrequentKey();
-        int minute = minutes.get(guardId).mostFrequentKey();
-        return guardId * minute;
+        Integer guardId = Fn.argMax(counts.keySet(), gid -> IntArrays.sum(counts.get(gid)));
+        return guardId * maxGuardMinute(guardId);
     }
 
     @Override
     public Integer part2() {
-        int guardId = Fn.argMax(minutes.keySet(), gid -> Fn.max(minutes.get(gid).values()));
-        int minute = minutes.get(guardId).mostFrequentKey();
-        return guardId * minute;
+        Integer guardId = Fn.argMax(counts.keySet(), gid -> IntArrays.max(counts.get(gid)));
+        return guardId * maxGuardMinute(guardId);
+    }
+
+    private int maxGuardMinute(Integer gid) {
+        int[] guardCounts = counts.get(gid);
+        return IntArrays.index(guardCounts, IntArrays.max(guardCounts));
     }
 
     @AllArgsConstructor

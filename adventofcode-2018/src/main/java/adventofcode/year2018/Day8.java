@@ -22,7 +22,7 @@ public class Day8 extends AbstractDay {
 
     @Override
     public Integer part1() {
-        return sumEntries(IntArrays.iterator(data));
+        return sumEntries(IntArrays.asList(data).iterator());
     }
 
     private int sumEntries(PrimitiveIterator.OfInt it) {
@@ -38,7 +38,7 @@ public class Day8 extends AbstractDay {
 
     @Override
     public Object part2() {
-        return value(IntArrays.iterator(data));
+        return value(IntArrays.asList(data).iterator());
     }
 
     private int value(PrimitiveIterator.OfInt it) {

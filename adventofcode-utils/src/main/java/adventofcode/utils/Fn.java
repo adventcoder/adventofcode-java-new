@@ -50,6 +50,10 @@ public class Fn {
         return Pattern.compile(regex).matcher(s).results();
     }
 
+    public static <T, U, V> Function<T, V> compose(Function<? super U, V> g, Function<T, ? extends U> f) {
+        return f.andThen(g);
+    }
+
     public static <T extends Comparable<T>> List<T> sorted(Iterable<T> xs) {
         List<T> result = new ArrayList<T>();
         for (T x : xs)
