@@ -1,4 +1,4 @@
-package adventofcode.utils.collect;
+package adventofcode.utils;
 
 import java.util.function.IntBinaryOperator;
 
@@ -77,24 +77,24 @@ public class IntArrays {
         return reduce(arr, Integer::max);
     }
 
-    public int minIndex(int[] arr) {
+    public int indexOfMin(int[] arr) {
         int min = arr[0];
         int minIndex = 0;
         for (int i = 1; i < arr.length; i++) {
             if (arr[i] < min) {
-                arr[i] = min;
+                min = arr[i];
                 minIndex = i;
             }
         }
         return minIndex;
     }
 
-    public int maxIndex(int[] arr) {
+    public int indexOfMax(int[] arr) {
         int max = arr[0];
         int maxIndex = 0;
         for (int i = 1; i < arr.length; i++) {
             if (arr[i] > max) {
-                arr[i] = max;
+                max = arr[i];
                 maxIndex = i;
             }
         }

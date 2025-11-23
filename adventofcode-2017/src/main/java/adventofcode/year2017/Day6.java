@@ -1,29 +1,28 @@
 package adventofcode.year2017;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import adventofcode.utils.collect.IntArrays;
-import it.unimi.dsi.fastutil.ints.IntList;
+import adventofcode.utils.IntArrays;
+import adventofcode.utils.collect.DeepHashMap;
 
 @Puzzle(day = 6, name = "Memory Reallocation")
 public class Day6 extends AbstractDay {
-    private Map<IntList, Integer> seen;
+    private Map<int[], Integer> seen;
     private int[] curr;
 
     @Override
     public void parse(String input) {
-        seen = new HashMap<>();
+        seen = new DeepHashMap<>();
         curr = Fn.parseInts(input, "\\s+");
     }
 
     @Override
     public Integer part1() {
-        while (!seen.containsKey(IntArrays.asList(curr))) {
-            seen.put(IntArrays.asList(curr.clone()), seen.size());
+        while (!seen.containsKey(curr)) {
+            seen.put(curr.clone(), seen.size());
             redistribute(curr);
         }
         return seen.size();
@@ -31,11 +30,11 @@ public class Day6 extends AbstractDay {
 
     @Override
     public Integer part2() {
-        return seen.size() - seen.get(IntArrays.asList(curr));
+        return seen.size() - seen.get(curr);
     }
 
     private static void redistribute(int[] banks) {
-        int i = IntArrays.maxIndex(banks);
+        int i = IntArrays.indexOfMax(banks);
 
         int remaining = banks[i];
         banks[i] = 0;
