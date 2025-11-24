@@ -66,12 +66,12 @@ public class Day6 extends AbstractDay {
         Point curr = start;
         Dir4 dir = Dir4.NORTH;
         do {
-            if (contains(curr.neighbour(dir.left()))) {
+            if (contains(curr.neighbour(dir.left90()))) {
                 corners.add(curr);
-                dir = dir.left();
+                dir = dir.left90();
             } else if (!contains(curr.neighbour(dir))) {
                 corners.add(curr);
-                dir = dir.right();
+                dir = dir.right90();
             }
             curr = curr.neighbour(dir);
         } while (!curr.equals(start));

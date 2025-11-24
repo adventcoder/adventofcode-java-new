@@ -42,7 +42,7 @@ public class Day19 extends AbstractDay {
             while (charAt(pos) != ' ') {
                 action.accept(pos);
                 if (charAt(pos) == '+')
-                    dir = charAt(pos.neighbour(dir.left())) != ' ' ? dir.left() : dir.right();
+                    dir = charAt(pos.neighbour(dir.left90())) != ' ' ? dir.left90() : dir.right90();
                 pos = pos.neighbour(dir);
             }
         };

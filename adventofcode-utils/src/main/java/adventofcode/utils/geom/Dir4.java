@@ -11,46 +11,44 @@ public enum Dir4 {
     SOUTH(0, 1),
     WEST(-1, 0);
 
-    public static Dir4 valueAt(int i) {
-        return values()[Math.floorMod(i, 4)];
-    }
+    public static final Dir4[] VALUES = values();
 
     public final int x;
     public final int y;
 
-    public Dir4 left(int n) {
-        return valueAt(ordinal() - n);
+    public Dir4 left90(int n) {
+        return VALUES[(ordinal() - n) & 3];
     }
 
-    public Dir4 right(int n) {
-        return valueAt(ordinal() + n);
+    public Dir4 right90(int n) {
+        return VALUES[(ordinal() + n) & 3];
     }
 
-    public Dir4 right() {
-        return valueAt(ordinal() + 1);
+    public Dir4 right90() {
+        return VALUES[(ordinal() + 1) & 3];
     }
 
-    public Dir4 flip() {
-        return valueAt(ordinal() + 2);
+    public Dir4 opposite() {
+        return VALUES[(ordinal() + 2) & 3];
     }
 
-    public Dir4 left() {
-        return valueAt(ordinal() + 3);
+    public Dir4 left90() {
+        return VALUES[(ordinal() + 3) & 3];
     }
 
     public Dir4 reflectVertical() {
-        return valueAt(-ordinal());
+        return VALUES[(-ordinal()) & 3];
     }
 
     public Dir4 reflectAntiDiagonal() {
-        return valueAt(1 - ordinal());
+        return VALUES[(1 - ordinal()) & 3];
     }
 
     public Dir4 reflectHorizontal() {
-        return valueAt(2 - ordinal());
+        return VALUES[(2 - ordinal()) & 3];
     }
 
-    public Dir4 reflectDiagonal() {
-        return valueAt(3 - ordinal());
+    public Dir4 reflectMainDiagonal() {
+        return VALUES[(3 - ordinal()) & 3];
     }
 }

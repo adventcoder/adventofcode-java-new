@@ -38,10 +38,10 @@ public class Day22 extends AbstractDay {
         for (int i = 0; i < 10000; i++) {
             if (infected.contains(pos)) {
                 infected.remove(pos);
-                dir = dir.right();
+                dir = dir.right90();
             } else {
                 infected.add(pos);
-                dir = dir.left();
+                dir = dir.left90();
                 infections++;
             }
             pos = pos.neighbour(dir);
@@ -67,7 +67,7 @@ public class Day22 extends AbstractDay {
             if (newState == State.INFECTED)
                 infections++;
 
-            dir = dir.right(state.ordinal() - 1);
+            dir = dir.right90(state.ordinal() - 1);
             pos = pos.neighbour(dir);
         }
 
