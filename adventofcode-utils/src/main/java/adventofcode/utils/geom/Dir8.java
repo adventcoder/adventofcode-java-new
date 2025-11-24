@@ -11,7 +11,7 @@ public enum Dir8 {
     EAST(1, 0),
     SOUTHEAST(1, 1),
     SOUTH(0, 1),
-    SOUTHWEST(-1, 0),
+    SOUTHWEST(-1, 1),
     WEST(-1, 0),
     NORTHWEST(-1, -1);
 
