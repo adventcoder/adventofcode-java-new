@@ -1,9 +1,8 @@
 package adventofcode.utils;
 
+import java.util.PrimitiveIterator;
 import java.util.function.IntBinaryOperator;
 
-import it.unimi.dsi.fastutil.ints.AbstractIntList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -17,23 +16,18 @@ public class IntArrays {
         return res;
     }
 
-    public static IntList asList(int... arr) {
-        return new AbstractIntList() {
+    public static PrimitiveIterator.OfInt iterator(int[] arr) {
+        return new PrimitiveIterator.OfInt() {
+            private int i = 0;
+
             @Override
-            public int size() {
-                return arr.length;
+            public boolean hasNext() {
+                return i < arr.length;
             }
 
             @Override
-            public int getInt(int i) {
-                return arr[i];
-            }
-
-            @Override
-            public int set(int i, int val) {
-                int oldVal = arr[i];
-                arr[i] = val;
-                return oldVal;
+            public int nextInt() {
+                return arr[i++];
             }
         };
     }
@@ -69,6 +63,10 @@ public class IntArrays {
         return reduce(arr, 0, Integer::sum);
     }
 
+    public static int product(int[] arr) {
+        return reduce(arr, 1, IntMath::product);
+    }
+
     public static int min(int[] arr) {
         return reduce(arr, Integer::min);
     }
@@ -77,7 +75,7 @@ public class IntArrays {
         return reduce(arr, Integer::max);
     }
 
-    public int indexOfMin(int[] arr) {
+    public int minIndex(int[] arr) {
         int min = arr[0];
         int minIndex = 0;
         for (int i = 1; i < arr.length; i++) {
@@ -89,7 +87,7 @@ public class IntArrays {
         return minIndex;
     }
 
-    public int indexOfMax(int[] arr) {
+    public int maxIndex(int[] arr) {
         int max = arr[0];
         int maxIndex = 0;
         for (int i = 1; i < arr.length; i++) {

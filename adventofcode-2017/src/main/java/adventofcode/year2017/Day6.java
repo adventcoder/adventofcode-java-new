@@ -34,7 +34,7 @@ public class Day6 extends AbstractDay {
     }
 
     private static void redistribute(int[] banks) {
-        int i = IntArrays.indexOfMax(banks);
+        int i = IntArrays.maxIndex(banks);
 
         int remaining = banks[i];
         banks[i] = 0;
