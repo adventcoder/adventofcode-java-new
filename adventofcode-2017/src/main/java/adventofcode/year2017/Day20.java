@@ -1,11 +1,9 @@
 package adventofcode.year2017;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
@@ -32,9 +30,7 @@ public class Day20 extends AbstractDay {
 
     @Override
     public Integer part1() {
-        return IntStream.range(0, particles.size()).boxed()
-            .min(Comparator.comparing(i -> particles.get(i)))
-            .orElse(null);
+        return Fn.argMin(new Range(particles.size()), i -> particles.get(i).distanceToOriginAtInfinity());
     }
 
     @Override
@@ -65,7 +61,7 @@ public class Day20 extends AbstractDay {
     }
 
     @AllArgsConstructor
-    private static class Particle implements Comparable<Particle> {
+    private static class Particle {
         public Vector3 pos;
         public Vector3 vel;
         public Vector3 acc;
@@ -84,15 +80,8 @@ public class Day20 extends AbstractDay {
             return new Vector3(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]), Integer.parseInt(vals[2]));
         }
 
-        @Override
-        public int compareTo(Particle other) {
-            int cmp = Integer.compare(acc.abs(), other.acc.abs());
-            if (cmp == 0) {
-                cmp = Integer.compare(acc.addMul(vel, 2).abs(), other.acc.addMul(other.vel, 2).abs());
-                if (cmp == 0)
-                    cmp = Integer.compare(pos.abs(), other.pos.abs());
-            }
-            return cmp;
+        public IntList distanceToOriginAtInfinity() {
+            return IntList.of(acc.abs(), acc.addMul(vel, 2).abs(), pos.multiply(2).abs());
         }
 
         public IntList collide(Particle other) {

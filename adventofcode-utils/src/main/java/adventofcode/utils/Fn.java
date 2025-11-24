@@ -53,7 +53,7 @@ public class Fn {
         return f.andThen(g);
     }
 
-    public static <T extends Comparable<T>> List<T> sorted(Iterable<T> xs) {
+    public static <T extends Comparable<? super T>> List<T> sorted(Iterable<T> xs) {
         List<T> result = new ArrayList<T>();
         for (T x : xs)
             result.add(x);
@@ -83,7 +83,7 @@ public class Fn {
         };
     }
 
-    public static <T, U extends Comparable<U>> U min(Iterable<T> domain, Function<? super T, ? extends U> expr) {
+    public static <T, U extends Comparable<? super U>> U min(Iterable<T> domain, Function<? super T, ? extends U> expr) {
         Iterator<T> it = domain.iterator();
         U min = expr.apply(it.next());
         while (it.hasNext()) {
@@ -94,11 +94,11 @@ public class Fn {
         return min;
     }
 
-    public static <T extends Comparable<T>> T min(Iterable<T> domain) {
+    public static <T extends Comparable<? super T>> T min(Iterable<T> domain) {
         return min(domain, Function.identity());
     }
 
-    public static <T, U extends Comparable<U>> U max(Iterable<T> domain, Function<? super T, ? extends U> expr) {
+    public static <T, U extends Comparable<? super U>> U max(Iterable<T> domain, Function<? super T, ? extends U> expr) {
         Iterator<T> it = domain.iterator();
         U max = expr.apply(it.next());
         while (it.hasNext()) {
@@ -109,11 +109,11 @@ public class Fn {
         return max;
     }
 
-    public static <T extends Comparable<T>> T max(Iterable<T> domain) {
+    public static <T extends Comparable<? super T>> T max(Iterable<T> domain) {
         return max(domain, Function.identity());
     }
 
-    public static <T, U extends Comparable<U>> T argMin(Iterable<T> domain, Function<? super T, ? extends U> expr) {
+    public static <T, U extends Comparable<? super U>> T argMin(Iterable<T> domain, Function<? super T, ? extends U> expr) {
         Iterator<T> it = domain.iterator();
         T argMin = it.next();
         U min = expr.apply(argMin);
@@ -128,7 +128,7 @@ public class Fn {
         return argMin;
     }
 
-    public static <T, U extends Comparable<U>> T argMax(Iterable<T> domain, Function<? super T, ? extends U> expr) {
+    public static <T, U extends Comparable<? super U>> T argMax(Iterable<T> domain, Function<? super T, ? extends U> expr) {
         Iterator<T> it = domain.iterator();
         T argMax = it.next();
         U max = expr.apply(argMax);
