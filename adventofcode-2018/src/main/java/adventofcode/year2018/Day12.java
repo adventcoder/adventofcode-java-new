@@ -1,9 +1,12 @@
 package adventofcode.year2018;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
+import adventofcode.utils.collect.DeepHashMap;
+import it.unimi.dsi.fastutil.longs.LongLongPair;
 
 @Puzzle(day = 12, name = "Subterranean Sustainability")
 public class Day12 extends AbstractDay {
@@ -33,7 +36,7 @@ public class Day12 extends AbstractDay {
     }
 
     @Override
-    public Integer part1() {
+    public Long part1() {
         State state = initialState;
         for (int i = 0; i < 20; i++)
             state = state.tick(rules);
@@ -41,15 +44,34 @@ public class Day12 extends AbstractDay {
     }
 
     @Override
-    public Object part2() {
-        return null;
+    public Long part2() {
+        Map<byte[], LongLongPair> seen = new DeepHashMap<>();
+        State state = initialState;
+        long time = 0;
+        while (!seen.containsKey(state.state)) {
+            seen.put(state.state, LongLongPair.of(time, state.offset));
+            state = state.tick(rules);
+            time++;
+        }
+        LongLongPair prev = seen.get(state.state);
+        long timeStep = time - prev.leftLong();
+        long offsetStep = state.offset - prev.rightLong();
+
+        long targetTime = 50000000000L;
+        long q = (targetTime - time) / timeStep;
+        long r = (targetTime - time) % timeStep;
+
+        state.offset += q*offsetStep; 
+        for (long i = 0; i < r; i++)
+            state = state.tick(rules);
+        return state.sum();
     }
 
     public static class State {
-        private int offset;
+        private long offset;
         private byte[] state;
 
-        public State(int offset, byte[] state) {
+        public State(long offset, byte[] state) {
             int start = 0;
             while (state[start] == 0) start++;
             int end = state.length;
@@ -65,8 +87,8 @@ public class Day12 extends AbstractDay {
             return new State(0, state);
         }
 
-        public int sum() {
-            int total = 0;
+        public long sum() {
+            long total = 0;
             for (int i = 0; i < state.length; i++)
                 total += state[i] * (offset + i);
             return total;

@@ -8,16 +8,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ObjectsEx {
-    public static Object firstNonNull(Object a, Object b) {
-        return a != null ? a : b;
-    }
-
-    public static Object firstNonNull(Object... os) {
-        for (Object o : os)
-            if (o != null) return o;
-        return null;
-    }
-
     public static int deepHashCode(Object o) {
         if (o instanceof Object[] arr) return Arrays.deepHashCode(arr);
         if (o instanceof byte[] arr) return Arrays.hashCode(arr);
