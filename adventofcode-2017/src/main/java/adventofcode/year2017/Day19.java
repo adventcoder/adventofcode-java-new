@@ -1,22 +1,18 @@
 package adventofcode.year2017;
 
-import java.util.stream.IntStream;
-
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.collect.Traversable;
 import adventofcode.utils.geom.Dir4;
 import adventofcode.utils.geom.Point;
+import adventofcode.utils.iter.Enumerable;
 
 @Puzzle(day = 19, name = "A Series of Tubes")
 public class Day19 extends AbstractDay {
     private String[] grid;
-    private int startX;
 
     @Override
     public void parse(String input) {
         grid = input.split("\n");
-        startX = IntStream.range(0, grid[0].length()).filter(i -> grid[0].charAt(i) == '|').findFirst().orElseThrow();
     }
 
     @Override
@@ -35,9 +31,9 @@ public class Day19 extends AbstractDay {
         return path().count();
     }
 
-    private Traversable<Point> path() {
+    private Enumerable<Point> path() {
         return action -> {
-            Point pos = new Point(startX, 0);
+            Point pos = findStart();
             Dir4 dir = Dir4.SOUTH;
             while (charAt(pos) != ' ') {
                 action.accept(pos);
@@ -46,6 +42,13 @@ public class Day19 extends AbstractDay {
                 pos = pos.neighbour(dir);
             }
         };
+    }
+
+    private Point findStart() {
+        for (int x = 0; x < grid[0].length(); x++)
+            if (grid[0].charAt(x) == '|')
+                return new Point(x, 0);
+        return null;
     }
 
     private char charAt(Point pos) {

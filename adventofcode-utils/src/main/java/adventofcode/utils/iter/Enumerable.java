@@ -1,4 +1,4 @@
-package adventofcode.utils.collect;
+package adventofcode.utils.iter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,8 +12,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @FunctionalInterface
-public interface Traversable<T> {
-
+public interface Enumerable<T> {
     void forEach(Consumer<? super T> action);
 
     default <A, R> R collect(Collector<? super T, A, R> coll) {

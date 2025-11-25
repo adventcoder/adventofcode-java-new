@@ -40,7 +40,7 @@ public class Day13 extends AbstractDay {
     public String part1() {
         while (dead.isEmpty())
             tick();
-        Cart cart = dead.iterator().next();;
+        Cart cart = dead.iterator().next();
         return cart.x + "," + cart.y;
     }
 
@@ -85,7 +85,7 @@ public class Day13 extends AbstractDay {
                 case '/' -> dir = dir.reflectAntiDiagonal();
                 case '\\' -> dir = dir.reflectMainDiagonal();
                 case '+' -> {
-                    dir = dir.right90(state - 1);
+                    dir = dir.rotate(state - 1);
                     state = (state + 1) % 3;
                 }
             }

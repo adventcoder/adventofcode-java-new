@@ -31,10 +31,10 @@ public class Point {
     }
 
     public List<Point> neighbours4() {
-        return Fn.map(Dir4.VALUES, this::neighbour);
+        return Fn.map(Dir4.values, this::neighbour);
     }
 
     public List<Point> neighbours8() {
-        return Fn.map(Dir8.VALUES, this::neighbour);
+        return Fn.map(Dir8.values, this::neighbour);
     }
 }
