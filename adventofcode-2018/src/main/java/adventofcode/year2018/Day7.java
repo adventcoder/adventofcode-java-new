@@ -86,6 +86,7 @@ public class Day7 extends AbstractDay {
         public int timeRemaining;
     }
 
+    //TODO: this is kind of ugly
     private class StepQueue extends PriorityQueue<String> {
         private final Counter<String> inDegree = new Counter<>();
 

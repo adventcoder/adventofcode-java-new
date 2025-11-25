@@ -35,7 +35,7 @@ public class Day6 extends AbstractDay {
 
     @Override
     public Object part1() {
-        return null;
+        return null; //TODO: ugh voronoi
     }
 
     @Override
