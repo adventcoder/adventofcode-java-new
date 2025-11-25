@@ -25,7 +25,7 @@ public interface Enumerable<T> {
         return collect(Collectors.counting());
     }
 
-    default <C extends Collection<T>> C toCollection(Supplier<? extends C> generator) {
+    default <C extends Collection<T>> C toCollection(Supplier<C> generator) {
         C coll = generator.get();
         forEach(coll::add);
         return coll;

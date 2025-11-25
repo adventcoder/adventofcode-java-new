@@ -34,13 +34,13 @@ public interface LookaheadIterator<T> extends Iterator<T> {
         };
     }
 
-    static <T> LookaheadIterator<T> iterate(BooleanSupplier findNext, Supplier<T> get) {
+    static <T> LookaheadIterator<T> iterate(BooleanSupplier findNext, Supplier<T> currSupplier) {
         return new LookaheadIterator<T>() {
             private boolean hasNext = findNext.getAsBoolean();
 
             @Override
             public T peek() {
-                return get.get();
+                return currSupplier.get();
             }
 
             @Override
@@ -52,7 +52,7 @@ public interface LookaheadIterator<T> extends Iterator<T> {
             public T next() {
                 if (!hasNext)
                     throw new NoSuchElementException();
-                T curr = get.get();
+                T curr = currSupplier.get();
                 hasNext = findNext.getAsBoolean();
                 return curr;
             }
