@@ -1,15 +1,13 @@
 package adventofcode.year2018;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.geom.Dir4;
+import adventofcode.utils.geom.Point;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 13, name = "Mine Cart Madness")
@@ -22,7 +20,7 @@ public class Day13 extends AbstractDay {
 
     private String[] track;
     private List<Cart> carts = new ArrayList<>();
-    private Set<Cart> dead = new LinkedHashSet<>();
+    private List<Point> collisions = new ArrayList<>();
 
     @Override
     public void parse(String input) {
@@ -31,17 +29,17 @@ public class Day13 extends AbstractDay {
             for (int x = 0; x < track[y].length(); x++) {
                 Dir4 dir = dirMap.get(track[y].charAt(x));
                 if (dir != null)
-                    carts.add(new Cart(x, y, dir, 0));
+                    carts.add(new Cart(x, y, dir, 0, false));
             }
         }
     }
 
     @Override
     public String part1() {
-        while (dead.isEmpty())
+        while (collisions.isEmpty())
             tick();
-        Cart cart = dead.iterator().next();
-        return cart.x + "," + cart.y;
+        Point coll = collisions.get(0);
+        return coll.x + "," + coll.y;
     }
 
     @Override
@@ -53,26 +51,29 @@ public class Day13 extends AbstractDay {
     }
 
     private void tick() {
-        carts.sort(Comparator.comparingInt(c -> c.x + track[0].length()*c.y));
+        carts.sort(Cart::comparePosition);
         for (Cart cart : carts) {
-            if (dead.contains(cart)) continue;
+            if (cart.dead) continue;
             cart.tick(track);
+            // Just do the quadratic loop, we won't bother keeping track of pos -> cart
             for (Cart other : carts) {
-                if (cart != other && cart.x == other.x && cart.y == other.y && !dead.contains(other)) {
-                    dead.add(cart);
-                    dead.add(other);
+                if (cart != other && cart.comparePosition(other) == 0 && !other.dead) {
+                    cart.dead = true;
+                    other.dead = true;
+                    collisions.add(new Point(cart.x, cart.y));
                 }
             }
         }
-        carts.removeAll(dead);
+        carts.removeIf(c -> c.dead);
     }
 
     @AllArgsConstructor
-    public static class Cart {
+    private static class Cart {
         private int x;
         private int y;
         private Dir4 dir;
         private int state;
+        private boolean dead;
 
         public void tick(String[] track) {
             x += dir.x;
@@ -85,6 +86,10 @@ public class Day13 extends AbstractDay {
                     state = (state + 1) % 3;
                 }
             }
+        }
+
+        public int comparePosition(Cart other) {
+            return y == other.y ? x - other.x : y - other.y;
         }
     }
 }
