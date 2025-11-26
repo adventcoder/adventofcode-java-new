@@ -58,7 +58,7 @@ public class Day13 extends AbstractDay {
             if (dead.contains(cart)) continue;
             cart.tick(track);
             for (Cart other : carts) {
-                if (cart != other && cart.collides(other) && !dead.contains(other)) {
+                if (cart != other && cart.x == other.x && cart.y == other.y && !dead.contains(other)) {
                     dead.add(cart);
                     dead.add(other);
                 }
@@ -74,18 +74,14 @@ public class Day13 extends AbstractDay {
         private Dir4 dir;
         private int state;
 
-        public boolean collides(Cart other) {
-            return x == other.x && y == other.y;
-        }
-
         public void tick(String[] track) {
             x += dir.x;
             y += dir.y;
             switch (track[y].charAt(x)) {
-                case '/' -> dir = dir.reflectAntiDiagonal();
-                case '\\' -> dir = dir.reflectMainDiagonal();
+                case '/' -> dir = dir.reflect(Dir4.NORTH, Dir4.EAST);
+                case '\\' -> dir = dir.reflect(Dir4.SOUTH, Dir4.EAST);
                 case '+' -> {
-                    dir = dir.rotate(state - 1);
+                    dir = dir.right90(state - 1);
                     state = (state + 1) % 3;
                 }
             }

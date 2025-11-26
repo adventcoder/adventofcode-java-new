@@ -1,10 +1,8 @@
 package adventofcode.utils.geom;
 
 import lombok.AllArgsConstructor;
-import lombok.ToString;
 
 @AllArgsConstructor
-@ToString
 public enum Dir8 {
     NORTH(0, -1),
     NORTHEAST(1, -1),
@@ -18,57 +16,49 @@ public enum Dir8 {
     public final int x;
     public final int y;
 
-    public static final Dir8[] values = values();
+    static final Dir8[] cachedValues = values();
 
-    public Dir8 rotate(int n) {
-        return values[(ordinal() + n) & 7];
+    public Dir8 right45(int n) {
+        return cachedValues[(ordinal() + n) & 7];
     }
 
-    public Dir8 reflect(int n) {
-        return values[(n - ordinal()) & 7];
+    public Dir8 left45(int n) {
+        return right45(-n);
     }
 
     public Dir8 right45() {
-        return rotate(1);
+        return right45(1);
     }
 
     public Dir8 right90() {
-        return rotate(2);
+        return right45(2);
     }
 
     public Dir8 right135() {
-        return rotate(3);
+        return right45(3);
     }
 
     public Dir8 opposite() {
-        return rotate(4);
+        return right45(4);
     }
 
     public Dir8 left135() {
-        return rotate(5);
+        return right45(5);
     }
 
     public Dir8 left90() {
-        return rotate(6);
+        return right45(6);
     }
 
     public Dir8 left45() {
-        return rotate(7);
+        return right45(7);
     }
 
-    public Dir8 reflectVertical() {
-        return reflect(0);
+    public Dir8 reflect(Dir8 a, Dir8 b) {
+        return cachedValues[(a.ordinal() + b.ordinal() - ordinal()) & 7];
     }
 
-    public Dir8 reflectAntiDiagonal() {
-        return reflect(2);
-    }
-
-    public Dir8 reflectHorizontal() {
-        return reflect(4);
-    }
-
-    public Dir8 reflectMainDiagonal() {
-        return reflect(6);
+    public Dir8 reflect(Dir8 a) {
+        return reflect(a, a);
     }
 }

@@ -67,7 +67,7 @@ public class Day22 extends AbstractDay {
             if (newState == State.INFECTED)
                 infections++;
 
-            dir = dir.rotate(state.ordinal() - 1);
+            dir = dir.right90(state.ordinal() - 1);
             pos = pos.neighbour(dir);
         }
 
