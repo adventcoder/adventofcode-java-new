@@ -3,12 +3,15 @@ package adventofcode.year2018;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.OptionalInt;
+import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.geom.Dir4;
 import adventofcode.utils.geom.Point;
+import adventofcode.utils.geom.Rect;
 import picocli.CommandLine.Option;
 
 @Puzzle(day = 6, name = "Chronal Coordinates")
@@ -33,9 +36,47 @@ public class Day6 extends AbstractDay {
         }
     }
 
+    //TODO: voronoi sweep line algorithm
     @Override
-    public Object part1() {
-        return null; //TODO: ugh voronoi
+    public OptionalInt part1() {
+        Rect bounds = Rect.empty();
+        for (Point p : seeds)
+            bounds = bounds.or(p);
+
+        int[] areas = new int[seeds.size()];
+        boolean[] infinite = new boolean[seeds.size()];
+        for (int y = bounds.yMin; y <= bounds.yMax; y++) {
+            for (int x = bounds.xMin; x <= bounds.xMax; x++) {
+                int owner = findClosestSeed(new Point(x, y));
+                if (owner >= 0) {
+                    areas[owner]++;
+                    if (x == bounds.xMin || x == bounds.xMax || y == bounds.yMin || y == bounds.yMax)
+                        infinite[owner] = true;
+                }
+            }
+        }
+
+        return IntStream.range(0, areas.length)
+            .filter(i -> !infinite[i])
+            .map(i -> areas[i])
+            .max();
+    }
+
+    private int findClosestSeed(Point p) {
+        int minDist = Integer.MAX_VALUE;
+        int owner = -1;
+        boolean tie = false;
+        for (int i = 0; i < seeds.size(); i++) {
+            int dist = p.distanceTo(seeds.get(i));
+            if (dist < minDist) {
+                minDist = dist;
+                owner = i;
+                tie = false;
+            } else if (dist == minDist) {
+                tie = true;
+            }
+        }
+        return tie ? -1 : owner;
     }
 
     @Override
