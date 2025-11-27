@@ -1,20 +1,17 @@
 package adventofcode.year2018;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.Fn;
 import adventofcode.utils.collect.Counter;
 import adventofcode.utils.collect.DefaultHashMap;
-import lombok.AllArgsConstructor;
 
 @Puzzle(day = 7, name = "The Sum of Its Parts")
 public class Day7 extends AbstractDay {
@@ -22,14 +19,14 @@ public class Day7 extends AbstractDay {
         main(Day7.class, args);
     }
 
-    private Map<String, Set<String>> edges;
+    private Map<Character, Set<Character>> edges;
 
     @Override
     public void parse(String input) {
         edges = new DefaultHashMap<>(HashSet::new);
         for (String line : input.split("\n")) {
             String[] tokens = line.split("\\s+");
-            edges.get(tokens[1]).add(tokens[7]);
+            edges.get(tokens[1].charAt(0)).add(tokens[7].charAt(0));
         }
     }
 
@@ -37,7 +34,7 @@ public class Day7 extends AbstractDay {
     public String part1() {
         Scheduler scheduler = new Scheduler(1);
         scheduler.run();
-        return String.join("", scheduler.finished);
+        return scheduler.finished.toString();
     }
 
     @Override
@@ -48,60 +45,71 @@ public class Day7 extends AbstractDay {
     }
 
     private class Scheduler {
-        private final int workers;
-        private final Counter<String> inDegree = new Counter<>();
-        private final PriorityQueue<String> available = new PriorityQueue<>();
-        private final List<Task> inProgress = new ArrayList<>();
-        private final List<String> finished = new ArrayList<>();
+        private final Worker[] workers;
+        private final Counter<Character> inDegree = new Counter<>();
+        private final PriorityQueue<Character> ready = new PriorityQueue<>();
+        private final StringBuilder finished = new StringBuilder();
         private int totalTime = 0;
 
-        public Scheduler(int workers) {
-            this.workers = workers;
+        public Scheduler(int numWorkers) {
+            workers = new Worker[numWorkers];
+            for (int i = 0; i < numWorkers; i++)
+                workers[i] = new Worker();
 
-            for (String a : edges.keySet())
-                for (String b : edges.get(a))
-                    inDegree.inc(b);
-
-            for (String a : edges.keySet())
-                if (!inDegree.containsKey(a))
-                    available.add(a);
+            for (Character step : edges.keySet())
+                for (Character nextStep : edges.get(step))
+                    inDegree.inc(nextStep);
+            for (Character step : edges.keySet())
+                if (!inDegree.containsKey(step))
+                    ready.add(step);
         }
 
         public void run() {
-            addTasks();
-            while (!inProgress.isEmpty()) {
-                int timeStep = Fn.min(inProgress, t -> t.timeRemaining);
-                totalTime += timeStep;
-                for (Iterator<Task> it = inProgress.iterator(); it.hasNext(); ) {
-                    Task task = it.next();
-                    task.timeRemaining -= timeStep;
-                    if (task.timeRemaining == 0) {
-                        finish(task.step);
-                        it.remove();
-                    }
+            while (true) {
+                assignWork();
+
+                OptionalInt timeDelta = Stream.of(workers)
+                        .filter(worker -> worker.step != null)
+                        .mapToInt(worker -> worker.timeRemaining)
+                        .min();
+                if (timeDelta.isEmpty())
+                    break;
+
+                work(timeDelta.getAsInt());
+            }
+        }
+
+        private void assignWork() {
+            for (Worker worker : workers) {
+                if (ready.isEmpty()) break;
+                if (worker.step != null) continue;
+                worker.step = ready.poll();
+                worker.timeRemaining = 60 + (worker.step - 'A' + 1);
+            }
+        }
+
+        private void work(int time) {
+            totalTime += time;
+            for (Worker worker : workers) {
+                if (worker.step == null) continue;
+                worker.timeRemaining -= time;
+                if (worker.timeRemaining == 0) {
+                    finish(worker.step);
+                    worker.step = null;
                 }
-                addTasks();
             }
         }
 
-        public void addTasks() {
-            while (inProgress.size() < workers && !available.isEmpty()) {
-                String step = available.poll();
-                inProgress.add(new Task(step, 60 + (step.charAt(0) - 'A' + 1)));
-            }
-        }
-
-        public void finish(String step) {
-            for (String b : edges.getOrDefault(step, Collections.emptySet()))
-                if (inDegree.dec(b) == 0)
-                    available.add(b);
-            finished.add(step);
+        private void finish(Character step) {
+            for (Character nextStep : edges.getOrDefault(step, Collections.emptySet()))
+                if (inDegree.dec(nextStep) == 0)
+                    ready.add(nextStep);
+            finished.append(step.charValue());
         }
     }
 
-    @AllArgsConstructor
-    private static class Task {
-        public final String step;
+    public static class Worker {
+        public Character step;
         public int timeRemaining;
     }
 }
