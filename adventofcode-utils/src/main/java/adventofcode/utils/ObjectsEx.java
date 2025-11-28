@@ -2,12 +2,21 @@ package adventofcode.utils;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Function;
 
 import it.unimi.dsi.fastutil.Hash;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ObjectsEx {
+    public <T> T firstNonNull(T o1, T o2) {
+        return o1 == null ? o2 : o1;
+    }
+
+    public <T, U> U ifNonNull(T o, Function<? super T, ? extends U> f) {
+        return o == null ? null : f.apply(o);
+    }
+
     public static int deepHashCode(Object o) {
         if (o instanceof Object[] arr) return Arrays.deepHashCode(arr);
         if (o instanceof byte[] arr) return Arrays.hashCode(arr);

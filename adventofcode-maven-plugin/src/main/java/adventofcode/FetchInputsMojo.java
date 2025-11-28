@@ -20,12 +20,12 @@ import org.codehaus.plexus.build.BuildContext;
 import org.codehaus.plexus.util.Scanner;
 
 import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ParserConfiguration.LanguageLevel;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.TypeDeclaration;
-import com.github.javaparser.ast.expr.AnnotationExpr;
+
+import adventofcode.ast.ParsedClass;
+import adventofcode.ast.ParsedSourceFile;
+import adventofcode.ast.PuzzleAnnotation;
 
 @Mojo(name = "fetch-inputs", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class FetchInputsMojo extends AbstractMojo {
@@ -122,18 +122,18 @@ public class FetchInputsMojo extends AbstractMojo {
         Set<Integer> days = new HashSet<>();
         for (File sourceFile : sourceFiles) {
             getLog().debug("Parsing source file: " + sourceFile);
-
-            ParseResult<CompilationUnit> result = parser.parse(sourceFile);
-            if (!result.isSuccessful()) {
-                getLog().warn(sourceFile + ": " + result);
+            var parseResult = parser.parse(sourceFile);
+            if (!parseResult.isSuccessful()) {
+                getLog().warn(sourceFile + ": " + parseResult);
                 continue;
             }
-
-            CompilationUnit cu = result.getResult().orElseThrow();
-            for (TypeDeclaration<?> type : cu.getTypes()) {
-                AnnotationExpr puzzleAnno = ParseUtils.getPuzzleAnnotation(type, cu);
-                if (puzzleAnno != null)
-                    days.add(ParseUtils.getPuzzleDay(puzzleAnno));
+            ParsedSourceFile parsedSourceFile = new ParsedSourceFile(parseResult.getResult().orElseThrow());
+            for (ParsedClass parsedClass : parsedSourceFile.getClassses()) {
+                if (parsedClass.isDayClass()) {
+                    PuzzleAnnotation anno = parsedClass.getPuzzleAnnotation();
+                    if (anno != null && anno.getDay() != null)
+                        days.add(anno.getDay());
+                }
             }
         }
         return days;
