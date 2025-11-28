@@ -1,13 +1,11 @@
 package adventofcode.year2018;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
@@ -22,7 +20,7 @@ public class Day16 extends AbstractDay {
     }
 
     private List<Sample> samples;
-    private int[] code;
+    private List<int[]> program;
 
     @Override
     public void parse(String input) {
@@ -37,10 +35,9 @@ public class Day16 extends AbstractDay {
             samples.add(new Sample(before, instr, after));
         }
 
-        String[] lines = sections[1].split("\n");
-        code = new int[lines.length * 4];
-        for (int i = 0; i < lines.length; i++)
-            System.arraycopy(Fn.parseInts(lines[i], "\\s+"), 0, code, i * 4, 4);
+        program = new ArrayList<>();
+        for (String line : sections[1].split("\n"))
+            program.add(Fn.parseInts(line, "\\s+"));
     }
 
     @Override
@@ -52,34 +49,29 @@ public class Day16 extends AbstractDay {
     public Integer part2() {
         Op[] opMapping = resolveOpMapping();
         int[] mem = new int[4];
-        for (int i = 0; i < code.length; i += 4)
-            opMapping[code[i]].apply(mem, code[i+1], code[i+2], code[i+3]);
+        for (int[] instr : program)
+            opMapping[instr[0]].apply(mem, instr[1], instr[2], instr[3]);
         return mem[0];
     }
 
     private Op[] resolveOpMapping() {
         Map<Integer, EnumSet<Op.Name>> candidates = new DefaultHashMap<>(() -> EnumSet.allOf(Op.Name.class));
         for (Sample sample : samples) {
-            int opCode = sample.code[0];
+            int opCode = sample.instr[0];
             candidates.get(opCode).retainAll(sample.candidates());
         }
 
         Op[] opMapping = new Op[ops.size()];
-
-        Queue<Integer> queue = new ArrayDeque<>();
-        for (var entry : candidates.entrySet())
-            if (entry.getValue().size() == 1)
-                queue.add(entry.getKey());
-
-        while (!queue.isEmpty()) {
-            int opCode = queue.poll();
-
-            Op.Name opName = candidates.remove(opCode).iterator().next();
-            opMapping[opCode] = ops.get(opName);
-
-            for (var entry : candidates.entrySet())
-                if (entry.getValue().remove(opName) && entry.getValue().size() == 1)
-                    queue.add(entry.getKey());
+        EnumSet<Op.Name> resolved = EnumSet.noneOf(Op.Name.class);
+        while (resolved.size() < candidates.size()) {
+            for (var entry : candidates.entrySet()) {
+                entry.getValue().removeAll(resolved);
+                if (entry.getValue().size() == 1) {
+                    Op.Name opName = entry.getValue().iterator().next();
+                    opMapping[entry.getKey()] = ops.get(opName);
+                    resolved.add(opName);
+                }
+            }
         }
 
         return opMapping;
@@ -88,14 +80,14 @@ public class Day16 extends AbstractDay {
     @AllArgsConstructor
     public static class Sample {
         public int[] before;
-        public int[] code;
+        public int[] instr;
         public int[] after;
 
         public EnumSet<Op.Name> candidates() {
             EnumSet<Op.Name> result = EnumSet.noneOf(Op.Name.class);
             for (var entry : ops.entrySet()) {
                 int[] mem = before.clone();
-                entry.getValue().apply(mem, code[1], code[2], code[3]);
+                entry.getValue().apply(mem, instr[1], instr[2], instr[3]);
                 if (Arrays.equals(mem, after))
                     result.add(entry.getKey());
             }
