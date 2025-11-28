@@ -117,7 +117,7 @@ public class Day16 extends AbstractDay {
     }
 
     @FunctionalInterface
-    private static interface Op {
+    public static interface Op {
         enum Name {
             ADDR, ADDI,
             MULR, MULI,
