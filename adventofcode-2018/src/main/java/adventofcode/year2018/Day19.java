@@ -36,6 +36,21 @@ public class Day19 extends AbstractDay {
     private void run(int[] mem) {
         for (int ip = 0; ip < program.instructions.size(); ip++) {
             if (ip == 1) {
+                //  1: c = 1
+                //  2: e = 1
+                //  3: d = c * e
+                //  4: d = (d == f) ? 1 : 0
+                //  5: ip = d + ip
+                //  6: ip = ip + 1
+                //  7: a = c + a
+                //  8: e = e + 1
+                //  9: d = (e > f) ? 1 : 0
+                // 10: ip = ip + d
+                // 11: ip = 2
+                // 12: c = c + 1
+                // 13: d = (c > f) ? 1 : 0
+                // 14: ip = d + ip
+                // 15: ip = 1
                 mem[0] += divisorSum(mem[5]);
                 ip = 15;
             } else {
