@@ -124,7 +124,7 @@ public abstract class AbstractDay implements Callable<Integer> {
         return !method.getDeclaringClass().equals(AbstractDay.class);
     }
 
-    protected void debug(Object... args) {
+    public void debug(Object... args) {
         if (debug) {
             String message = Stream.of(args).map(Object::toString).collect(Collectors.joining(" "));
             System.out.println("  [DEBUG] " + message);

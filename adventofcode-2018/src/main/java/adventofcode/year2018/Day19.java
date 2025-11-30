@@ -1,12 +1,8 @@
 package adventofcode.year2018;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.year2018.Day16.Op;
+import adventofcode.year2018.utils.Program;
 
 @Puzzle(day = 19, name = "Go With The Flow")
 public class Day19 extends AbstractDay {
@@ -14,26 +10,12 @@ public class Day19 extends AbstractDay {
         main(Day19.class, args);
     }
 
-    private static Op[] ops = Stream.of(Op.Name.values())
-        .map(Day16.ops::get)
-        .toArray(Op[]::new);
-
-    private List<int[]> program;
-    private int ipReg;
+    private Program program;
 
     @Override
     public void parse(String input) {
-        String[] lines = input.split("\n");
-        ipReg = Integer.parseInt(lines[0].split("\\s+")[1]);
-        program = new ArrayList<>();
-        for (int i = 1; i < lines.length; i++) {
-            String[] tokens = lines[i].trim().split("\\s+");
-            int opCode = Op.Name.valueOf(tokens[0].toUpperCase()).ordinal();
-            int a = Integer.parseInt(tokens[1]);
-            int b = Integer.parseInt(tokens[2]);
-            int c = Integer.parseInt(tokens[3]);
-            program.add(new int[] { opCode, a, b, c });
-        }
+        program = Program.parse(input);
+        program.debug(this);
     }
 
     @Override
@@ -52,15 +34,14 @@ public class Day19 extends AbstractDay {
     }
 
     private void run(int[] mem) {
-        for (int ip = 0; ip < program.size(); ip++) {
+        for (int ip = 0; ip < program.instructions.size(); ip++) {
             if (ip == 1) {
                 mem[0] += divisorSum(mem[5]);
                 ip = 15;
             } else {
-                int[] instr = program.get(ip);
-                mem[ipReg] = ip;
-                ops[instr[0]].apply(mem, instr[1], instr[2], instr[3]);
-                ip = mem[ipReg];
+                mem[program.ipReg] = ip;
+                program.instructions.get(ip).apply(mem);
+                ip = mem[program.ipReg];
             }
         }
     }
