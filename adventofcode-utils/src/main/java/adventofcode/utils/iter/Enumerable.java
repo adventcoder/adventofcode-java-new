@@ -2,6 +2,7 @@ package adventofcode.utils.iter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,6 +25,10 @@ public interface Enumerable<T> {
         return coll.finisher().apply(acc);
     }
 
+    default long count() {
+        return collect(Collectors.counting());
+    }
+
     default <U> Enumerable<U> map(Function<? super T, ? extends U> func) {
         return action -> forEach(t -> action.accept(func.apply(t)));
     }
@@ -36,8 +41,12 @@ public interface Enumerable<T> {
         return action -> forEach(t -> { if (pred.test(t)) action.accept(t); });
     }
 
-    default long count() {
-        return collect(Collectors.counting());
+    default T minBy(Comparator<? super T> cmp) {
+        return collect(Collectors.minBy(cmp)).orElseThrow();
+    }
+
+    default T maxBy(Comparator<? super T> cmp) {
+        return collect(Collectors.maxBy(cmp)).orElseThrow();
     }
 
     default <C extends Collection<T>> C toCollection(Supplier<C> generator) {
@@ -54,7 +63,7 @@ public interface Enumerable<T> {
         return toCollection(HashSet::new);
     }
 
-    default T[] toArray(IntFunction<T[]> generator) {
+    default <E> E[] toArray(IntFunction<E[]> generator) {
         return toList().toArray(generator);
     }
 }

@@ -43,10 +43,12 @@ public interface Generator<T> extends Iterable<T>, Enumerable<T> {
         };
     }
 
+    @Override
     default <U> Generator<U> map(Function<? super T, ? extends U> func) {
         return () -> ObjectsEx.map(next(), func);
     }
 
+    @Override
     default Generator<T> filter(Predicate<? super T> pred) {
         return () -> {
             T look = next();

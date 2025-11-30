@@ -12,9 +12,11 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import adventofcode.utils.iter.Generator;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -45,12 +47,9 @@ public class Fn {
         return s.substring(start, end);
     }
 
-    public static Stream<MatchResult> findall(String s, String regex) {
-        return Pattern.compile(regex).matcher(s).results();
-    }
-
-    public static <T, U, V> Function<T, V> compose(Function<? super U, V> g, Function<T, ? extends U> f) {
-        return f.andThen(g);
+    public static Generator<MatchResult> findall(String s, String regex) {
+        Matcher m = Pattern.compile(regex).matcher(s);
+        return () -> m.find() ? m.toMatchResult() : null;
     }
 
     public static <T extends Comparable<? super T>> List<T> sorted(Iterable<T> xs) {

@@ -6,6 +6,10 @@ import adventofcode.utils.Fn;
 
 @Puzzle(day = 9, name = "Stream Processing")
 public class Day9 extends AbstractDay {
+    public static void main(String[] args) throws Exception {
+        main(Day9.class, args);
+    }
+
     private String stream;
 
     @Override
