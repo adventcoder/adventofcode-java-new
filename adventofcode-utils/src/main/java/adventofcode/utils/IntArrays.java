@@ -52,27 +52,16 @@ public class IntArrays {
         return acc;
     }
 
-    public static int reduce(int[] arr, IntBinaryOperator op) {
-        int acc = arr[0];
-        for (int i = 1; i < arr.length; i++)
-            acc = op.applyAsInt(acc, arr[i]);
-        return acc;
-    }
-
     public static int sum(int[] arr) {
         return reduce(arr, 0, Integer::sum);
     }
 
-    public static int product(int[] arr) {
-        return reduce(arr, 1, IntMath::product);
-    }
-
     public static int min(int[] arr) {
-        return reduce(arr, Integer::min);
+        return reduce(arr, Integer.MAX_VALUE, Integer::min);
     }
 
     public static int max(int[] arr) {
-        return reduce(arr, Integer::max);
+        return reduce(arr, Integer.MIN_VALUE, Integer::max);
     }
 
     public int minIndex(int[] arr) {

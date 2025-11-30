@@ -9,11 +9,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ObjectsEx {
-    public <T> T firstNonNull(T o1, T o2) {
-        return o1 == null ? o2 : o1;
-    }
-
-    public <T, U> U ifNonNull(T o, Function<? super T, ? extends U> f) {
+    public static <T, U> U map(T o, Function<? super T, ? extends U> f) {
         return o == null ? null : f.apply(o);
     }
 

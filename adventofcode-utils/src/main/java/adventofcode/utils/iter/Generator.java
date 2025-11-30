@@ -3,15 +3,15 @@ package adventofcode.utils.iter;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import adventofcode.utils.ObjectsEx;
+
 public interface Generator<T> extends Iterable<T>, Enumerable<T> {
     T next();
-
-    default boolean stop(T val) {
-        return val == null;
-    }
 
     default Stream<T> stream() {
         return StreamSupport.stream(spliterator(), false);
@@ -29,17 +29,30 @@ public interface Generator<T> extends Iterable<T>, Enumerable<T> {
 
             @Override
             public boolean hasNext() {
-                return !stop(look);
+                return look != null;
             }
 
             @Override
             public T next() {
-                if (stop(look))
+                if (look == null)
                     throw new NoSuchElementException();
                 T curr = look;
                 look = Generator.this.next();
                 return curr;
             }
+        };
+    }
+
+    default <U> Generator<U> map(Function<? super T, ? extends U> func) {
+        return () -> ObjectsEx.map(next(), func);
+    }
+
+    default Generator<T> filter(Predicate<? super T> pred) {
+        return () -> {
+            T look = next();
+            while (look != null && !pred.test(look))
+                look = next();
+            return look;
         };
     }
 }
