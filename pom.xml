@@ -21,6 +21,7 @@
         <module>adventofcode-core</module>
         <module>adventofcode-2017</module>
         <module>adventofcode-2018</module>
+        <module>adventofcode-2025</module>
     </modules>
 
     <dependencies>
