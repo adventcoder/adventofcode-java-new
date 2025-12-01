@@ -45,7 +45,7 @@ public interface Generator<T> extends Iterable<T>, Enumerable<T> {
 
     @Override
     default <U> Generator<U> map(Function<? super T, ? extends U> func) {
-        return () -> ObjectsEx.map(next(), func);
+        return () -> ObjectsEx.ifNonNull(next(), func);
     }
 
     @Override

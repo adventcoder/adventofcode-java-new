@@ -9,8 +9,8 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ObjectsEx {
-    public static <T, U> U map(T o, Function<? super T, ? extends U> f) {
-        return o == null ? null : f.apply(o);
+    public static <T, U> U ifNonNull(T o, Function<? super T, ? extends U> func) {
+        return o == null ? null : func.apply(o);
     }
 
     public static int deepHashCode(Object o) {
