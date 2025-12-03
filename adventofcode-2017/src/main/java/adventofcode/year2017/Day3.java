@@ -27,7 +27,7 @@ public class Day3 extends AbstractDay {
         grid.put(new Point(0, 0), 1);
         for (int i = 1; ; i++) {
             Point p = pos(i);
-            int newVal = Fn.sum(p.neighbours8(), n -> grid.getOrDefault(n, 0));
+            int newVal = Fn.sumInt(p.neighbours8(), n -> grid.getOrDefault(n, 0));
             if (newVal > n)
                 return newVal;
             grid.put(p, newVal);

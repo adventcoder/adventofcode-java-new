@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,7 +49,7 @@ public class Fn {
         return s.substring(start, end);
     }
 
-    public static Generator<MatchResult> findall(String s, String regex) {
+    public static Generator<MatchResult> findAll(String s, String regex) {
         Matcher m = Pattern.compile(regex).matcher(s);
         return () -> m.find() ? m.toMatchResult() : null;
     }
@@ -149,10 +150,17 @@ public class Fn {
         return argMax;
     }
 
-    public static <T> int sum(Iterable<T> domain, ToIntFunction<? super T> expr) {
+    public static <T> int sumInt(Iterable<T> domain, ToIntFunction<? super T> expr) {
         int total = 0;
         for (T x : domain)
             total += expr.applyAsInt(x);
+        return total;
+    }
+
+    public static <T> long sumLong(Iterable<T> domain, ToLongFunction<? super T> expr) {
+        long total = 0;
+        for (T x : domain)
+            total += expr.applyAsLong(x);
         return total;
     }
 

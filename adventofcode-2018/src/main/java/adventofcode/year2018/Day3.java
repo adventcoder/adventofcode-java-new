@@ -23,7 +23,7 @@ public class Day3 extends AbstractDay {
     public void parse(String input) {
         claims = new HashMap<>();
         for (String line : input.split("\n")) {
-            int[] vals = Fn.findall(line, "\\d+").mapToInt(m -> Integer.parseInt(m.group())).toIntArray();
+            int[] vals = Fn.findAll(line, "\\d+").mapToInt(m -> Integer.parseInt(m.group())).toIntArray();
             int id = vals[0], x = vals[1], y = vals[2], w = vals[3], h = vals[4];
             claims.put(id, new Rect(x, y, x + w - 1, y + h - 1));
         }

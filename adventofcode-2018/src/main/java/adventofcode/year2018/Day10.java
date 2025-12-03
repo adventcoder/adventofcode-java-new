@@ -25,7 +25,7 @@ public class Day10 extends AbstractDay {
         pos = new int[2][lines.length];
         vel = new int[2][lines.length];
         for (int i = 0; i < lines.length; i++) {
-            int[] vals = Fn.findall(lines[i], "-?\\d+")
+            int[] vals = Fn.findAll(lines[i], "-?\\d+")
                 .mapToInt(m -> Integer.parseInt(m.group()))
                 .toIntArray();
             pos[0][i] = vals[0]; pos[1][i] = vals[1];

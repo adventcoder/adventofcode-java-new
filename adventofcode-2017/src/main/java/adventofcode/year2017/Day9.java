@@ -35,7 +35,7 @@ public class Day9 extends AbstractDay {
 
     @Override
     public Integer part2() {
-        return Fn.findall(stream, "<([^>]*)>")
+        return Fn.findAll(stream, "<([^>]*)>")
             .mapToInt(m -> m.group(1).length())
             .sum();
     }

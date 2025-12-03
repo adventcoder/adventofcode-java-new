@@ -130,6 +130,6 @@ public class Day6 extends AbstractDay {
     }
 
     private boolean contains(Point p) {
-        return Fn.sum(seeds, p::distanceTo) < radius;
+        return Fn.sumInt(seeds, p::distanceTo) < radius;
     }
 }
