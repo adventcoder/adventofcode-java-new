@@ -35,11 +35,10 @@ public class Day3 extends AbstractDay {
     private static long maxJoltage(int[] bank, int n) {
         int start = 0;
         long joltage = 0;
-        while (n > 0) {
-            int i = firstMaxIndex(bank, start, bank.length - n + 1);
+        for (int end = bank.length - n + 1; end <= bank.length; end++) {
+            int i = firstMaxIndex(bank, start, end);
             joltage = joltage*10 + bank[i];
             start = i + 1;
-            n--;
         }
         return joltage;
     }

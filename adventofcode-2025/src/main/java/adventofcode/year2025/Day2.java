@@ -91,7 +91,7 @@ public class Day2 extends AbstractDay {
     }
 
     private long sumInvalidAll(int n) {
-        // The moebius functions handles inclusion/exclusion for cases like 1111 that would show for 1,2,4 group.
+        // The moebius function handles inclusion/exclusion for cases like 1111 that would count toward all of 1,2,4 groups.
         long total = 0;
         for (int d1 = 1; d1*d1 <= n; d1++) {
             if (n % d1 != 0) continue;
