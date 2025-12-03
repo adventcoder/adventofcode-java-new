@@ -1,87 +1,121 @@
 package adventofcode.year2025;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import lombok.AllArgsConstructor;
+import adventofcode.utils.Fn;
+import adventofcode.utils.collect.DefaultHashMap;
+import it.unimi.dsi.fastutil.Pair;
 
 @Puzzle(day = 2, name = "Gift Shop")
 public class Day2 extends AbstractDay {
-    private static final int[] mu = { 0, 1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1, 0, -1 };
-    private static final long[] pow10 = { 1L, 10L, 100L, 1_000L, 10_000L, 100_000L, 1_000_000L, 10_000_000L, 100_000_000L, 1_000_000_000L, 10_000_000_000L, 100_000_000_000L, 1_000_000_000_000L, 10_000_000_000_000L, 100_000_000_000_000L, 1_000_000_000_000_000L, 10_000_000_000_000_000L, 100_000_000_000_000_000L, 1_000_000_000_000_000_000L };
-
     public static void main(String[] args) throws Exception {
         main(Day2.class, args);
     }
 
-    private List<IdRange> ranges;
+    private Map<Integer, List<Pair<BigInteger, BigInteger>>> ranges;
+    private BigInteger[] pow10;
+    private int[] mu;
 
     @Override
     public void parse(String input) {
-        ranges = new ArrayList<>();
-        for (String s : input.split(",")) {
-            String[] pair = s.trim().split("-");
-            long a = Long.parseLong(pair[0]);
-            long b = Long.parseLong(pair[1]);
+        String[][] pairs = Fn.parseVals(input, ",", s -> s.split("-")).toArray(String[][]::new);
 
-            // split the range by digit count
-            int n1 = digitCount(a);
-            int n2 = digitCount(b);
-            if (n1 == n2) {
-                ranges.add(new IdRange(a, b, n1));
+        int maxCount = 0;
+        for (String[] pair : pairs) {
+            int aCount = pair[0].length(), bCount = pair[1].length();
+            maxCount = Math.max(maxCount, Math.max(aCount, bCount));
+        }
+
+        precomputePowers(maxCount);
+        precomputeMu(maxCount);
+
+        // now actually parse the ranges, splitting and grouping by digit count
+        ranges = new DefaultHashMap<>(ArrayList::new);
+        for (String[] pair : pairs) {
+            int aCount = pair[0].length(), bCount = pair[1].length();
+            BigInteger a = new BigInteger(pair[0]), b = new BigInteger(pair[1]);
+            if (aCount == bCount) {
+                ranges.get(aCount).add(Pair.of(a, b));
             } else {
-                ranges.add(new IdRange(a, pow10[n1] - 1, n1));
-                for (int n = n1 + 1; n < n2; n++)
-                    ranges.add(new IdRange(pow10[n - 1], pow10[n] - 1, n));
-                ranges.add(new IdRange(pow10[n2 - 1], b, n2));
+                ranges.get(aCount).add(Pair.of(a, pow10[aCount].subtract(BigInteger.ONE)));
+                for (int n = aCount + 1; n < bCount; n++)
+                    ranges.get(n).add(Pair.of(pow10[n - 1], pow10[n].subtract(BigInteger.ONE))); 
+                ranges.get(bCount).add(Pair.of(pow10[bCount - 1], b));
+            }
+        }
+    }
+
+    private void precomputePowers(int max) {
+        pow10 = new BigInteger[max + 1];
+        pow10[0] = BigInteger.ONE;
+        for (int n = 1; n <= max; n++)
+            pow10[n] = pow10[n - 1].multiply(BigInteger.TEN);
+    }
+
+    private void precomputeMu(int max) {
+        mu = new int[max + 1];
+        for (int n = 1; n <= max; n++)
+            mu[n] = 1;
+        boolean[] seen = new boolean[max + 1];
+        for (int p = 2; p <= max; p++) {
+            if (!seen[p]) {
+                for (int n = p; n <= max; n += p) {
+                    mu[n] *= -1;
+                    seen[n] = true;
+                }
+                for (int n = p*p; n <= max; n += p*p)
+                    mu[n] = 0;
             }
         }
     }
 
     @Override
-    public Long part1() {
-        return ranges.stream().mapToLong(r -> sumInvalid1(r.a, r.b, r.n)).sum();
-    }
-
-    @Override
-    public Object part2() {
-        return ranges.stream().mapToLong(r -> sumInvalid2(r.a, r.b, r.n)).sum();
-    }
-
-    private long sumInvalid1(long a, long b, int n) {
-        if (n % 2 != 0) return 0;
-        long m = (pow10[n] - 1) / (pow10[n / 2] - 1);
-        return sumMultiples(a, b, m);
-    }
-
-    private long sumInvalid2(long a, long b, int n) {
-        long total = 0;
-        for (int k = 1; k <= n / 2; k++) {
-            if (n % k != 0) continue;
-            long m = (pow10[n] - 1) / (pow10[k] - 1);
-            total -= mu[n / k] * sumMultiples(a, b, m);
+    public BigInteger part1() {
+        BigInteger total = BigInteger.ZERO;
+        for (int n : ranges.keySet()) {
+            if (n % 2 != 0) continue;
+            total = total.add(sumInvalid(n, n / 2));
         }
         return total;
     }
 
-    private long sumMultiples(long a, long b, long m) {
-        long i = Math.floorDiv(a - 1, m);
-        long j = Math.floorDiv(b, m);
-        return m * (j*(j+1)/2 - i*(i+1)/2);
+    @Override
+    public BigInteger part2() {
+        BigInteger total = BigInteger.ZERO;
+        for (int n : ranges.keySet())
+            total = total.add(sumInvalid(n, n).subtract(sumInvalidAll(n))); // subtract out the groups that are just the entire number
+        return total;
     }
 
-    private static int digitCount(long x) {
-        int i = Arrays.binarySearch(pow10, x);
-        return i >= 0 ? i + 1 : -i - 1;
+    private BigInteger sumInvalidAll(int n) {
+        BigInteger total = BigInteger.ZERO;
+        for (int d = 1; d <= n; d++) {
+            if (n % d != 0) continue; // could precomputate spf for faster divisors?
+            BigInteger sign = BigInteger.valueOf(mu[n / d]); // mobius inversion handles inclusion/exclusion
+            if (sign.equals(BigInteger.ZERO)) continue;
+            total = total.add(sumInvalid(n, d).multiply(sign));
+        }
+        return total;
     }
 
-    @AllArgsConstructor
-    public static class IdRange {
-        public final long a;
-        public final long b;
-        public final int n;
+    private BigInteger sumInvalid(int n, int d) {
+        BigInteger total = BigInteger.ZERO;
+        BigInteger m = pow10[n].subtract(BigInteger.ONE).divide(pow10[d].subtract(BigInteger.ONE)); // (10^n-1) / (10^d-1)
+        for (var range : ranges.get(n))
+            total = total.add(sumMultiples(range.left(), range.right(), m));
+        return total;
+    }
+
+    private BigInteger sumMultiples(BigInteger a, BigInteger b, BigInteger m) {
+        BigInteger i = a.subtract(BigInteger.ONE).divide(m); // (a-1)/m
+        BigInteger j = b.divide(m); // b/m
+        BigInteger iSum = i.multiply(i.add(BigInteger.ONE)).divide(BigInteger.TWO); // i(i+1)/2
+        BigInteger jSum = j.multiply(j.add(BigInteger.ONE)).divide(BigInteger.TWO); // j(j+1)/2
+        return m.multiply(jSum.subtract(iSum));
     }
 }

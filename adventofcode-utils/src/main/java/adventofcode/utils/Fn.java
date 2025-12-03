@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
@@ -58,6 +59,12 @@ public class Fn {
             result.add(x);
         result.sort(Comparator.naturalOrder());
         return result;
+    }
+
+    public static <T, U> U reduce(Iterable<T> domain, U acc, BiFunction<? super U, ? super T, ? extends U> op) {
+        for (T x : domain)
+            acc = op.apply(acc, x);
+        return acc;
     }
 
     public static <T> T reduce(Iterable<T> domain, BinaryOperator<T> op) {
