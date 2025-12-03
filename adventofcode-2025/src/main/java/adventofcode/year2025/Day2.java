@@ -1,6 +1,5 @@
 package adventofcode.year2025;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +8,7 @@ import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.collect.DefaultHashMap;
-import it.unimi.dsi.fastutil.Pair;
+import it.unimi.dsi.fastutil.longs.LongLongPair;
 
 @Puzzle(day = 2, name = "Gift Shop")
 public class Day2 extends AbstractDay {
@@ -17,8 +16,8 @@ public class Day2 extends AbstractDay {
         main(Day2.class, args);
     }
 
-    private Map<Integer, List<Pair<BigInteger, BigInteger>>> ranges;
-    private BigInteger[] pow10;
+    private Map<Integer, List<LongLongPair>> ranges;
+    private long[] pow10;
     private int[] mu;
 
     @Override
@@ -38,23 +37,23 @@ public class Day2 extends AbstractDay {
         ranges = new DefaultHashMap<>(ArrayList::new);
         for (String[] pair : pairs) {
             int aCount = pair[0].length(), bCount = pair[1].length();
-            BigInteger a = new BigInteger(pair[0]), b = new BigInteger(pair[1]);
+            long a = Long.parseLong(pair[0]), b = Long.parseLong(pair[1]);
             if (aCount == bCount) {
-                ranges.get(aCount).add(Pair.of(a, b));
+                ranges.get(aCount).add(LongLongPair.of(a, b));
             } else {
-                ranges.get(aCount).add(Pair.of(a, pow10[aCount].subtract(BigInteger.ONE)));
+                ranges.get(aCount).add(LongLongPair.of(a, pow10[aCount] - 1));
                 for (int n = aCount + 1; n < bCount; n++)
-                    ranges.get(n).add(Pair.of(pow10[n - 1], pow10[n].subtract(BigInteger.ONE))); 
-                ranges.get(bCount).add(Pair.of(pow10[bCount - 1], b));
+                    ranges.get(n).add(LongLongPair.of(pow10[n - 1], pow10[n] - 1)); 
+                ranges.get(bCount).add(LongLongPair.of(pow10[bCount - 1], b));
             }
         }
     }
 
     private void precomputePowers(int max) {
-        pow10 = new BigInteger[max + 1];
-        pow10[0] = BigInteger.ONE;
+        pow10 = new long[max + 1];
+        pow10[0] = 1;
         for (int n = 1; n <= max; n++)
-            pow10[n] = pow10[n - 1].multiply(BigInteger.TEN);
+            pow10[n] = pow10[n - 1] * 10;
     }
 
     private void precomputeMu(int max) {
@@ -75,47 +74,47 @@ public class Day2 extends AbstractDay {
     }
 
     @Override
-    public BigInteger part1() {
-        BigInteger total = BigInteger.ZERO;
-        for (int n : ranges.keySet()) {
-            if (n % 2 != 0) continue;
-            total = total.add(sumInvalid(n, n / 2));
-        }
+    public Long part1() {
+        long total = 0;
+        for (int n : ranges.keySet())
+            if (n % 2 == 0)
+                total += sumInvalid(n, n / 2);
         return total;
     }
 
     @Override
-    public BigInteger part2() {
-        BigInteger total = BigInteger.ZERO;
+    public Long part2() {
+        long total = 0;
         for (int n : ranges.keySet())
-            total = total.add(sumInvalid(n, n).subtract(sumInvalidAll(n))); // subtract out the groups that are just the entire number
+            total += sumInvalid(n, n) - sumInvalidAll(n); // add back in the the full number group which isn't actually invalid
         return total;
     }
 
-    private BigInteger sumInvalidAll(int n) {
-        BigInteger total = BigInteger.ZERO;
-        for (int d = 1; d <= n; d++) {
-            if (n % d != 0) continue; // could precomputate spf for faster divisors?
-            BigInteger sign = BigInteger.valueOf(mu[n / d]); // mobius inversion handles inclusion/exclusion
-            if (sign.equals(BigInteger.ZERO)) continue;
-            total = total.add(sumInvalid(n, d).multiply(sign));
+    private long sumInvalidAll(int n) {
+        // The moebius functions handles inclusion/exclusion for cases like 1111 that would show for 1,2,4 group.
+        long total = 0;
+        for (int d1 = 1; d1*d1 <= n; d1++) {
+            if (n % d1 != 0) continue;
+            int d2 = n / d1;
+            if (mu[d1] != 0)
+                total += mu[d1] * sumInvalid(n, d2);
+            if (mu[d2] != 0 && d1 != d2)
+                total += mu[d2] * sumInvalid(n, d1);
         }
         return total;
     }
 
-    private BigInteger sumInvalid(int n, int d) {
-        BigInteger total = BigInteger.ZERO;
-        BigInteger m = pow10[n].subtract(BigInteger.ONE).divide(pow10[d].subtract(BigInteger.ONE)); // (10^n-1) / (10^d-1)
+    private long sumInvalid(int n, int d) {
+        long total = 0;
+        long m = (pow10[n] - 1) / (pow10[d] - 1);
         for (var range : ranges.get(n))
-            total = total.add(sumMultiples(range.left(), range.right(), m));
+            total += sumMultiples(range.leftLong(), range.rightLong(), m);
         return total;
     }
 
-    private BigInteger sumMultiples(BigInteger a, BigInteger b, BigInteger m) {
-        BigInteger i = a.subtract(BigInteger.ONE).divide(m); // (a-1)/m
-        BigInteger j = b.divide(m); // b/m
-        BigInteger iSum = i.multiply(i.add(BigInteger.ONE)).divide(BigInteger.TWO); // i(i+1)/2
-        BigInteger jSum = j.multiply(j.add(BigInteger.ONE)).divide(BigInteger.TWO); // j(j+1)/2
-        return m.multiply(jSum.subtract(iSum));
+    private long sumMultiples(long a, long b, long m) {
+        long i = Math.floorDiv(a - 1, m);
+        long j = Math.floorDiv(b, m);
+        return m*(j*(j+1)/2 - i*(i+1)/2);
     }
 }
