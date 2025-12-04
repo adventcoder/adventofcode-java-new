@@ -1,4 +1,4 @@
-package adventofcode.utils.iter;
+package adventofcode.utils.function;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

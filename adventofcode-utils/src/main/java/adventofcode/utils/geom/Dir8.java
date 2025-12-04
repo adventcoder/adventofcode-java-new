@@ -1,5 +1,7 @@
 package adventofcode.utils.geom;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -13,13 +15,13 @@ public enum Dir8 {
     WEST(-1, 0),
     NORTHWEST(-1, -1);
 
+    public static final List<Dir8> values = List.of(values());
+
     public final int x;
     public final int y;
 
-    static final Dir8[] cachedValues = values();
-
     public Dir8 right45(int n) {
-        return cachedValues[(ordinal() + n) & 7];
+        return values.get((ordinal() + n) & 7);
     }
 
     public Dir8 left45(int n) {
@@ -55,7 +57,7 @@ public enum Dir8 {
     }
 
     public Dir8 reflect(Dir8 a, Dir8 b) {
-        return cachedValues[(a.ordinal() + b.ordinal() - ordinal()) & 7];
+        return values.get((a.ordinal() + b.ordinal() - ordinal()) & 7);
     }
 
     public Dir8 reflect(Dir8 a) {

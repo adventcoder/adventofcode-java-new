@@ -21,7 +21,7 @@ public class Day4 extends AbstractDay {
         main(Day4.class, args);
     }
 
-    private Map<Integer, int[]> counts = new DefaultHashMap<>(() -> new int[60]);
+    private Map<Integer, int[]> minutes = new DefaultHashMap<>(() -> new int[60]);
 
     @Override
     public void parse(String input) {
@@ -46,21 +46,19 @@ public class Day4 extends AbstractDay {
 
     private void addNap(Integer guardId, int startMinute, int endMinute) {
         for (int m = startMinute; m < endMinute; m++)
-            counts.get(guardId)[m]++;
+            minutes.get(guardId)[m]++;
     }
 
     @Override
     public Integer part1() {
-        Integer guardId = Fn.argMax(counts.keySet(), gid -> IntArrays.sum(counts.get(gid)));
-        int minute = IntArrays.maxIndex(counts.get(guardId));
-        return guardId * minute;
+        Integer guardId = Fn.argMax(minutes.keySet(), gid -> IntArrays.sum(minutes.get(gid)));
+        return guardId * IntArrays.maxIndex(minutes.get(guardId));
     }
 
     @Override
     public Integer part2() {
-        Integer guardId = Fn.argMax(counts.keySet(), gid -> IntArrays.max(counts.get(gid)));
-        int minute = IntArrays.maxIndex(counts.get(guardId));
-        return guardId * minute;
+        Integer guardId = Fn.argMax(minutes.keySet(), gid -> IntArrays.max(minutes.get(gid)));
+        return guardId * IntArrays.maxIndex(minutes.get(guardId));
     }
 
     @AllArgsConstructor

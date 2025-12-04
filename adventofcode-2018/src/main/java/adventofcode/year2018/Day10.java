@@ -3,6 +3,8 @@ package adventofcode.year2018;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
@@ -54,7 +56,7 @@ public class Day10 extends AbstractDay {
         for (Point p : points)
             grid[p.y - bounds.yMin][p.x - bounds.xMin] = '#';
 
-        return String.join("\n", Fn.map(grid, String::new));
+        return Stream.of(grid).map(String::new).collect(Collectors.joining("\n"));
     }
 
     @Override

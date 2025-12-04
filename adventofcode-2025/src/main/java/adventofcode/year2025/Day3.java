@@ -30,12 +30,13 @@ public class Day3 extends AbstractDay {
     }
 
     private long maxJoltage(String bank, int n) {
+        // stack holds the lexicographical largest decreasing run encountered so far
         char[] stack = new char[bank.length()];
         int size = 0;
         for (int i = 0; i < bank.length(); i++) {
             char d = bank.charAt(i);
             int remaining = bank.length() - i;
-            while (size > 0 && d > stack[size - 1] && size + remaining > n)
+            while (size + remaining > n && size > 0 && d > stack[size - 1])
                 size--;
             stack[size++] = d;
         }

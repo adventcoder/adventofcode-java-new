@@ -1,6 +1,5 @@
 package adventofcode.utils;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -74,20 +73,6 @@ public class Fn {
         while (it.hasNext())
             acc = op.apply(acc, it.next());
         return acc;
-    }
-
-    public static <T, U> List<U> map(T[] vals, Function<? super T, ? extends U> op) {
-        return new AbstractList<U>() {
-            @Override
-            public int size() {
-                return vals.length;
-            }
-
-            @Override
-            public U get(int i) {
-                return op.apply(vals[i]);
-            }
-        };
     }
 
     public static <T, U extends Comparable<? super U>> U min(Iterable<T> domain, Function<? super T, ? extends U> expr) {
