@@ -1,6 +1,5 @@
 package adventofcode.year2025;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import adventofcode.AbstractDay;
@@ -13,13 +12,11 @@ public class Day3 extends AbstractDay {
         main(Day3.class, args);
     }
 
-    List<int[]> banks;
+    private List<String> banks;
 
     @Override
     public void parse(String input) {
-        banks = new ArrayList<>();
-        for (String line : input.split("\n"))
-            banks.add(line.chars().map(c -> c - '0').toArray());
+        banks = List.of(input.split("\n"));
     }
 
     @Override
@@ -32,26 +29,16 @@ public class Day3 extends AbstractDay {
         return Fn.sumLong(banks, bank -> maxJoltage(bank, 12));
     }
 
-    private static long maxJoltage(int[] bank, int n) {
-        int start = 0;
-        long joltage = 0;
-        for (int end = bank.length - n + 1; end <= bank.length; end++) {
-            int i = firstMaxIndex(bank, start, end);
-            joltage = joltage*10 + bank[i];
-            start = i + 1;
+    private long maxJoltage(String bank, int n) {
+        char[] stack = new char[bank.length()];
+        int size = 0;
+        for (int i = 0; i < bank.length(); i++) {
+            char d = bank.charAt(i);
+            int remaining = bank.length() - i;
+            while (size > 0 && d > stack[size - 1] && size + remaining > n)
+                size--;
+            stack[size++] = d;
         }
-        return joltage;
-    }
-
-    private static int firstMaxIndex(int[] bank, int start, int end) {
-        int max = bank[start];
-        int maxIndex = start;
-        for (int i = start + 1; i < end && max < 9; i++) {
-            if (bank[i] > max) {
-                max = bank[i];
-                maxIndex = i;
-            }
-        }
-        return maxIndex;
+        return Long.parseLong(new String(stack, 0, n));
     }
 }
