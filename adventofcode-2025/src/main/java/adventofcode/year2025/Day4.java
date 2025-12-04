@@ -5,8 +5,8 @@ import java.util.Queue;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.collect.Grid;
 import adventofcode.utils.geom.Dir8;
+import adventofcode.utils.geom.Grid;
 import adventofcode.utils.geom.Point;
 
 @Puzzle(day = 4, name = "Printing Department")

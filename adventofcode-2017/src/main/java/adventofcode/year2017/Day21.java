@@ -8,7 +8,7 @@ import java.util.function.UnaryOperator;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.decorators.Memoized;
-import adventofcode.utils.collect.Grid;
+import adventofcode.utils.geom.Grid;
 import adventofcode.utils.geom.Point;
 
 @Puzzle(day = 21, name = "Fractal Art")

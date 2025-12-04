@@ -1,14 +1,12 @@
 package adventofcode.year2018;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
+import adventofcode.utils.geom.Grid;
 import adventofcode.utils.geom.Point;
 import adventofcode.utils.geom.Rect;
 
@@ -36,27 +34,21 @@ public class Day10 extends AbstractDay {
     }
 
     @Override
-    public String part1() {
+    public Grid part1() {
         int t = part2();
 
         List<Point> points = new ArrayList<>();
+        Rect bounds = Rect.empty();
         for (int i = 0; i < pos[0].length; i++) {
-            int x = pos[0][i] + vel[0][i]*t;
-            int y = pos[1][i] + vel[1][i]*t;
-            points.add(new Point(x, y));
+            Point p = new Point(pos[0][i] + vel[0][i]*t, pos[1][i] + vel[1][i]*t);
+            points.add(p);
+            bounds = bounds.or(p);
         }
 
-        Rect bounds = Rect.empty();
+        Grid grid = new Grid(bounds.width(), bounds.height(), ' ');
         for (Point p : points)
-            bounds = bounds.or(p);
-
-        char[][] grid = new char[bounds.height()][bounds.width()];
-        for (char[] row : grid)
-            Arrays.fill(row, ' ');
-        for (Point p : points)
-            grid[p.y - bounds.yMin][p.x - bounds.xMin] = '#';
-
-        return Stream.of(grid).map(String::new).collect(Collectors.joining("\n"));
+            grid.set(p.x - bounds.xMin, p.y - bounds.yMin, '#');
+        return grid;
     }
 
     @Override
