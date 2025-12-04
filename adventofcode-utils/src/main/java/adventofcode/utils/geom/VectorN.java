@@ -2,6 +2,7 @@ package adventofcode.utils.geom;
 
 import it.unimi.dsi.fastutil.ints.IntImmutableList;
 
+//TODO: maybe just make a mutable IntMatrix and IntVector class that includes vector operations
 public class VectorN extends IntImmutableList {
     public VectorN(int... vals) {
         super(vals);
