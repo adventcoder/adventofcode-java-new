@@ -16,6 +16,8 @@ public class Day4 extends AbstractDay {
     }
 
     private Grid grid;
+    private int[][] counts;
+    private Queue<Point> queue;
 
     @Override
     public void parse(String input) {
@@ -24,45 +26,39 @@ public class Day4 extends AbstractDay {
 
     @Override
     public Integer part1() {
-        int removable = 0;
+        computeCounts();
+        queue = new ArrayDeque<>();
         for (int y = 0; y < grid.height; y++)
             for (int x = 0; x < grid.width; x++)
-                if (grid.get(x, y) == '@' && neighbourCount(x, y) <= 3)
-                    removable++;
-        return removable;
+                if (grid.get(x, y) == '@' && counts[y][x] < 4)
+                    queue.add(new Point(x, y));
+        return queue.size();
     }
 
     @Override
     public Integer part2() {
-        Queue<Point> queue = new ArrayDeque<>();
-        int[][] counts = new int[grid.height][grid.width];
+        int removals = 0;
+        while (!queue.isEmpty()) {
+            Point p = queue.poll();
+            removals++;
+            for (Point n : p.neighbours8())
+                if (grid.inBounds(n.x, n.y) && grid.get(n.x, n.y) == '@' && counts[n.y][n.x]-- == 4)
+                    queue.add(n);
+        }
+        return removals;
+    }
+
+    private void computeCounts() {
+        //TODO: create an IntMatrix class, do a 2d convolution
+        counts = new int[grid.height][grid.width];
         for (int y = 0; y < grid.height; y++) {
             for (int x = 0; x < grid.width; x++) {
-                if (grid.get(x, y) == '@') {
-                    counts[y][x] = neighbourCount(x, y);
-                    if (counts[y][x] <= 3)
-                        queue.add(new Point(x, y));
+                if (grid.get(x, y) != '@') continue;
+                for (Dir8 d : Dir8.values) {
+                    if (grid.inBounds(x + d.x, y + d.y) && grid.get(x + d.x, y + d.y) == '@')
+                        counts[y][x]++;
                 }
             }
         }
-
-        int removed = 0;
-        while (!queue.isEmpty()) {
-            Point p = queue.poll();
-            removed++;
-            for (Point n : p.neighbours8()) {
-                if (grid.inBounds(n.x, n.y) && grid.get(n.x, n.y) == '@' && --counts[n.y][n.x] == 3)
-                    queue.add(n);
-            }
-        }
-        return removed;
-    }
-
-    private int neighbourCount(int x, int y) {
-        int count = 0;
-        for (Dir8 d : Dir8.values)
-            if (grid.inBounds(x + d.x, y + d.y) && grid.get(x + d.x, y + d.y) == '@')
-                count++;
-        return count;
     }
 }
