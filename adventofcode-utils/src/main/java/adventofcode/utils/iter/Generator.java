@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -19,7 +20,11 @@ public interface Generator<T> extends Iterable<T>, Enumerable<T> {
 
     @Override
     default void forEach(Consumer<? super T> action) {
-        Iterable.super.forEach(action);
+        T look = next();
+        while (look != null) {
+            action.accept(look);
+            look = next();
+        }
     }
 
     @Override
@@ -46,6 +51,11 @@ public interface Generator<T> extends Iterable<T>, Enumerable<T> {
     @Override
     default <U> Generator<U> map(Function<? super T, ? extends U> func) {
         return () -> ObjectsEx.ifNonNull(next(), func);
+    }
+
+    @Override
+    default IntGenerator mapToInt(ToIntFunction<? super T> func) {
+        return action -> ObjectsEx.doIfNonNull(next(), t -> action.accept(func.applyAsInt(t)));
     }
 
     @Override

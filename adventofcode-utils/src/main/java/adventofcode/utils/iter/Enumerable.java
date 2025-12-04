@@ -3,9 +3,7 @@ package adventofcode.utils.iter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -57,10 +55,6 @@ public interface Enumerable<T> {
 
     default List<T> toList() {
         return toCollection(ArrayList::new);
-    }
-
-    default Set<T> toSet() {
-        return toCollection(HashSet::new);
     }
 
     default <E> E[] toArray(IntFunction<E[]> generator) {

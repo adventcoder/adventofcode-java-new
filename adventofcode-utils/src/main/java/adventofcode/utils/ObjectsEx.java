@@ -2,6 +2,7 @@ package adventofcode.utils;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import it.unimi.dsi.fastutil.Hash;
@@ -10,7 +11,15 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ObjectsEx {
     public static <T, U> U ifNonNull(T o, Function<? super T, ? extends U> func) {
-        return o == null ? null : func.apply(o);
+        return o != null ? func.apply(o) : null;
+    }
+
+    public static <T> boolean doIfNonNull(T o, Consumer<? super T> consumer) {
+        if (o != null) {
+            consumer.accept(o);
+            return true;
+        }
+        return false;
     }
 
     public static int deepHashCode(Object o) {

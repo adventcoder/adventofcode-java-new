@@ -1,8 +1,8 @@
 package adventofcode.utils.iter;
 
-import java.util.function.Consumer;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntConsumer;
+import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
@@ -10,18 +10,16 @@ import java.util.function.Supplier;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 
-public interface IntEnumerable extends Enumerable<Integer> {
-    default void forEach(Consumer<? super Integer> action) {
-        forEachInt(val -> action.accept(Integer.valueOf(val)));
-    }
-
-    void forEachInt(IntConsumer action);
+public interface IntEnumerable {
+    void forEach(IntConsumer action);
 
     default IntEnumerable map(IntUnaryOperator func) {
         return action -> forEach(val -> action.accept(func.applyAsInt(val)));
+    }
+
+    default <T> Enumerable<T> mapToObj(IntFunction<? extends T> func) {
+        return action -> forEach(val -> action.accept(func.apply(val)));
     }
 
     default IntEnumerable filter(IntPredicate pred) {
@@ -29,16 +27,9 @@ public interface IntEnumerable extends Enumerable<Integer> {
     }
 
     default int reduce(int identity, IntBinaryOperator op) {
-        var reducer = new IntConsumer() {
-            int acc = identity;
-
-            @Override
-            public void accept(int val) {
-                acc = op.applyAsInt(acc, val);
-            }
-        };
-        forEachInt(reducer);
-        return reducer.acc;
+        int[] acc = { identity };
+        forEach(t -> acc[0] = op.applyAsInt(acc[0], t));
+        return acc[0];
     }
 
     default int sum() {
@@ -53,21 +44,17 @@ public interface IntEnumerable extends Enumerable<Integer> {
         return reduce(Integer.MIN_VALUE, Integer::max);
     }
 
-    default <C extends IntCollection> C toIntCollection(Supplier<C> generator) {
+    default <C extends IntCollection> C toCollection(Supplier<C> generator) {
         C coll = generator.get();
-        forEachInt(coll::add);
+        forEach(coll::add);
         return coll;
     }
 
-    default IntList toIntList() {
-        return toIntCollection(IntArrayList::new);
+    default IntList toList() {
+        return toCollection(IntArrayList::new);
     }
 
-    default IntSet toIntSet() {
-        return toIntCollection(IntOpenHashSet::new);
-    }
-
-    default int[] toIntArray() {
-        return toIntList().toIntArray();
+    default int[] toArray() {
+        return toList().toIntArray();
     }
 }

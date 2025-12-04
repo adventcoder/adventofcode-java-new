@@ -24,12 +24,12 @@ public class Day4 extends AbstractDay {
 
     @Override
     public Integer part1() {
-        int accessed = 0;
+        int removable = 0;
         for (int y = 0; y < grid.height; y++)
             for (int x = 0; x < grid.width; x++)
                 if (grid.get(x, y) == '@' && neighbourCount(x, y) <= 3)
-                    accessed++;
-        return accessed;
+                    removable++;
+        return removable;
     }
 
     @Override
