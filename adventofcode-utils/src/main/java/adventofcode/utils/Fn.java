@@ -25,7 +25,7 @@ public class Fn {
     public static <T> Stream<T> parseVals(String s, String sep, Function<? super String, ? extends T> parser) {
         return Stream.of(s.split(sep)).map(String::trim).map(parser);
     }
-    
+
     public static int[] parseInts(String s, String sep) {
         String[] tokens = s.split(sep);
         int[] result = new int[tokens.length];
