@@ -1,12 +1,41 @@
-package adventofcode.utils;
+package adventofcode.utils.array;
 
+import java.util.Arrays;
 import java.util.PrimitiveIterator;
 import java.util.function.IntBinaryOperator;
+import java.util.function.IntUnaryOperator;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class IntArrays {
+    public static int[] create(int size, int val) {
+        int[] arr = new int[size];
+        Arrays.fill(arr, val);
+        return arr;
+    }
+
+    public static int[][] create(int width, int height, int val) {
+        int[][] arr = new int[height][width];
+        for (int[] row : arr)
+            Arrays.fill(row, val);
+        return arr;
+    }
+
+    public static int[] create(int size, IntUnaryOperator op) {
+        int[] arr = new int[size];
+        for (int i = 0; i < size; i++)
+            arr[i] = op.applyAsInt(i);
+        return arr;
+    }
+    public static int[][] create(int width, int height, IntBinaryOperator op) {
+        int[][] arr = new int[height][width];
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+                arr[y][x] = op.applyAsInt(x, y);
+        return arr;
+    }
+
     public static int[] concat(int[] a, int[] b) {
         if (a.length == 0) return b;
         if (b.length == 0) return a;
@@ -64,7 +93,7 @@ public class IntArrays {
         return reduce(arr, Integer.MIN_VALUE, Integer::max);
     }
 
-    public int minIndex(int[] arr) {
+    public static int minIndex(int[] arr) {
         int min = arr[0];
         int minIndex = 0;
         for (int i = 1; i < arr.length; i++) {
@@ -76,7 +105,7 @@ public class IntArrays {
         return minIndex;
     }
 
-    public int maxIndex(int[] arr) {
+    public static int maxIndex(int[] arr) {
         int max = arr[0];
         int maxIndex = 0;
         for (int i = 1; i < arr.length; i++) {
@@ -88,7 +117,7 @@ public class IntArrays {
         return maxIndex;
     }
 
-    public void swap(int[] arr, int i, int j) {
+    public static void swap(int[] arr, int i, int j) {
         int t = arr[i];
         arr[i] = arr[j];
         arr[j] = t;

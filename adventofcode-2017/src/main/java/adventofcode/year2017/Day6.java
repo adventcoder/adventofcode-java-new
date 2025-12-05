@@ -5,7 +5,7 @@ import java.util.Map;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import adventofcode.utils.IntArrays;
+import adventofcode.utils.array.IntArrays;
 import adventofcode.utils.collect.DeepHashMap;
 
 @Puzzle(day = 6, name = "Memory Reallocation")

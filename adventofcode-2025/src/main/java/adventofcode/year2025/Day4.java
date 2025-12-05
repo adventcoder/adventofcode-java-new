@@ -5,7 +5,6 @@ import java.util.Queue;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.geom.Dir8;
 import adventofcode.utils.geom.Grid;
 import adventofcode.utils.geom.Point;
 
@@ -22,15 +21,41 @@ public class Day4 extends AbstractDay {
     @Override
     public void parse(String input) {
         grid = Grid.parse(input);
+        popCount();
+    }
+
+    private void popCount() {
+        // Counts the populated cells of each 3x3 subgrid
+        counts = new int[grid.height][grid.width];
+        for (int y = 0; y < grid.height; y++)
+            for (int x = 0; x < grid.width; x++)
+                counts[y][x] = grid.get(x, y) == '@' ? 1 : 0;
+        for (int y = 0; y < grid.height; y++) {
+            int prev = 0;
+            for (int x = 0; x < grid.width - 1; x++) {
+                int curr = counts[y][x];
+                counts[y][x] += prev + counts[y][x+1];
+                prev = curr;
+            }
+            counts[y][grid.width - 1] += prev;
+        }
+        for (int x = 0; x < grid.width; x++) {
+            int prev = 0;
+            for (int y = 0; y < grid.height - 1; y++) {
+                int curr = counts[y][x];
+                counts[y][x] += prev + counts[y+1][x];
+                prev = curr;
+            }
+            counts[grid.height - 1][x] += prev;
+        }
     }
 
     @Override
     public Integer part1() {
-        computeCounts();
         queue = new ArrayDeque<>();
         for (int y = 0; y < grid.height; y++)
             for (int x = 0; x < grid.width; x++)
-                if (grid.get(x, y) == '@' && counts[y][x] < 4)
+                if (grid.get(x, y) == '@' && counts[y][x] <= 4)
                     queue.add(new Point(x, y));
         return queue.size();
     }
@@ -42,23 +67,9 @@ public class Day4 extends AbstractDay {
             Point p = queue.poll();
             removals++;
             for (Point n : p.neighbours8())
-                if (grid.inBounds(n.x, n.y) && grid.get(n.x, n.y) == '@' && counts[n.y][n.x]-- == 4)
+                if (grid.getOrDefault(n.x, n.y, '.') == '@' && --counts[n.y][n.x] == 4)
                     queue.add(n);
         }
         return removals;
-    }
-
-    private void computeCounts() {
-        //TODO: create an IntMatrix class, do a 2d convolution
-        counts = new int[grid.height][grid.width];
-        for (int y = 0; y < grid.height; y++) {
-            for (int x = 0; x < grid.width; x++) {
-                if (grid.get(x, y) != '@') continue;
-                for (Dir8 d : Dir8.values) {
-                    if (grid.inBounds(x + d.x, y + d.y) && grid.get(x + d.x, y + d.y) == '@')
-                        counts[y][x]++;
-                }
-            }
-        }
     }
 }

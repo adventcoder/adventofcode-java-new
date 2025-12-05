@@ -11,7 +11,7 @@ import java.util.Objects;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import adventofcode.utils.IntArrays;
+import adventofcode.utils.array.IntArrays;
 import adventofcode.utils.collect.DefaultHashMap;
 import lombok.AllArgsConstructor;
 
