@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import adventofcode.utils.Fn;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -29,12 +30,13 @@ public class Grid {
     }
 
     public Grid(String... rows) {
-        this(rows[0].length(), rows.length);
-        for (int y = 0; y < rows.length; y++) {
-            if (rows[y].length() != width)
-                throw new IllegalArgumentException();
-            setRow(y, rows[y]);
-        }
+        this(Arrays.asList(rows));
+    }
+
+    public Grid(List<String> rows) {
+        this(Fn.max(rows, String::length), rows.size(), ' ');
+        for (int y = 0; y < rows.size(); y++)
+            setRow(0, y, rows.get(y));
     }
 
     public static Grid parse(String input) {
@@ -53,8 +55,12 @@ public class Grid {
         return x >= 0 && x < width && y >= 0 && y < height;
     }
 
+    private int index(int x, int y) {
+        return start + x + stride * y;
+    }
+
     public char get(int x, int y) {
-        return data[start + x + y*stride];
+        return data[index(x, y)];
     }
 
     public char getOrDefault(int x, int y, char c) {
@@ -62,15 +68,35 @@ public class Grid {
     }
 
     public void set(int x, int y, char c) {
-        data[start + x + y*stride] = c;
+        data[index(x, y)] = c;
+    }
+
+    public String getRow(int x, int y, int size) {
+        return new String(data, index(x, y), size);
     }
 
     public String getRow(int y) {
-        return new String(data, start + y*stride, width);
+        return getRow(0, y, width);
     }
 
-    public void setRow(int y, String row) {
-        row.getChars(0, row.length(), data, start + y*stride);
+    public void setRow(int x, int y, String row) {
+        row.getChars(0, row.length(), data, index(x, y));
+    }
+
+    public String getColumn(int x) {
+        return getColumn(x, 0, height);
+    }
+
+    public String getColumn(int x, int y, int size) {
+        char[] col = new char[size];
+        for (int i = 0; i < size; i++)
+            col[i] = get(x, y + i);
+        return new String(col);
+    }
+
+    public void setColumn(int x, int y, CharSequence col) {
+        for (int i = 0; i < col.length(); i++)
+            set(x, y + i, col.charAt(i));
     }
 
     public Grid slice(int x, int y, int sliceWidth, int sliceHeight) {
@@ -79,7 +105,7 @@ public class Grid {
 
     public void setSlice(int x, int y, Grid slice) {
         if (width == slice.width && stride == width && slice.stride == slice.width) {
-            System.arraycopy(slice.data, slice.start, data, start + x + y*stride, slice.width * slice.height);
+            System.arraycopy(slice.data, slice.start, data, index(x, y), slice.width * slice.height);
         } else {
             for (int sliceY = 0; sliceY < slice.height; sliceY++) {
                 int offset = start + x + (sliceY + y)*stride;
