@@ -10,5 +10,5 @@ import java.lang.annotation.Target;
 public @interface Puzzle {
     // public int year(); //TODO
     public int day();
-    public String[] name();
+    public String[] name() default {};
 }

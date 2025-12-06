@@ -69,10 +69,10 @@ public abstract class AbstractDay implements Callable<Integer> {
     }
 
     public String title() {
-        String title = "Day " + day;
-        if (name != null)
-            title += ": " + name;
-        return title;
+        if (name == null)
+            return String.format("--- Day %d ---", day);
+        else
+            return String.format("--- Day %d: %s ---", day, name);
     }
 
     public Integer call() throws Exception {
