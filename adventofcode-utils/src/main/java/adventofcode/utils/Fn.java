@@ -1,10 +1,10 @@
 package adventofcode.utils;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -42,6 +42,14 @@ public class Fn {
         return result;
     }
 
+    public static String lstrip(String s, String prefix) {
+        return s.startsWith(prefix) ? s.substring(prefix.length()) : s;
+    }
+
+    public static String rstrip(String s, String suffix) {
+        return s.endsWith(suffix) ? s.substring(s.length() - suffix.length()) : s;
+    }
+
     public static String strip(String s, String prefix, String suffix) {
         int start = s.startsWith(prefix) ? prefix.length() : 0;
         int end = s.endsWith(suffix) ? s.length() - suffix.length() : s.length();
@@ -55,10 +63,23 @@ public class Fn {
 
     public static <T extends Comparable<? super T>> List<T> sorted(Iterable<T> xs) {
         List<T> result = new ArrayList<T>();
-        for (T x : xs)
-            result.add(x);
+        for (T x : xs) result.add(x);
         result.sort(Comparator.naturalOrder());
         return result;
+    }
+
+    public static <T, U> List<U> map(List<T> xs, Function<? super T, ? extends U> func) {
+        return new AbstractList<>() {
+            @Override
+            public int size() {
+                return xs.size();
+            }
+
+            @Override
+            public U get(int i) {
+                return func.apply(xs.get(i));
+            }
+        };
     }
 
     public static <T, U> U reduce(Iterable<T> domain, U acc, BiFunction<? super U, ? super T, ? extends U> op) {
@@ -171,33 +192,57 @@ public class Fn {
         return true;
     }
 
+    public static <T, K extends Comparable<K>> int bisectLeft(List<T> list, K x, Function<? super T, ? extends K> key) {
+        return bisectLeft(map(list, key), x, Comparator.naturalOrder());
+    }
+
+    public static <T> int bisectLeft(List<T> list, T x, Comparator<T> cmp) {
+        if (list.isEmpty()) return 0;
+        int p = bsearchFirst(0, list.size() - 1, i -> cmp.compare(list.get(i), x) >= 0 ? 0 : -1);
+        return p >= 0 ? p : -p - 1;
+    }
+
+    public static <T, K extends Comparable<K>> int bisectRight(List<T> list, K x, Function<? super T, ? extends K> key) {
+        return bisectRight(map(list, key), x, Comparator.naturalOrder());
+    }
+
+    public static <T> int bisectRight(List<T> list, T x, Comparator<T> cmp) {
+        if (list.isEmpty()) return 0;
+        int p = bsearchLast(0, list.size() - 1, i -> cmp.compare(list.get(i), x) <= 0 ? 0 : 1);
+        return p >= 0 ? p + 1 : -p - 1;
+    }
+
     public static int bsearchFirst(int min, int max, IntUnaryOperator op) {
-        while (min <= max) {
+        while (min < max) {
             int mid = min + (max - min) / 2;
             int val = op.applyAsInt(mid);
             if (val < 0) {
                 min = mid + 1;
             } else {
-                max = mid - 1;
+                max = mid;
             }
         }
-        if (op.applyAsInt(min) == 0)
-            return min;
-        throw new NoSuchElementException();
+        assert min == max;
+        int val = op.applyAsInt(min);
+        if (val == 0) return min;
+        int ins = val > 0 ? min : min + 1;
+        return -ins - 1;
     }
 
     public static int bsearchLast(int min, int max, IntUnaryOperator op) {
-        while (min <= max) {
-            int mid = min + (max - min) / 2;
+        while (min < max) {
+            int mid = min + (max - min + 1) / 2;
             int val = op.applyAsInt(mid);
             if (val > 0) {
                 max = mid - 1;
             } else {
-                min = mid + 1;
+                min = mid;
             }
         }
-        if (op.applyAsInt(max) == 0)
-            return max;
-        throw new NoSuchElementException();
+        assert min == max;
+        int val = op.applyAsInt(min);
+        if (val == 0) return min;
+        int ins = val > 0 ? min : min + 1;
+        return -ins - 1;
     }
 }
