@@ -1,6 +1,5 @@
 package adventofcode.utils;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -63,20 +62,6 @@ public class Fn {
         for (T x : xs) result.add(x);
         result.sort(Comparator.naturalOrder());
         return result;
-    }
-
-    public static <T, U> List<U> map(List<T> xs, Function<? super T, ? extends U> func) {
-        return new AbstractList<>() {
-            @Override
-            public int size() {
-                return xs.size();
-            }
-
-            @Override
-            public U get(int i) {
-                return func.apply(xs.get(i));
-            }
-        };
     }
 
     public static <T, U> U reduce(Iterable<T> domain, U acc, BiFunction<? super U, ? super T, ? extends U> op) {
@@ -189,24 +174,16 @@ public class Fn {
         return true;
     }
 
-    public static <T, K extends Comparable<K>> int bisectLeft(List<T> list, K x, Function<? super T, ? extends K> key) {
-        return bisectLeft(map(list, key), x, Comparator.naturalOrder());
-    }
-
     public static <T> int bisectLeft(List<T> list, T x, Comparator<T> cmp) {
         if (list.isEmpty()) return 0;
-        int p = bsearchFirst(0, list.size() - 1, i -> cmp.compare(list.get(i), x) >= 0 ? 0 : -1);
-        return p >= 0 ? p : -p - 1;
-    }
-
-    public static <T, K extends Comparable<K>> int bisectRight(List<T> list, K x, Function<? super T, ? extends K> key) {
-        return bisectRight(map(list, key), x, Comparator.naturalOrder());
+        int firstIndex = bsearchFirst(0, list.size() - 1, i -> cmp.compare(list.get(i), x) >= 0 ? 0 : -1);
+        return firstIndex >= 0 ? firstIndex : -firstIndex - 1;
     }
 
     public static <T> int bisectRight(List<T> list, T x, Comparator<T> cmp) {
         if (list.isEmpty()) return 0;
-        int p = bsearchLast(0, list.size() - 1, i -> cmp.compare(list.get(i), x) <= 0 ? 0 : 1);
-        return p >= 0 ? p + 1 : -p - 1;
+        int lastIndex = bsearchLast(0, list.size() - 1, i -> cmp.compare(list.get(i), x) <= 0 ? 0 : 1);
+        return lastIndex >= 0 ? lastIndex + 1 : -lastIndex - 1;
     }
 
     public static int bsearchFirst(int min, int max, IntUnaryOperator op) {
