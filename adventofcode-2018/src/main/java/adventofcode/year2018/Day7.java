@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
+import adventofcode.utils.array.ArraysEx;
 import adventofcode.utils.collect.Counter;
 import adventofcode.utils.collect.DefaultHashMap;
 
@@ -44,6 +45,7 @@ public class Day7 extends AbstractDay {
         return scheduler.totalTime;
     }
 
+    //TODO: this is still ugly
     private class Scheduler {
         private final Worker[] workers;
         private final Counter<Character> inDegree = new Counter<>();
@@ -52,10 +54,7 @@ public class Day7 extends AbstractDay {
         private int totalTime = 0;
 
         public Scheduler(int numWorkers) {
-            workers = new Worker[numWorkers];
-            for (int i = 0; i < numWorkers; i++)
-                workers[i] = new Worker();
-
+            workers = ArraysEx.create(Worker.class, numWorkers, Worker::new);
             for (Character step : edges.keySet())
                 for (Character nextStep : edges.get(step))
                     inDegree.inc(nextStep);
