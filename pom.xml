@@ -16,7 +16,6 @@
     </properties>
 
     <modules>
-        <module>adventofcode-maven-plugin</module>
         <module>adventofcode-utils</module>
         <module>adventofcode-core</module>
         <module>adventofcode-2017</module>

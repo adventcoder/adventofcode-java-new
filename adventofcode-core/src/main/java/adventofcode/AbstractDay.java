@@ -3,7 +3,9 @@ package adventofcode;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Objects;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
@@ -18,27 +20,59 @@ import picocli.CommandLine.Option;
 
 @Command(mixinStandardHelpOptions = true)
 public abstract class AbstractDay implements Callable<Integer> {
+    protected final int year;
     protected final int day;
     protected final String name;
 
-    @Option(names = "--debug", description = "Enabled debug output")
+    @Option(names = "--debug", description = "Enable debug output")
     public boolean debug;
 
     @Option(names = "--input", description = "Path to input file")
     private File inputFile;
 
+    @Option(names = "--input-encoding", description = "Input encoding")
+    private Charset inputEncoding = StandardCharsets.UTF_8;
+
+    @Option(names = "--session", defaultValue = "${env:AOC_SESSION}")
+    private String session;
+
     public AbstractDay() {
-        Puzzle puzzle = Objects.requireNonNull(getPuzzle());
-        day = puzzle.day();
-        name = puzzle.name();
+        Puzzle puzzle = getPuzzle();
+        if (puzzle != null) {
+            year = detectYear().orElseThrow(); //TODO: get from annotation
+            day = puzzle.day();
+            name = puzzle.name().length == 0 ? null : puzzle.name()[0];
+        } else {
+            year = detectYear().orElseThrow();
+            day = detectDay().orElseThrow();
+            name = null;
+        }
     }
 
     private Puzzle getPuzzle() {
         return Decorators.undecorate(getClass()).getAnnotation(Puzzle.class);
     }
 
+    private OptionalInt detectYear() {
+        String[] parts = Decorators.undecorate(getClass()).getPackageName().split("\\.");
+        String lastPart = parts[parts.length - 1];
+        if (lastPart.matches("year(\\d+)"))
+            return OptionalInt.of(Integer.parseInt(lastPart.substring(4)));
+        return OptionalInt.empty();
+    }
+
+    private OptionalInt detectDay() {
+        String name = Decorators.undecorate(getClass()).getSimpleName();
+        if (name.matches("Day(\\d+)"))
+            return OptionalInt.of(Integer.parseInt(name.substring(3)));
+        return OptionalInt.empty();
+    }
+
     public String title() {
-        return String.format("Day %d: %s", day, name);
+        String title = "Day " + day;
+        if (name != null)
+            title += ": " + name;
+        return title;
     }
 
     public Integer call() throws Exception {
@@ -95,13 +129,13 @@ public abstract class AbstractDay implements Callable<Integer> {
     }
 
     public String getInput() throws IOException {
-        if (inputFile == null) {
-            return Inputs.read(getClass(), getInputName());
-        } else if (inputFile.toString().equals("-")) {
-            return Inputs.read(System.in);
-        } else {
-            return Inputs.read(inputFile);
-        }
+        if (inputFile != null)
+            return TextIO.read(inputFile, inputEncoding);
+        URL inputURL = getClass().getResource(getInputName());
+        if (inputURL != null)
+            return TextIO.read(inputURL, StandardCharsets.UTF_8);
+        Client client = new Client(session);
+        return client.getInput(this);
     }
 
     public String getInputName() {

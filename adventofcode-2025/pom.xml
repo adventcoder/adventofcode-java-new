@@ -9,10 +9,6 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <properties>
-        <aoc.year>2025</aoc.year>
-    </properties>
-
     <groupId>com.example</groupId>
     <artifactId>adventofcode-2025</artifactId>
     <version>1.0-SNAPSHOT</version>
@@ -32,18 +28,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>com.example</groupId>
-                <artifactId>adventofcode-maven-plugin</artifactId>
-                <version>1.0-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>fetch-inputs</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
