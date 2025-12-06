@@ -2,9 +2,9 @@ package adventofcode.year2025;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.LongBinaryOperator;
+import java.util.function.Function;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
@@ -16,8 +16,6 @@ public class Day6 extends AbstractDay {
     public static void main(String[] args) throws Exception {
         main(Day6.class, args);
     }
-
-    private static Map<String, LongBinaryOperator> opMap = Map.of("+", Long::sum, "*", (x, y) -> x * y);
 
     private List<Grid> problems = new ArrayList<>();
 
@@ -36,25 +34,31 @@ public class Day6 extends AbstractDay {
 
     @Override
     public Long part1() {
-        return Fn.sumLong(problems, this::evalRows);
+        return Fn.sumLong(problems, p -> eval(p, this::operandsByRow));
     }
 
     @Override
     public Long part2() {
-        return Fn.sumLong(problems, this::evalColumns);
+        return Fn.sumLong(problems, p -> eval(p, this::operandsByColumn));
     }
 
-    private long evalRows(Grid problem) {
+    private long eval(Grid problem, Function<Grid, LongStream> operands) {
+        String op = problem.getRow(problem.height - 1).trim();
+        return switch (op) {
+            case "+" -> operands.apply(problem).sum();
+            case "*" -> operands.apply(problem).reduce(1L, (x, y) -> x * y);
+            default -> throw new UnsupportedOperationException();
+        };
+    }
+
+    private LongStream operandsByRow(Grid problem) {
         return IntStream.range(0, problem.height - 1)
-            .mapToLong(y -> Long.parseLong(problem.getRow(y).trim()))
-            .reduce(opMap.get(problem.getRow(problem.height - 1).trim()))
-            .orElseThrow();
+            .mapToLong(y -> Long.parseLong(problem.getRow(0, y, problem.width).trim()));
     }
-    
-    private long evalColumns(Grid problem) {
+
+    private LongStream operandsByColumn(Grid problem) {
         return IntStream.range(0, problem.width)
-            .mapToLong(x -> Long.parseLong(problem.getColumn(x, 0, problem.height - 1).trim()))
-            .reduce(opMap.get(problem.getRow(problem.height - 1).trim()))
-            .orElseThrow();
+            .mapToLong(x -> Long.parseLong(problem.getColumn(x, 0, problem.height - 1).trim()));
     }
+
 }

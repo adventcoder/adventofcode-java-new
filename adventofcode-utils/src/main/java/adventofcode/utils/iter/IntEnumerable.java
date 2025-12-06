@@ -1,5 +1,6 @@
 package adventofcode.utils.iter;
 
+import java.util.NoSuchElementException;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
@@ -32,16 +33,29 @@ public interface IntEnumerable {
         return acc[0];
     }
 
+    default int reduce(IntBinaryOperator op) {
+        IntList acc = new IntArrayList(1);
+        forEach(t -> {
+            if (acc.isEmpty())
+                acc.add(t);
+            else
+                acc.set(0, op.applyAsInt(acc.getInt(0), t));
+        });
+        if (acc.isEmpty())
+            throw new NoSuchElementException();
+        return acc.getInt(0);
+    }
+
     default int sum() {
         return reduce(0, Integer::sum);
     }
 
     default int min() {
-        return reduce(Integer.MAX_VALUE, Integer::min);
+        return reduce(Integer::min);
     }
 
     default int max() {
-        return reduce(Integer.MIN_VALUE, Integer::max);
+        return reduce(Integer::max);
     }
 
     default <C extends IntCollection> C toCollection(Supplier<C> generator) {

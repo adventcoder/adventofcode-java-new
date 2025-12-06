@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -37,6 +38,14 @@ public interface Enumerable<T> {
 
     default Enumerable<T> filter(Predicate<? super T> pred) {
         return action -> forEach(t -> { if (pred.test(t)) action.accept(t); });
+    }
+
+    default T reduce(T identity, BinaryOperator<T> op) {
+        return collect(Collectors.reducing(identity, op));
+    }
+
+    default T reduce(BinaryOperator<T> op) {
+        return collect(Collectors.reducing(op)).orElseThrow();
     }
 
     default T minBy(Comparator<? super T> cmp) {
