@@ -20,6 +20,8 @@ import picocli.CommandLine.Option;
 
 @Command(mixinStandardHelpOptions = true)
 public abstract class AbstractDay implements Callable<Integer> {
+    private static final Cache cache = new Cache();
+
     protected final int year;
     protected final int day;
     protected final String name;
@@ -134,8 +136,7 @@ public abstract class AbstractDay implements Callable<Integer> {
         URL inputURL = getClass().getResource(getInputName());
         if (inputURL != null)
             return TextIO.read(inputURL, StandardCharsets.UTF_8);
-        Client client = new Client(session);
-        return client.getInput(this);
+        return cache.getInput(year, day, session);
     }
 
     public String getInputName() {

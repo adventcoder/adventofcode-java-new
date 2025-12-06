@@ -12,32 +12,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Objects;
 
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
 public class Client {
-    private final String session;
-    private static final Cache cache = new Cache();
+    public String getInput(int year, int day, String session) throws IOException {
+        URI uri = URI.create(String.format("https://adventofcode.com/%d/day/%d/input", year, day));
 
-    public String getInput(AbstractDay day) throws IOException {
-        return cache.getInput(day.year, day.day, () -> {
-            day.debug("Downloading input..."); //TODO: i should probably make a proper logger interface instead of passing the whole Day object
-            URI uri = URI.create(String.format("https://adventofcode.com/%d/day/%d/input", day.year, day.day));
+        HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
+        if (session != null)
+            conn.setRequestProperty("Cookie", "session=" + session);
+        conn.setInstanceFollowRedirects(false);
 
-            HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
-            if (session != null)
-                conn.setRequestProperty("Cookie", "session=" + session);
-            conn.setInstanceFollowRedirects(false);
+        if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+            throw new IOException(appendErrorResponse("Failed to download input for year " + year + " day " + day, conn));
+        }
 
-            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException(appendErrorResponse("Failed to download input for year " + day.year + " day " + day.day, conn));
-            }
-    
-            Charset charset = Objects.requireNonNullElse(getResponseCharset(conn), StandardCharsets.UTF_8);
-            try (InputStream in = conn.getInputStream()) {
-                return TextIO.read(in, charset);
-            }
-        });
+        Charset charset = Objects.requireNonNullElse(getResponseCharset(conn), StandardCharsets.UTF_8);
+        try (InputStream in = conn.getInputStream()) {
+            return TextIO.read(in, charset);
+        }
     }
 
     private Charset getResponseCharset(HttpURLConnection conn) throws IOException {

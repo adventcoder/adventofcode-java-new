@@ -5,13 +5,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class Cache {
-    public String getInput(int year, int day, InputSupplier supplier) throws IOException {
-        File file = getInputsFile(year, day);
+    private final Client client = new Client();
+
+    public String getInput(int year, int day, String session) throws IOException {
+        File file = getInputFile(year, day);
         if (file.exists()) {
             return TextIO.read(file, StandardCharsets.UTF_8);
         }
 
-        String input = supplier.get();
+        String input = client.getInput(year, day, session);
 
         File parentFile = file.getParentFile();
         if (parentFile.exists() || parentFile.mkdirs()) {
@@ -27,15 +29,10 @@ public class Cache {
         return input;
     }
 
-    public File getInputsFile(int year, int day) {
+    public File getInputFile(int year, int day) {
         File file = new File("inputs");
         file = new File(file, Integer.toString(year));
         file = new File(file, day + ".txt");
         return file;
-    }
-
-    @FunctionalInterface
-    public static interface InputSupplier {
-        String get() throws IOException;
     }
 }
