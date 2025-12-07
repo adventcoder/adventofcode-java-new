@@ -120,12 +120,22 @@ public class Grid {
 
     public int count(char c) {
         int count = 0;
-        for (int y = 0; y < height; y++) {
-            int offset = start + y*stride;
-            for (int x = 0; x < width; x++) {
-                if (data[offset + x] == c) count++;
-            }
-        }
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+                if (get(x, y) == c) count++;
         return count;
     }
+
+    public Point find(char c) {
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+                if (get(x, y) == c)
+                    return new Point(x, y);
+        return null;
+    }
+
+    // TODO:
+    // findall
+    // find subgrids
+    // D8 transforms
 }
