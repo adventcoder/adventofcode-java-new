@@ -4,10 +4,9 @@ import java.util.Iterator;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import adventofcode.utils.iter.Enumerable;
 import adventofcode.utils.iter.Iterators;
 
-public class IntervalUnion implements Iterable<Interval>, Enumerable<Interval> {
+public class IntervalUnion implements Iterable<Interval> {
     private final NavigableMap<Long, Long> tree = new TreeMap<>();
 
     public void add(long min, long max) {
