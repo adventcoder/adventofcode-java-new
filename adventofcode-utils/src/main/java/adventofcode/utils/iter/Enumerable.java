@@ -69,13 +69,4 @@ public interface Enumerable<T> {
     default <E> E[] toArray(IntFunction<E[]> generator) {
         return toList().toArray(generator);
     }
-
-    // default Iterator<T> iterator() {
-    //     Object NIL = new Object();
-    //     Fiber<Object, Object> fiber = new Fiber<>(self -> ignored -> {
-    //         forEach(i -> self.yield(i));
-    //         return NIL;
-    //     });
-    //     return Iterators.generate(() -> (T) fiber.resume(NIL), o -> o != NIL);
-    // }
 }
