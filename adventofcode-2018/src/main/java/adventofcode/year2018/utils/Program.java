@@ -3,17 +3,14 @@ package adventofcode.year2018.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import adventofcode.AbstractDay;
+import adventofcode.Logger;
 import lombok.AllArgsConstructor;
 
-@AllArgsConstructor
 public class Program {
-    public final int ipReg;
-    public final List<Instruction> instructions;
+    public int ipReg = -1;
+    public List<Instruction> instructions = new ArrayList<>();
 
-    public static Program parse(String input) {
-        int ipReg = -1;
-        List<Instruction> instructions = new ArrayList<>();
+    public Program(String input) {
         for (String line : input.split("\n")) {
             String[] tokens = line.trim().split("\\s+");
             if (tokens[0].equals("#ip")) {
@@ -26,13 +23,12 @@ public class Program {
                 instructions.add(new Instruction(op, a, b, c));
             }
         }
-        return new Program(ipReg, instructions);
     }
 
-    public void debug(AbstractDay day) {
+    public void debug(Logger logger) {
         for (int ip = 0; ip < instructions.size(); ip++) {
             Instruction i = instructions.get(ip);
-            day.debug(String.format("%2d:", ip), switch (i.op) {
+            logger.debug(String.format("%2d:", ip), switch (i.op) {
                 case ADDR -> String.format("%s = %s + %s", reg(i.c), reg(i.a), reg(i.b));
                 case ADDI -> String.format("%s = %s + %d", reg(i.c), reg(i.a), i.b);
                 case MULR -> String.format("%s = %s * %s", reg(i.c), reg(i.a), reg(i.b));

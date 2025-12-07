@@ -24,12 +24,12 @@ public class Iterators {
 
     public static <T> Iterator<T> generate(Predicate<? super Consumer<? super T>> tryAdvance) {
         class Itr implements Iterator<T>, Consumer<T> {
-            private T look;
+            private T next;
             private boolean hasNext = tryAdvance.test(this);
 
             @Override
             public void accept(T next) {
-                this.look = next;
+                this.next = next;
             }
 
             @Override
@@ -39,9 +39,9 @@ public class Iterators {
 
             @Override
             public T next() {
-                if (hasNext)
+                if (!hasNext)
                     throw new NoSuchElementException();
-                T curr = look;
+                T curr = next;
                 hasNext = tryAdvance.test(this);
                 return curr;
             }

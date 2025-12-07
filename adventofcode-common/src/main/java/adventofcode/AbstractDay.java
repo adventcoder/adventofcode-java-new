@@ -10,8 +10,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import adventofcode.decorators.Decorators;
 import picocli.CommandLine;
@@ -19,7 +17,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 @Command(mixinStandardHelpOptions = true)
-public abstract class AbstractDay implements Callable<Integer> {
+public abstract class AbstractDay implements Callable<Integer>, Logger {
     private static final Cache cache = new Cache();
 
     protected final int year;
@@ -160,10 +158,9 @@ public abstract class AbstractDay implements Callable<Integer> {
     }
 
     public void debug(Object... args) {
-        if (debug) {
-            String message = Stream.of(args).map(Object::toString).collect(Collectors.joining(" "));
-            System.out.println("  [DEBUG] " + message);
-        }
+        //TODO: should only nest when running inside parser/part1/part2. also the stopwatch should be paused
+        if (debug)
+            System.out.println(Logger.format("  [DEBUG]", args));
     }
 
     public static void main(String[] args) throws Exception {

@@ -14,7 +14,7 @@ public class Day19 extends AbstractDay {
 
     @Override
     public void parse(String input) {
-        program = Program.parse(input);
+        program = new Program(input);
         program.debug(this);
     }
 
