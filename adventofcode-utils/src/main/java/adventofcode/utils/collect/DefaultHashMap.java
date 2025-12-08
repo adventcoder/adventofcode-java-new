@@ -12,13 +12,14 @@ public class DefaultHashMap<K, V> extends HashMap<K, V> {
     @NonNull
     private final Supplier<? extends V> supplier;
 
-    @SuppressWarnings("unchecked")
     @Override
-    public V get(Object key) {
+    public V get(Object obj) {
+        @SuppressWarnings("unchecked")
+        K key = (K) obj;
         V val = super.get(key);
         if (val == null) {
             val = Objects.requireNonNull(supplier.get());
-            put((K) key, val);
+            put(key, val);
         }
         return val;
     }
