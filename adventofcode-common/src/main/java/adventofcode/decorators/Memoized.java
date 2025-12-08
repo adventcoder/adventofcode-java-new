@@ -24,8 +24,15 @@ public @interface Memoized {
 
         @RuntimeType
         public Object intercept(@Origin Method method, @AllArguments Object[] args, @SuperCall Callable<Object> superCall) throws Exception {
-            Map<Object, Object> memo = memos.computeIfAbsent(method, k -> new HashMap<>());
             Object key = args.length == 1 ? args[0] : Arrays.asList(args);
+            return getValue(getMemo(method), key, superCall);
+        }
+
+        private Map<Object, Object> getMemo(Method method) {
+            return memos.computeIfAbsent(method, k -> new HashMap<>());
+        }
+
+        private static Object getValue(Map<Object, Object> memo, Object key, Callable<Object> superCall) throws Exception {
             Object val = memo.get(key);
             if (val == null && !memo.containsKey(key)) {
                 val = superCall.call();

@@ -13,6 +13,22 @@ public class Point {
     public final int x;
     public final int y;
 
+    public Point north() {
+        return new Point(x, y - 1);
+    }
+
+    public Point south() {
+        return new Point(x, y + 1);
+    }
+
+    public Point west() {
+        return new Point(x - 1, y);
+    }
+
+    public Point east() {
+        return new Point(x + 1, y);
+    }
+
     public Point neighbour(Dir4 dir) {
         return new Point(x + dir.x, y + dir.y);
     }

@@ -1,9 +1,11 @@
 package adventofcode.year2025;
 
-import java.util.stream.LongStream;
+import java.util.HashSet;
+import java.util.Set;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
+import adventofcode.decorators.Memoized;
 import adventofcode.utils.geom.Grid;
 import adventofcode.utils.geom.Point;
 
@@ -22,42 +24,35 @@ public class Day7 extends AbstractDay {
 
     @Override
     public Integer part1() {
-        Point start = grid.find('S');
-        boolean[][] occupied = new boolean[grid.height][grid.width];
-        occupied[start.y][start.x] = true;
-        int splits = 0;
-        for (int y = start.y + 1; y < grid.height; y++) {
-            for (int x = 0; x < grid.width; x++) {
-                if (!occupied[y - 1][x]) continue;
-                if (grid.get(x, y) == '^') {
-                    splits++;
-                    occupied[y][x - 1] = true;
-                    occupied[y][x + 1] = true;
-                } else {
-                    occupied[y][x] = true;
-                }
-            }
+        Set<Point> splitters = new HashSet<>();
+        addSplitters(grid.find('S'), splitters);
+        return splitters.size();
+    }
+
+    private void addSplitters(Point start, Set<Point> result) {
+        Point splitter = nextSplitter(start);
+        if (splitter != null && result.add(splitter)) {
+            addSplitters(splitter.west(), result);
+            addSplitters(splitter.east(), result);
         }
-        return splits;
     }
 
     @Override
     public Long part2() {
-        Point start = grid.find('S');
-        long[][] counts = new long[grid.height][grid.width];
-        counts[start.y][start.x] = 1L;
-        for (int y = start.y + 1; y < grid.height; y++) {
-            for (int x = 0; x < grid.width; x++) {
-                long n = counts[y - 1][x];
-                if (n == 0) continue;
-                if (grid.get(x, y) == '^') {
-                    counts[y][x - 1] += n;
-                    counts[y][x + 1] += n;
-                } else {
-                    counts[y][x] += n;
-                }
-            }
-        }
-        return LongStream.of(counts[grid.height - 1]).sum();
+        return timelines(grid.find('S'));
+    }
+
+    @Memoized
+    protected long timelines(Point start) {
+        Point splitter = nextSplitter(start);
+        if (splitter == null) return 1L;
+        return timelines(splitter.west()) + timelines(splitter.east());
+    }
+
+    private Point nextSplitter(Point start) {
+        for (int y = start.y + 2; y < grid.height; y += 2)
+            if (grid.get(start.x, y) == '^')
+                return new Point(start.x, y);
+        return null;
     }
 }
