@@ -1,8 +1,6 @@
 package adventofcode.utils.iter;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -12,41 +10,28 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class Iterators {
     public static <T> Iterator<T> generate(Supplier<T> next, Predicate<? super T> cond) {
-        return generate(action -> {
+        return generate(() -> {
             T val = next.get();
-            if (cond.test(val)) {
-                action.accept(val);
-                return true;
-            }
-            return false;
+            return cond.test(val) ? Maybe.present(val) : Maybe.empty();
         });
     }
 
-    public static <T> Iterator<T> generate(Predicate<? super Consumer<? super T>> tryAdvance) {
-        class Itr implements Iterator<T>, Consumer<T> {
-            private T next;
-            private boolean hasNext = tryAdvance.test(this);
-
-            @Override
-            public void accept(T next) {
-                this.next = next;
-            }
+    public static <T> Iterator<T> generate(Supplier<Maybe<T>> next) {
+        return new Iterator<T>() {
+            private Maybe<T> look = next.get();
 
             @Override
             public boolean hasNext() {
-                return hasNext;
+                return look.isPresent();
             }
 
             @Override
             public T next() {
-                if (!hasNext)
-                    throw new NoSuchElementException();
-                T curr = next;
-                hasNext = tryAdvance.test(this);
+                T curr = look.get();
+                look = next.get();
                 return curr;
             }
         };
-        return new Itr();
     }
 
     public static <T, U> Iterator<U> map(Iterator<T> it, Function<? super T, ? extends U> func) {
@@ -61,18 +46,5 @@ public class Iterators {
                 return func.apply(it.next());
             }
         };
-    }
-
-    public static <T> Iterator<T> filter(Iterator<T> it, Predicate<? super T> pred) {
-        return generate(action -> {
-            while (it.hasNext()) {
-                T curr = it.next();
-                if (pred.test(curr)) {
-                    action.accept(curr);
-                    return true;
-                }
-            }
-            return false;
-        });
     }
 }
