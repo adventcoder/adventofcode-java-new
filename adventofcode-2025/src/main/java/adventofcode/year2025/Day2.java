@@ -35,17 +35,18 @@ public class Day2 extends AbstractDay {
 
         // now actually parse the ranges, splitting and grouping by digit count
         ranges = new DefaultHashMap<>(ArrayList::new);
-        for (String[] pair : pairs) {
-            int aCount = pair[0].length(), bCount = pair[1].length();
-            long a = Long.parseLong(pair[0]), b = Long.parseLong(pair[1]);
-            if (aCount == bCount) {
-                ranges.get(aCount).add(LongLongPair.of(a, b));
-            } else {
-                ranges.get(aCount).add(LongLongPair.of(a, pow10[aCount] - 1));
-                for (int n = aCount + 1; n < bCount; n++)
-                    ranges.get(n).add(LongLongPair.of(pow10[n - 1], pow10[n] - 1)); 
-                ranges.get(bCount).add(LongLongPair.of(pow10[bCount - 1], b));
-            }
+        for (String[] pair : pairs)
+            addRange(Long.parseLong(pair[0]), pair[0].length(), Long.parseLong(pair[1]), pair[1].length());
+    }
+
+    private void addRange(long a, int aCount, long b, int bCount) {
+        if (aCount == bCount) {
+            ranges.get(aCount).add(LongLongPair.of(a, b));
+        } else {
+            ranges.get(aCount).add(LongLongPair.of(a, pow10[aCount] - 1));
+            for (int n = aCount + 1; n < bCount; n++)
+                ranges.get(n).add(LongLongPair.of(pow10[n - 1], pow10[n] - 1)); 
+            ranges.get(bCount).add(LongLongPair.of(pow10[bCount - 1], b));
         }
     }
 
