@@ -30,7 +30,7 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     @Option(names = "--input", description = "Path to input file")
     private File inputFile;
 
-    @Option(names = "--input-encoding", description = "Input encoding")
+    @Option(names = "--input-encoding", description = "Encoding of the input file")
     private Charset inputEncoding = StandardCharsets.UTF_8;
 
     @Option(names = "--session", defaultValue = "${env:AOC_SESSION}")
@@ -39,9 +39,9 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     public AbstractDay() {
         Puzzle puzzle = getPuzzle();
         if (puzzle != null) {
-            year = detectYear().orElseThrow(); //TODO: get from annotation
-            day = puzzle.day();
-            name = puzzle.name().length == 0 ? null : puzzle.name()[0];
+            year = puzzle.year() >= 0 ? puzzle.year() : detectYear().orElseThrow();
+            day = puzzle.day() >= 0 ? puzzle.day() : detectDay().orElseThrow();
+            name = puzzle.name().isEmpty() ? null : puzzle.name();
         } else {
             year = detectYear().orElseThrow();
             day = detectDay().orElseThrow();

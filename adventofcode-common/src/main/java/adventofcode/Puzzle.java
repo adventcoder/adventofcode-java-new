@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Puzzle {
-    // public int year(); //TODO
-    public int day();
-    public String[] name() default {};
+    public int day() default -1;
+    public int year() default -1;
+    public String name() default "";
 }
