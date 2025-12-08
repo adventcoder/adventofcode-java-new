@@ -9,8 +9,8 @@ public record Vector3(int x, int y, int z) {
         return Math.abs(x) + Math.abs(y) + Math.abs(z);
     }
 
-    public int magnitudeSquared() {
-        return x*x + y*y + z*z;
+    public long magnitudeSquared() {
+        return ((long) x)*x + ((long) y)*y + ((long) z)*z;
     }
 
     public Vector3 add(Vector3 v) {
@@ -30,11 +30,11 @@ public record Vector3(int x, int y, int z) {
     }
 
     public Vector3 multiply(int n) {
-        return new Vector3(x * n, y * n, z * n);
+        return new Vector3(x*n, y*n, z*n);
     }
 
-    public int dot(Vector3 v) {
-        return x*v.x + y*v.y + z*v.z;
+    public long dot(Vector3 v) {
+        return ((long) x)*v.x + ((long) y)*v.y + ((long) z)*v.z;
     }
 
     public Vector3 cross(Vector3 v) {

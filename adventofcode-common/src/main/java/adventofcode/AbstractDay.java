@@ -2,13 +2,10 @@ package adventofcode;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.OptionalLong;
 import java.util.concurrent.Callable;
 
 import adventofcode.decorators.Decorators;
@@ -76,56 +73,9 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     }
 
     public Integer call() throws Exception {
-        System.out.println(title());
-
-        String input = getInput();
-        Stopwatch stopwatch = new Stopwatch();
-
-        System.out.println();
-        System.out.println("- Parsing input");
-        long parseTime = stopwatch.resumeFor(this::parse, input);
-        System.out.println("  Took " + formatTime(parseTime));
-
-        PartFunction[] partFunctions = { this::part1, this::part2 };
-        for (int part = 1; part <= 2; part++) {
-            if (partSupported(part)) {
-                System.out.println();
-                System.out.println("- Part " + part);
-                PartResult partResult = stopwatch.resumeFor(partFunctions[part - 1]);
-                System.out.println(formatAnswer("  Answer: ", partResult.answer));
-                System.out.println("  Took " + formatTime(partResult.time));
-            }
-        }
-
-        System.out.println();
-        System.out.println("Took in total " + formatTime(stopwatch.time()));
-
+        DayRunner runner = new DayRunner(this);
+        runner.run();
         return 0;
-    }
-
-    private String formatAnswer(String prefix, Object answer) {
-        String answerString = answerToString(answer, "<No answer>");
-        return prefix + String.join("\n" + " ".repeat(prefix.length()), answerString.split("\n"));
-    }
-
-    private String answerToString(Object answer, String defaultString) {
-        if (answer instanceof Optional<?> opt)
-            return opt.map(Object::toString).orElse(defaultString);
-        if (answer instanceof OptionalInt optInt)
-            return optInt.isPresent() ? Integer.toString(optInt.getAsInt()) : defaultString;
-        if (answer instanceof OptionalLong optLong)
-            return optLong.isPresent() ? Long.toString(optLong.getAsLong()) : defaultString;
-        return answer != null ? answer.toString() : defaultString;
-    }
-
-    private String formatTime(long nanos) {
-        long seconds = nanos / 1000_000_000;
-        nanos %= 1000_000_000;
-        if (seconds != 0) {
-            return String.format("%d s %d ms", seconds, nanos / 1000_000);
-        } else {
-            return String.format("%.3f ms", (double) nanos / 1000_000);
-        }
     }
 
     public String getInput() throws IOException {
@@ -144,6 +94,9 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     public void parse(String input) {
     }
 
+    public void preprocess() {
+    }
+
     public Object part1() {
         throw new UnsupportedOperationException();
     }
@@ -152,13 +105,17 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
         throw new UnsupportedOperationException();
     }
 
+    public boolean hasPreprocessing() throws NoSuchMethodException {
+        return !getClass().getMethod("preprocess").getDeclaringClass().equals(AbstractDay.class);
+    }
+
     public boolean partSupported(int part) throws NoSuchMethodException {
-        Method method = getClass().getMethod("part" + part);
-        return !method.getDeclaringClass().equals(AbstractDay.class);
+        return !getClass().getMethod("part" + part).getDeclaringClass().equals(AbstractDay.class);
     }
 
     public void debug(Object... args) {
-        //TODO: should only nest when running inside parser/part1/part2. also the stopwatch should be paused
+        //TODO: should indent only when running inside parser/part1/part2.
+        //TODO: also the stopwatch should be paused
         if (debug)
             System.out.println(Logger.format("  [DEBUG]", args));
     }

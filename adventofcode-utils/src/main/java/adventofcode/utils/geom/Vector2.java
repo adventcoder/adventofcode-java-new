@@ -9,8 +9,8 @@ public record Vector2(int x, int y) {
         return Math.abs(x) + Math.abs(y);
     }
 
-    public int magnitudeSquared() {
-        return x*x + y*y;
+    public long magnitudeSquared() {
+        return ((long) x)*x + ((long) y)*y;
     }
 
     public Vector2 add(Vector2 v) {
@@ -33,8 +33,8 @@ public record Vector2(int x, int y) {
         return new Vector2(x * n, y * n);
     }
 
-    public int dot(Vector2 v) {
-        return x*v.x + y*v.y;
+    public long dot(Vector2 v) {
+        return ((long) x)*v.x + ((long) y)*v.y;
     }
 
     public int cross(Vector2 v) {

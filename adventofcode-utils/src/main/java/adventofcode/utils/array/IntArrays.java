@@ -3,6 +3,7 @@ package adventofcode.utils.array;
 import java.util.PrimitiveIterator;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntUnaryOperator;
+import java.util.stream.IntStream;
 
 import lombok.experimental.UtilityClass;
 
@@ -77,6 +78,13 @@ public class IntArrays {
 
     public static int sum(int[] arr) {
         return reduce(arr, 0, Integer::sum);
+    }
+
+    public static int product(int[] arr, int start, int size) {
+        return IntStream.of(arr)
+            .skip(start)
+            .limit(size)
+            .reduce(1, (x, y) -> x * y);
     }
 
     public static int min(int[] arr) {

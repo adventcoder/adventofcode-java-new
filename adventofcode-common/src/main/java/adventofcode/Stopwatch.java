@@ -1,5 +1,9 @@
 package adventofcode;
 
+import java.util.concurrent.Callable;
+
+import it.unimi.dsi.fastutil.objects.ObjectLongPair;
+
 public class Stopwatch {
     private long lastStartTime = -1;
     private long time = 0L; 
@@ -33,17 +37,17 @@ public class Stopwatch {
         return time;
     }
 
-    public long resumeFor(ParseFunction fn, String input) throws Exception {
+    public long resumeFor(Runnable runnable) {
         long startTime = resume();
-        fn.call(input);
+        runnable.run();
         long endTime = pause();
         return endTime - startTime;
     }
 
-    public PartResult resumeFor(PartFunction fn) throws Exception {
+    public <T> ObjectLongPair<T> resumeFor(Callable<T> callable) throws Exception {
         long startTime = resume();
-        Object answer = fn.call();
+        T result = callable.call();
         long endTime = pause();
-        return new PartResult(answer, endTime - startTime);
+        return ObjectLongPair.of(result, endTime - startTime);
     }
 }
