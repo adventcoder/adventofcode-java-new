@@ -1,39 +1,16 @@
 package adventofcode.utils.geom;
 
-import it.unimi.dsi.fastutil.ints.AbstractIntList;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-@ToString
-public class Vector3 extends AbstractIntList {
-    public final int x;
-    public final int y;
-    public final int z;
-
-    @Override
-    public int size() {
-        return 3;
-    }
-
-    @Override
-    public int getInt(int i) {
-        return switch (i) {
-            case 0 -> x;
-            case 1 -> y;
-            case 2 -> z;
-            default -> throw new IndexOutOfBoundsException();
-        };
-    }
-
+public record Vector3(int x, int y, int z) {
     public boolean isZero() {
         return x == 0 && y == 0 && z == 0;
     }
 
     public int abs() {
         return Math.abs(x) + Math.abs(y) + Math.abs(z);
+    }
+
+    public int magnitudeSquared() {
+        return x*x + y*y + z*z;
     }
 
     public Vector3 add(Vector3 v) {

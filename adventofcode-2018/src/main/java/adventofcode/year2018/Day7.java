@@ -1,16 +1,16 @@
 package adventofcode.year2018;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.array.ArraysEx;
 import adventofcode.utils.collect.Counter;
 import adventofcode.utils.collect.DefaultHashMap;
 
@@ -21,13 +21,18 @@ public class Day7 extends AbstractDay {
     }
 
     private Map<Character, Set<Character>> edges;
+    private Counter<Character> inDegree;
 
     @Override
     public void parse(String input) {
         edges = new DefaultHashMap<>(HashSet::new);
+        inDegree = new Counter<>();
         for (String line : input.split("\n")) {
             String[] tokens = line.split("\\s+");
-            edges.get(tokens[1].charAt(0)).add(tokens[7].charAt(0));
+            Character step = tokens[1].charAt(0);
+            Character nextStep = tokens[7].charAt(0);
+            edges.get(step).add(nextStep);
+            inDegree.inc(nextStep);
         }
     }
 
@@ -47,35 +52,25 @@ public class Day7 extends AbstractDay {
 
     //TODO: this is still ugly
     private class Scheduler {
-        private final Worker[] workers;
-        private final Counter<Character> inDegree = new Counter<>();
+        private final List<Worker> workers = new ArrayList<>();
+        private final Counter<Character> remainingInDegree = new Counter<>();
         private final PriorityQueue<Character> ready = new PriorityQueue<>();
         private final StringBuilder finished = new StringBuilder();
         private int totalTime = 0;
 
         public Scheduler(int numWorkers) {
-            workers = ArraysEx.create(Worker.class, numWorkers, Worker::new);
+            while (workers.size() < numWorkers)
+                workers.add(new Worker());
+            remainingInDegree.putAll(inDegree);
             for (Character step : edges.keySet())
-                for (Character nextStep : edges.get(step))
-                    inDegree.inc(nextStep);
-            for (Character step : edges.keySet())
-                if (!inDegree.containsKey(step))
+                if (!remainingInDegree.containsKey(step))
                     ready.add(step);
         }
 
         public void run() {
-            while (true) {
+            do {
                 assignWork();
-
-                OptionalInt timeDelta = Stream.of(workers)
-                        .filter(worker -> worker.step != null)
-                        .mapToInt(worker -> worker.timeRemaining)
-                        .min();
-                if (timeDelta.isEmpty())
-                    break;
-
-                work(timeDelta.getAsInt());
-            }
+            } while (work());
         }
 
         private void assignWork() {
@@ -87,21 +82,31 @@ public class Day7 extends AbstractDay {
             }
         }
 
-        private void work(int time) {
-            totalTime += time;
+        private boolean work() {
+            OptionalInt timeStep = leastTimeStep();
+            if (timeStep.isEmpty()) return false;
+            totalTime += timeStep.getAsInt();
             for (Worker worker : workers) {
                 if (worker.step == null) continue;
-                worker.timeRemaining -= time;
+                worker.timeRemaining -= timeStep.getAsInt();
                 if (worker.timeRemaining == 0) {
                     finish(worker.step);
                     worker.step = null;
                 }
             }
+            return true;
+        }
+
+        private OptionalInt leastTimeStep() {
+            return workers.stream()
+                .filter(worker -> worker.step != null)
+                .mapToInt(worker -> worker.timeRemaining)
+                .min();
         }
 
         private void finish(Character step) {
             for (Character nextStep : edges.getOrDefault(step, Collections.emptySet()))
-                if (inDegree.dec(nextStep) == 0)
+                if (remainingInDegree.dec(nextStep) == 0)
                     ready.add(nextStep);
             finished.append(step.charValue());
         }

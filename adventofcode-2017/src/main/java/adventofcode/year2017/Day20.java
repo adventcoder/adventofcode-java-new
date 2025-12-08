@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToIntFunction;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
@@ -19,6 +20,12 @@ import lombok.AllArgsConstructor;
 
 @Puzzle(day = 20, name = "Particle Swarm")
 public class Day20 extends AbstractDay {
+    public static void main(String[] args) throws Exception {
+        main(Day20.class, args);
+    }
+
+    private static final List<ToIntFunction<Vector3>> axes = List.of(Vector3::x, Vector3::y, Vector3::z);
+
     private List<Particle> particles;
 
     @Override
@@ -94,14 +101,15 @@ public class Day20 extends AbstractDay {
 
     private static IntList solveQuadratic(Vector3 a, Vector3 b, Vector3 c) {
         IntList roots = null;
-        for (int i = 0; i < 3; i++) {
-            IntList axisRoots = solveQuadratic(a.getInt(i), b.getInt(i), c.getInt(i));
+        for (var axis : axes) {
+            IntList axisRoots = solveQuadratic(axis.applyAsInt(a), axis.applyAsInt(b), axis.applyAsInt(c));
             if (axisRoots == null) continue;
             if (roots == null) {
                 roots = axisRoots;
             } else {
                 roots.retainAll(axisRoots);
             }
+            if (roots.isEmpty()) break;
         }
         return roots;
     }

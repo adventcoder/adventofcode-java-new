@@ -1,14 +1,22 @@
 package adventofcode.utils.collect;
 
 import adventofcode.utils.Fn;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class Counter<K> extends Object2IntOpenHashMap<K> {
     public Counter() {
+        super();
     }
 
     public Counter(Iterable<K> vals) {
+        this();
         incAll(vals);
+    }
+
+    public Counter(Object2IntMap<K> other) {
+        this();
+        putAll(other);
     }
 
     public int total() {

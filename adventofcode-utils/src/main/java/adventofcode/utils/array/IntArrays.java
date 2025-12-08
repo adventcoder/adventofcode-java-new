@@ -1,6 +1,5 @@
 package adventofcode.utils.array;
 
-import java.util.Arrays;
 import java.util.PrimitiveIterator;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntUnaryOperator;
@@ -9,25 +8,13 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class IntArrays {
-    public static int[] create(int size, int val) {
-        int[] arr = new int[size];
-        Arrays.fill(arr, val);
-        return arr;
-    }
-
-    public static int[][] create(int width, int height, int val) {
-        int[][] arr = new int[height][width];
-        for (int[] row : arr)
-            Arrays.fill(row, val);
-        return arr;
-    }
-
     public static int[] create(int size, IntUnaryOperator op) {
         int[] arr = new int[size];
         for (int i = 0; i < size; i++)
             arr[i] = op.applyAsInt(i);
         return arr;
     }
+
     public static int[][] create(int width, int height, IntBinaryOperator op) {
         int[][] arr = new int[height][width];
         for (int y = 0; y < height; y++)

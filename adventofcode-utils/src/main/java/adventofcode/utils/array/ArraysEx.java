@@ -1,21 +1,13 @@
 package adventofcode.utils.array;
 
 import java.lang.reflect.Array;
-import java.util.function.Supplier;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ArraysEx {
     @SuppressWarnings("unchecked")
-    public static <BaseT, T extends BaseT> T[] create(Class<BaseT> elClass, int size) {
+    public static <BaseT, T extends BaseT> T[] newInstance(Class<BaseT> elClass, int size) {
         return (T[]) Array.newInstance(elClass, size);
-    }
-
-    public static <BaseT, T extends BaseT> T[] create(Class<BaseT> elClass, int size, Supplier<T> supplier) {
-        T[] arr = create(elClass, size);
-        for (int i = 0; i < arr.length; i++)
-            arr[i] = supplier.get();
-        return arr;
     }
 }

@@ -1,5 +1,7 @@
 package adventofcode.utils.collect;
 
+import java.util.stream.IntStream;
+
 public class DisjointSet {
     private final int[] parent;
     private final int[] rank;
@@ -23,10 +25,10 @@ public class DisjointSet {
         return rank[findRoot(x)];
     }
 
-    public void merge(int x, int y) {
+    public boolean merge(int x, int y) {
         int rootX = findRoot(x);
         int rootY = findRoot(y);
-        if (rootX == rootY) return;
+        if (rootX == rootY) return false;
 
         if (rank[rootX] < rank[rootY]) {
             parent[rootX] = rootY;
@@ -36,11 +38,22 @@ public class DisjointSet {
             rank[rootX] += rank[rootY];
         }
         size--;
+        return true;
     }
 
     public int findRoot(int x) {
         if (parent[x] != x)
             parent[x] = findRoot(parent[x]);
         return parent[x];
+    }
+
+    public IntStream roots() {
+        return IntStream.range(0, parent.length)
+            .map(this::findRoot)
+            .distinct();
+    }
+
+    public IntStream ranks() {
+        return roots().map(this::rank);
     }
 }
