@@ -15,6 +15,8 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import adventofcode.utils.function.IntBiFunction;
+import adventofcode.utils.function.IntTriFunction;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -37,6 +39,21 @@ public class Fn {
         for (int i = 0; i < tokens.length; i++)
             result[i] = (byte) Integer.parseInt(tokens[i].trim());
         return result;
+    }
+
+    public static <T> T parseIntPair(String s, String sep, IntBiFunction<? extends T> generator) {
+        String[] tokens = s.split(sep, 2);
+        int x = Integer.parseInt(tokens[0].trim());
+        int y = Integer.parseInt(tokens[1].trim());
+        return generator.apply(x, y);
+    }
+
+    public static <T> T parseIntTriple(String s, String sep, IntTriFunction<? extends T> generator) {
+        String[] tokens = s.split(sep, 3);
+        int x = Integer.parseInt(tokens[0].trim());
+        int y = Integer.parseInt(tokens[1].trim());
+        int z = Integer.parseInt(tokens[2].trim());
+        return generator.apply(x, y, z);
     }
 
     public static String lstrip(String s, String prefix) {

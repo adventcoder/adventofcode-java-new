@@ -21,8 +21,8 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     protected final int day;
     protected final String name;
 
-    @Option(names = "--debug", description = "Enable debug output")
-    public boolean debug;
+    @Option(names = "--verbose", description = "Enable verbose output")
+    public boolean verbose;
 
     @Option(names = "--input", description = "Path to input file")
     private File inputFile;
@@ -113,11 +113,10 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
         return !getClass().getMethod("part" + part).getDeclaringClass().equals(AbstractDay.class);
     }
 
-    public void debug(Object... args) {
+    public void log(Logger.Level level, String message) {
         //TODO: should indent only when running inside parser/part1/part2.
-        //TODO: also the stopwatch should be paused
-        if (debug)
-            System.out.println(Logger.format("  [DEBUG]", args));
+        if (verbose)
+            System.out.println("  [" + level + "]" + message);
     }
 
     public static void main(String[] args) throws Exception {
