@@ -94,6 +94,7 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     public void parse(String input) {
     }
 
+    //TODO: rename this to common
     public void preprocess() {
     }
 
@@ -105,6 +106,7 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
         throw new UnsupportedOperationException();
     }
 
+    //TODO: don't need this
     public boolean hasPreprocessing() throws NoSuchMethodException {
         return !getClass().getMethod("preprocess").getDeclaringClass().equals(AbstractDay.class);
     }
