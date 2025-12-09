@@ -20,8 +20,8 @@ public class Day9 extends AbstractDay {
         main(Day9.class, args);
     }
 
-    @Option(names = "--image-name")
-    private String imageName;
+    @Option(names = "--image-file")
+    private File imageFile;
 
     private List<Point> points;
 
@@ -30,7 +30,12 @@ public class Day9 extends AbstractDay {
         points = new ArrayList<>();
         for (String line : input.split("\n"))
             points.add(Fn.parseIntPair(line, ",", Point::new));
-        writeImage();
+    }
+
+    @Override
+    public void preprocess() {
+        if (imageFile != null)
+            writeImage(100_000, 100_000, 100);
     }
 
     @Override
@@ -39,7 +44,7 @@ public class Day9 extends AbstractDay {
         for (int i = 0; i < points.size(); i++) {
             for (int j = i + 1; j < points.size(); j++) {
                 Point a = points.get(i), b = points.get(j);
-                maxArea = Math.max(maxArea, area(a, b));
+                maxArea = Math.max(maxArea, rectArea(a, b));
             }
         }
         return maxArea;
@@ -51,65 +56,54 @@ public class Day9 extends AbstractDay {
         for (int i = 0; i < points.size(); i++) {
             for (int j = i + 1; j < points.size(); j++) {
                 Point a = points.get(i), b = points.get(j);
-                if (contains(new Point(a.x, b.y)) && contains(new Point(b.x, a.y)))
-                    maxArea = Math.max(maxArea, area(a, b));
+                if (containsRect(a, b))
+                    maxArea = Math.max(maxArea, rectArea(a, b));
             }
         }
         return maxArea;
     }
 
-    private boolean contains(Point p) {
-        boolean inside = false;
-        Point a = points.get(points.size() - 1);
-        for (Point b : points) {
-            if (a.y == b.y) {
-                // Horizontal edge Intersection
-                if (p.y == a.y) {
-                    // Check p is on the edge
-                    if (p.x >= Math.min(a.x, b.x) && p.x <= Math.max(a.x, b.x))
-                        return true;
-                }
-            }
-            else {
-                // Vertical edge intersection
-                if (p.y >= Math.min(a.y, b.y) && p.y <= Math.max(a.y, b.y)) {
-                    // Check p is on the edge
-                    if (p.x == a.x) return true;
-                    // Ray cast: vertical edge intersects ray iff its x is > p.x
-                    if (a.x > p.x) inside = !inside;
-                }
-            }
-            a = b;
+    private boolean containsRect(Point a, Point b) {
+        int xMin = Math.min(a.x, b.x), xMax = Math.max(a.x, b.x);
+        int yMin = Math.min(a.y, b.y), yMax = Math.max(a.y, b.y);
+        Point c = points.get(points.size() - 1);
+        for (Point d : points) {
+            int xMinEdge = Math.min(c.x, d.x), xMaxEdge = Math.max(c.x, d.x);
+            int yMinEdge = Math.min(c.y, d.y), yMaxEdge = Math.max(c.y, d.y);
+
+            // found an edge that overlaps the rect interior
+            // this means the rect is not fully inside the polygon
+            boolean xOverlaps = xMaxEdge > xMin && xMinEdge < xMax;
+            boolean yoverlaps = yMaxEdge > yMin && yMinEdge < yMax;
+            if (xOverlaps && yoverlaps)
+                return false;
+
+            c = d;
         }
-        return inside;
+        return true;
     }
 
-    private static long area(Point a, Point b) {
+    private static long rectArea(Point a, Point b) {
         int width = Math.abs(b.x - a.x) + 1;
         int height = Math.abs(b.y - a.y) + 1;
         return ((long) width) * height;
     }
 
-    private void writeImage() {
-        if (imageName == null) return;
-        int factor = 100;
-        BufferedImage img = new BufferedImage(100_000 / factor, 100_000 / factor, BufferedImage.TYPE_INT_RGB);
+    private void writeImage(int width, int height, int factor) {
+        BufferedImage img = new BufferedImage(width / factor, height / factor, BufferedImage.TYPE_INT_RGB);
         Point a = points.get(points.size() - 1);
         for (Point b : points) {
-            img.setRGB(b.x / factor, b.y / factor, 0xFF0000);
-            if (a.x == b.x) {
-                int x = a.x / factor;
-                int y0 = Math.min(a.y, b.y) / factor, y1 = Math.max(a.y, b.y) / factor;
-                for (int y = y0 + 1; y < y1; y++) img.setRGB(x, y, 0x00FF00);
-            } else {
-                int x0 = Math.min(a.x, b.x) / factor, x1 = Math.max(a.x, b.x) / factor;
-                int y = a.y / factor;
-                for (int x = x0 + 1; x < x1; x++) img.setRGB(x, y, 0x00Ff00);
-            }
+            int xMin = Math.min(a.x, b.x) / factor, xMax = Math.max(a.x, b.x) / factor;
+            int yMin = Math.min(a.y, b.y) / factor, yMax = Math.max(a.y, b.y) / factor;
+            for (int y = yMin; y <= yMax; y++)
+                for (int x = xMin; x <= xMax; x++)
+                    img.setRGB(x, y, 0x00FF00);
             a = b;
         }
+        for (Point p : points)
+            img.setRGB(p.x / factor, p.y / factor, 0xFF0000);
         try {
-            ImageIO.write(img, "png", new File(imageName + ".png"));
+            ImageIO.write(img, "png", imageFile);
         } catch (IOException ioe) {
             warn(ioe.getMessage());
         }
