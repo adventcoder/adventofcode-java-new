@@ -1,4 +1,4 @@
-package adventofcode.decorators;
+package adventofcode.utils.decorators;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

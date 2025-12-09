@@ -4,7 +4,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import org.reflections.Reflections;
 
-import adventofcode.decorators.Decorators;
+import adventofcode.utils.decorators.Decorators;
 
 import java.util.ArrayList;
 import java.util.Comparator;

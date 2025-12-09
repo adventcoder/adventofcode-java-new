@@ -7,7 +7,7 @@ import java.util.function.UnaryOperator;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.decorators.Memoized;
+import adventofcode.utils.decorators.Memoized;
 import adventofcode.utils.geom.Grid;
 import adventofcode.utils.geom.Point;
 

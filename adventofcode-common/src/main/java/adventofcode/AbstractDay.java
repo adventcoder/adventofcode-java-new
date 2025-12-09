@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.OptionalInt;
 import java.util.concurrent.Callable;
 
-import adventofcode.decorators.Decorators;
+import adventofcode.utils.decorators.Decorators;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
