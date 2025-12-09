@@ -30,12 +30,7 @@ public class Day9 extends AbstractDay {
         points = new ArrayList<>();
         for (String line : input.split("\n"))
             points.add(Fn.parseIntPair(line, ",", Point::new));
-    }
-
-    @Override
-    public void preprocess() {
-        if (imageFile != null)
-            writeImage(100_000, 100_000, 100);
+        writeImage(1000, 1000, 100);
     }
 
     @Override
@@ -90,7 +85,8 @@ public class Day9 extends AbstractDay {
     }
 
     private void writeImage(int width, int height, int factor) {
-        BufferedImage img = new BufferedImage(width / factor, height / factor, BufferedImage.TYPE_INT_RGB);
+        if (imageFile == null) return;
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Point a = points.get(points.size() - 1);
         for (Point b : points) {
             int xMin = Math.min(a.x, b.x) / factor, xMax = Math.max(a.x, b.x) / factor;

@@ -2,6 +2,7 @@ package adventofcode;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -15,11 +16,12 @@ import picocli.CommandLine.Option;
 
 @Command(mixinStandardHelpOptions = true)
 public abstract class AbstractDay implements Callable<Integer>, Logger {
-    private static final Cache cache = new Cache();
-
     protected final int year;
     protected final int day;
     protected final String name;
+
+    private final DayRunner runner = new DayRunner(this);
+    private final Cache cache = new Cache();
 
     @Option(names = "--verbose", description = "Enable verbose output")
     public boolean verbose;
@@ -73,12 +75,19 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     }
 
     public Integer call() throws Exception {
-        DayRunner runner = new DayRunner(this);
-        runner.run();
+        runner.intro();
+        runner.parse(getInput());
+        if (hasCommon())
+            runner.common();
+        if (partSupported(1))
+            runner.part(1, this::part1);
+        if (partSupported(2))
+            runner.part(2, this::part2);
+        runner.outro();
         return 0;
     }
 
-    public String getInput() throws IOException {
+    protected String getInput() throws IOException {
         if (inputFile != null)
             return TextIO.read(inputFile, inputEncoding);
         URL inputURL = getClass().getResource(getInputName());
@@ -87,15 +96,18 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
         return cache.getInput(year, day, session);
     }
 
-    public String getInputName() {
+    protected String getInputName() {
         return Decorators.undecorate(getClass()).getSimpleName() + ".txt";
     }
 
     public void parse(String input) {
     }
 
-    //TODO: rename this to common
-    public void preprocess() {
+    // this is done inconsistently since I added it later but in theory this should do any
+    // preprocessing that's required for either part 1 or 2, that way part 2 could run standalone
+    // without assuming part 1 ran first.
+    //TODO: enforce this and add a --part parameter to just run a specific part
+    public void common() {
     }
 
     public Object part1() {
@@ -106,19 +118,22 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
         throw new UnsupportedOperationException();
     }
 
-    //TODO: don't need this
-    public boolean hasPreprocessing() throws NoSuchMethodException {
-        return !getClass().getMethod("preprocess").getDeclaringClass().equals(AbstractDay.class);
+    protected boolean hasCommon() throws NoSuchMethodException {
+        return methodOverriden("common");
     }
 
-    public boolean partSupported(int part) throws NoSuchMethodException {
-        return !getClass().getMethod("part" + part).getDeclaringClass().equals(AbstractDay.class);
+    protected boolean partSupported(int part) throws NoSuchMethodException {
+        return methodOverriden("part" + part);
+    }
+
+    private boolean methodOverriden(String name) throws NoSuchMethodException {
+        Method method = getClass().getMethod(name);
+        return method.getDeclaringClass() != AbstractDay.class;
     }
 
     public void log(Logger.Level level, String message) {
-        //TODO: should indent only when running inside parser/part1/part2.
         if (verbose)
-            System.out.println("  [" + level + "]" + message);
+            runner.log(level, message);
     }
 
     public static void main(String[] args) throws Exception {

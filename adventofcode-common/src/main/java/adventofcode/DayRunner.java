@@ -12,18 +12,6 @@ public class DayRunner {
     private final AbstractDay day;
     private final Stopwatch stopwatch = new Stopwatch();
 
-    public void run() throws Exception {
-        intro();
-        parse(day.getInput());
-        if (day.hasPreprocessing())
-            preprocess();
-        if (day.partSupported(1))
-            part(1, day::part1);
-        if (day.partSupported(2))
-            part(2, day::part2);
-        outro();
-    }
-
     public void intro() {
         System.out.println(day.title());
         System.out.println();
@@ -36,10 +24,10 @@ public class DayRunner {
         System.out.println();
     }
 
-    public void preprocess() {
-        System.out.println("- Pre-processing");
-        long preprocessTime = stopwatch.resumeFor(day::preprocess);
-        System.out.println("  Took " + formatTime(preprocessTime));
+    public void common() {
+        System.out.println("- Common");
+        long commonTime = stopwatch.resumeFor(day::common);
+        System.out.println("  Took " + formatTime(commonTime));
         System.out.println();
     }
 
@@ -53,6 +41,10 @@ public class DayRunner {
 
     public void outro() {
         System.out.println("Took in total " + formatTime(stopwatch.time()));
+    }
+
+    public void log(Logger.Level level, String message) {
+        stopwatch.pauseFor(() -> System.out.println("  [" + level + "]" + message));
     }
 
     private String formatAnswer(String prefix, Object answer) {

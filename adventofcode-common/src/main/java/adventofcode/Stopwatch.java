@@ -37,6 +37,19 @@ public class Stopwatch {
         return time;
     }
 
+    public void pauseFor(Runnable runnable) {
+        if (running()) {
+            pause();
+            try {
+                runnable.run();
+            } finally {
+                resume();
+            }
+        } else {
+            runnable.run();
+        }
+    }
+
     public long resumeFor(Runnable runnable) {
         long startTime = resume();
         runnable.run();

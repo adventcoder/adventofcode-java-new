@@ -25,14 +25,12 @@ public class Day8 extends AbstractDay {
     @Override
     public void parse(String input) {
         junctions = new ArrayList<>();
-        for (String line : input.split("\n")) {
-            int[] vals = Fn.parseInts(line, ",");
-            junctions.add(new Vector3(vals[0], vals[1], vals[2]));
-        }
+        for (String line : input.split("\n"))
+            junctions.add(Fn.parseIntTriple(line, ",", Vector3::new));
     }
 
     @Override
-    public void preprocess() {
+    public void common() {
         connections = new PriorityQueue<>(Comparator.comparingLong(this::distance));
         for (int i = 0; i < junctions.size(); i++)
             for (int j = i + 1; j < junctions.size(); j++)
