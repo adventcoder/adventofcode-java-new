@@ -12,6 +12,7 @@ import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.geom.Point;
+import adventofcode.utils.geom.Rect;
 import picocli.CommandLine.Option;
 
 @Puzzle(day = 9, name = "Movie Theater")
@@ -38,8 +39,8 @@ public class Day9 extends AbstractDay {
         long maxArea = 0;
         for (int i = 0; i < points.size(); i++) {
             for (int j = i + 1; j < points.size(); j++) {
-                Point a = points.get(i), b = points.get(j);
-                maxArea = Math.max(maxArea, rectArea(a, b));
+                Rect rect = Rect.of(points.get(i), points.get(j));
+                maxArea = Math.max(maxArea, rect.area());
             }
         }
         return maxArea;
@@ -50,38 +51,24 @@ public class Day9 extends AbstractDay {
         long maxArea = 0;
         for (int i = 0; i < points.size(); i++) {
             for (int j = i + 1; j < points.size(); j++) {
-                Point a = points.get(i), b = points.get(j);
-                if (containsRect(a, b))
-                    maxArea = Math.max(maxArea, rectArea(a, b));
+                Rect rect = Rect.of(points.get(i), points.get(j));
+                if (containsRect(rect))
+                    maxArea = Math.max(maxArea, rect.area());
             }
         }
         return maxArea;
     }
 
-    private boolean containsRect(Point a, Point b) {
-        int xMin = Math.min(a.x, b.x), xMax = Math.max(a.x, b.x);
-        int yMin = Math.min(a.y, b.y), yMax = Math.max(a.y, b.y);
-        Point c = points.get(points.size() - 1);
-        for (Point d : points) {
-            int xMinEdge = Math.min(c.x, d.x), xMaxEdge = Math.max(c.x, d.x);
-            int yMinEdge = Math.min(c.y, d.y), yMaxEdge = Math.max(c.y, d.y);
-
-            // found an edge that overlaps the rect interior
-            // this means the rect is not fully inside the polygon
-            boolean xOverlaps = xMaxEdge > xMin && xMinEdge < xMax;
-            boolean yoverlaps = yMaxEdge > yMin && yMinEdge < yMax;
-            if (xOverlaps && yoverlaps)
-                return false;
-
-            c = d;
+    private boolean containsRect(Rect rect) {
+        Point a = points.get(points.size() - 1);
+        for (Point b : points) {
+            Rect edge = Rect.of(a, b);
+            // found an edge that overlaps the interior of the rect (excluding the boundary)
+            // in otherwords the rect is partly on either side of the edge, and therefore not fully contained within the polygon
+            if (edge.overlapsExclusive(rect)) return false;
+            a = b;
         }
         return true;
-    }
-
-    private static long rectArea(Point a, Point b) {
-        int width = Math.abs(b.x - a.x) + 1;
-        int height = Math.abs(b.y - a.y) + 1;
-        return ((long) width) * height;
     }
 
     private void writeImage(int width, int height, int factor) {
@@ -89,10 +76,9 @@ public class Day9 extends AbstractDay {
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Point a = points.get(points.size() - 1);
         for (Point b : points) {
-            int xMin = Math.min(a.x, b.x) / factor, xMax = Math.max(a.x, b.x) / factor;
-            int yMin = Math.min(a.y, b.y) / factor, yMax = Math.max(a.y, b.y) / factor;
-            for (int y = yMin; y <= yMax; y++)
-                for (int x = xMin; x <= xMax; x++)
+            Rect edge = Rect.of(a, b);
+            for (int y = edge.yMin / factor; y <= edge.yMax / factor; y++)
+                for (int x = edge.xMin / factor; x <= edge.xMax / factor; x++)
                     img.setRGB(x, y, 0x00FF00);
             a = b;
         }

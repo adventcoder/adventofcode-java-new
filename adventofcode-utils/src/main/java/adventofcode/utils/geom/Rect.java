@@ -13,12 +13,20 @@ public class Rect {
     public final int xMax;
     public final int yMax;
 
+    public static Rect of(Point a, Point b) {
+        return new Rect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y));
+    }
+
     public static Rect empty() {
         return new Rect(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
     }
 
     public boolean isEmpty() {
         return xMin > xMax || yMin > yMax;
+    }
+
+    public long area() {
+        return ((long) width()) * height();
     }
 
     public int width() {
@@ -31,6 +39,10 @@ public class Rect {
 
     public boolean overlaps(Rect r) {
         return (xMin <= r.xMax && xMax >= r.xMin) && (yMin <= r.yMax && yMax >= r.yMin);
+    }
+
+    public boolean overlapsExclusive(Rect r) {
+        return (xMin < r.xMax && xMax > r.xMin) && (yMin < r.yMax && yMax > r.yMin);
     }
 
     public boolean contains(Rect r) {
