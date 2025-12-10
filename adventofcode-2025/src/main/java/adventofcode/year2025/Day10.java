@@ -1,5 +1,6 @@
 package adventofcode.year2025;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -13,6 +14,13 @@ public class Day10 extends AbstractDay {
         main(Day10.class, args);
     }
 
+    // @Override
+    // protected String getInput() throws IOException {
+    //     return "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}\n" +
+    //         "[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}\n" +
+    //         "[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}";
+    // }
+
     private List<Machine> machines;
 
     @Override
@@ -24,20 +32,13 @@ public class Day10 extends AbstractDay {
     public Object part1() {
         int total = 0;
         for (Machine m : machines) {
-            int leastButtons = -1;
-            int combinations = 1 << m.size;
+            int leastButtons = Integer.MAX_VALUE;
+            int combinations = 1 << m.buttons.length;
             for (int mask = 0; mask < combinations; mask++) {
-                if (press(m.buttons, mask) == m.target) {
-                    int buttons = Integer.bitCount(mask);
-                    if (leastButtons < 0 || buttons < leastButtons)
-                        leastButtons = buttons;
-                }
+                if (press(m.buttons, mask) == m.target)
+                    leastButtons = Math.min(leastButtons, Integer.bitCount(mask));
             }
-            if (leastButtons >= 0)
-                total += leastButtons;
-            // System.out.println("size=" + m.size + ", buttons=" + Arrays.toString(m.buttons) + ", target=" + m.target + ", joltages=" + Arrays.toString(m.joltages));
-            // System.out.println(leastButtons);
-            // System.out.println();
+            total += leastButtons;
         }
         return total;
     }
@@ -50,7 +51,6 @@ public class Day10 extends AbstractDay {
         }
         return result;
     }
-
     
     // @Override
     // protected String getInput() throws IOException {
@@ -111,14 +111,14 @@ public class Day10 extends AbstractDay {
         return null; //TODO
     }
 
-    public record Machine(int size, int target, int[] buttons, int[] joltages) {
+    public record Machine(int size, int target, int[] buttons, int[] joltages, String src) {
         public static Machine parse(String s) {
             String[] tokens = s.trim().split("\\s+");
             int size = Fn.strip(tokens[0], "[", "]").length();
             int target = parseTarget(tokens[0]);
             int[] buttons = Arrays.stream(tokens, 1, tokens.length - 1).mapToInt(Machine::parseButton).toArray();
             int[] joltages = Fn.parseInts(Fn.strip(tokens[tokens.length - 1], "{", "}"), ",");
-            return new Machine(size, target, buttons, joltages);
+            return new Machine(size, target, buttons, joltages, s);
         }
 
         private static int parseTarget(String s) {
