@@ -2,28 +2,11 @@ package adventofcode.utils.array;
 
 import java.util.PrimitiveIterator;
 import java.util.function.IntBinaryOperator;
-import java.util.function.IntUnaryOperator;
-import java.util.stream.IntStream;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class IntArrays {
-    public static int[] create(int size, IntUnaryOperator op) {
-        int[] arr = new int[size];
-        for (int i = 0; i < size; i++)
-            arr[i] = op.applyAsInt(i);
-        return arr;
-    }
-
-    public static int[][] create(int width, int height, IntBinaryOperator op) {
-        int[][] arr = new int[height][width];
-        for (int y = 0; y < height; y++)
-            for (int x = 0; x < width; x++)
-                arr[y][x] = op.applyAsInt(x, y);
-        return arr;
-    }
-
     public static int[] concat(int[] a, int[] b) {
         if (a.length == 0) return b;
         if (b.length == 0) return a;
@@ -78,13 +61,6 @@ public class IntArrays {
 
     public static int sum(int[] arr) {
         return reduce(arr, 0, Integer::sum);
-    }
-
-    public static int product(int[] arr, int start, int size) {
-        return IntStream.of(arr)
-            .skip(start)
-            .limit(size)
-            .reduce(1, (x, y) -> x * y);
     }
 
     public static int min(int[] arr) {

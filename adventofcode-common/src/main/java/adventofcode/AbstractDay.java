@@ -6,7 +6,9 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.concurrent.Callable;
 
 import adventofcode.utils.decorators.Decorators;
@@ -20,8 +22,8 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     protected final int day;
     protected final String name;
 
-    private final DayRunner runner = new DayRunner(this);
     private final Cache cache = new Cache();
+    private final Stopwatch stopwatch = new Stopwatch();
 
     @Option(names = "--verbose", description = "Enable verbose output")
     public boolean verbose;
@@ -67,24 +69,75 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
         return OptionalInt.empty();
     }
 
-    public String title() {
-        if (name == null)
-            return String.format("--- Day %d ---", day);
-        else
-            return String.format("--- Day %d: %s ---", day, name);
+    public Integer call() throws Exception {
+        System.out.println(formatTitle());
+        System.out.println();
+
+        String input = getInput();
+        stopwatch.reset();
+
+        System.out.println("- Parsing input");
+        long parseTime = stopwatch.resumeFor(() -> parse(input));
+        System.out.println("  Took " + formatTime(parseTime));
+
+        if (includeCommon()) {
+            System.out.println();
+            System.out.println("- Common");
+            long commonTime = stopwatch.resumeFor(this::common);
+            System.out.println("  Took " + formatTime(commonTime));
+        }
+
+        if (includePart(1)) {
+            System.out.println();
+            System.out.println("- Part 1");
+            var pair = stopwatch.resumeFor(this::part1);
+            System.out.println(formatAnswer("  Answer: ", pair.left()));
+            System.out.println("  Took " + formatTime(pair.rightLong()));
+        }
+
+        if (includePart(2)) {
+            System.out.println();
+            System.out.println("- Part 2");
+            var pair = stopwatch.resumeFor(this::part2);
+            System.out.println(formatAnswer("  Answer: ", pair.left()));
+            System.out.println("  Took " + formatTime(pair.rightLong()));
+        }
+
+        System.out.println();
+        System.out.println("Took in total " + formatTime(stopwatch.time()));
+        return 0;
     }
 
-    public Integer call() throws Exception {
-        runner.intro();
-        runner.parse(getInput());
-        if (hasCommon())
-            runner.common();
-        if (partSupported(1))
-            runner.part(1, this::part1);
-        if (partSupported(2))
-            runner.part(2, this::part2);
-        runner.outro();
-        return 0;
+    private String formatTitle() {
+        String title = "Day " + day;
+        if (name != null)
+            title += ": " + name;
+        return "--- " + title + " ---";
+    }
+
+    private String formatAnswer(String prefix, Object answer) {
+        String answerString = answerToString(answer, "<No answer>");
+        return prefix + String.join("\n" + " ".repeat(prefix.length()), answerString.split("\n"));
+    }
+
+    private String formatTime(long nanos) {
+        long seconds = nanos / 1000_000_000;
+        nanos %= 1000_000_000;
+        if (seconds != 0) {
+            return String.format("%d s %d ms", seconds, nanos / 1000_000);
+        } else {
+            return String.format("%.3f ms", (double) nanos / 1000_000);
+        }
+    }
+
+    protected String answerToString(Object answer, String defaultString) {
+        if (answer instanceof Optional<?> opt)
+            return opt.map(Object::toString).orElse(defaultString);
+        if (answer instanceof OptionalInt optInt)
+            return optInt.isPresent() ? Integer.toString(optInt.getAsInt()) : defaultString;
+        if (answer instanceof OptionalLong optLong)
+            return optLong.isPresent() ? Long.toString(optLong.getAsLong()) : defaultString;
+        return answer != null ? answer.toString() : defaultString;
     }
 
     protected String getInput() throws IOException {
@@ -103,7 +156,7 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     public void parse(String input) {
     }
 
-    // this is done inconsistently since I added it later but in theory this should do any
+    // this is done inconsistently since I added common later but in theory this should do any
     // preprocessing that's required for either part 1 or 2, that way part 2 could run standalone
     // without assuming part 1 ran first.
     //TODO: enforce this and add a --part parameter to just run a specific part
@@ -118,11 +171,11 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
         throw new UnsupportedOperationException();
     }
 
-    protected boolean hasCommon() throws NoSuchMethodException {
+    protected boolean includeCommon() throws Exception {
         return methodOverriden("common");
     }
 
-    protected boolean partSupported(int part) throws NoSuchMethodException {
+    protected boolean includePart(int part) throws Exception {
         return methodOverriden("part" + part);
     }
 
@@ -133,7 +186,7 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
 
     public void log(Logger.Level level, String message) {
         if (verbose)
-            runner.log(level, message);
+            stopwatch.pauseFor(() -> System.out.println("  [" + level + "]" + message));
     }
 
     public static void main(String[] args) throws Exception {

@@ -1,6 +1,7 @@
 package adventofcode;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
@@ -38,29 +39,27 @@ public class Stopwatch {
     }
 
     public void pauseFor(Runnable runnable) {
-        if (running()) {
-            pause();
-            try {
-                runnable.run();
-            } finally {
-                resume();
-            }
-        } else {
+        pause();
+        try {
             runnable.run();
+        } finally {
+            resume();
         }
     }
 
-    public long resumeFor(Runnable runnable) {
-        long startTime = resume();
-        runnable.run();
-        long endTime = pause();
-        return endTime - startTime;
+    public long resumeFor(Runnable runnable) throws Exception {
+        return resumeFor(Executors.callable(runnable)).rightLong();
     }
 
     public <T> ObjectLongPair<T> resumeFor(Callable<T> callable) throws Exception {
         long startTime = resume();
-        T result = callable.call();
-        long endTime = pause();
+        T result;
+        long endTime;
+        try {
+            result = callable.call();
+        } finally {
+            endTime = pause();
+        }
         return ObjectLongPair.of(result, endTime - startTime);
     }
 }
