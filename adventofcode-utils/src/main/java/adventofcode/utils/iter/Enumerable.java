@@ -3,7 +3,6 @@ package adventofcode.utils.iter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
@@ -16,7 +15,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @FunctionalInterface
-public interface Enumerable<T> extends Iterable<T> {
+public interface Enumerable<T> {
     void forEach(Consumer<? super T> action);
 
     default <A, R> R collect(Collector<? super T, A, R> coll) {
@@ -69,13 +68,5 @@ public interface Enumerable<T> extends Iterable<T> {
 
     default <E> E[] toArray(IntFunction<E[]> generator) {
         return toList().toArray(generator);
-    }
-
-    default Iterator<T> iterator() {
-        // this should really be closeable...
-        return Iterators.generate(new PipedSupplier<>(action -> {
-            forEach(t -> action.accept(Maybe.present(t)));
-            action.accept(Maybe.empty());
-        }));
     }
 }

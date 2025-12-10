@@ -8,6 +8,7 @@ import java.util.PriorityQueue;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
+import adventofcode.utils.IntMath;
 import adventofcode.utils.collect.DisjointSet;
 import adventofcode.utils.geom.Vector3;
 import it.unimi.dsi.fastutil.ints.IntIntPair;
@@ -47,7 +48,7 @@ public class Day8 extends AbstractDay {
         return circuits.ranks()
             .sorted()
             .skip(circuits.size() - 3)
-            .reduce(1, (x, y) -> x * y);
+            .reduce(1, IntMath::product);
     }
 
     @Override

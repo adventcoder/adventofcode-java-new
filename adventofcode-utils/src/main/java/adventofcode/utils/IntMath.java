@@ -5,6 +5,10 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class IntMath {
+    public static int product(int x, int y) {
+        return x * y;
+    }
+
     public static int sgn(int x) {
         return Integer.compare(x, 0);
     }

@@ -1,6 +1,7 @@
 package adventofcode.year2025;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.ToLongFunction;
@@ -8,6 +9,8 @@ import java.util.stream.LongStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
+import adventofcode.utils.Fn;
+import adventofcode.utils.LongMath;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 
@@ -19,7 +22,7 @@ public class Day6 extends AbstractDay {
 
     private static Map<String, ToLongFunction<long[]>> opMap = Map.of(
         "+", operands -> LongStream.of(operands).sum(),
-        "*", operands -> LongStream.of(operands).reduce(1L, (x, y) -> x * y)
+        "*", operands -> LongStream.of(operands).reduce(1L, LongMath::product)
     );
 
     private List<ToLongFunction<long[]>> operators;
@@ -48,9 +51,7 @@ public class Day6 extends AbstractDay {
     }
 
     private void parseColumns(String[] rows) {
-        int maxLength = 0;
-        for (String row : rows)
-            maxLength = Math.max(maxLength, row.length());
+        int maxLength = Fn.maxInt(Arrays.asList(rows), String::length);
         colOperands = new ArrayList<>();
         LongList curr = new LongArrayList();
         for (int x = 0; x < maxLength; x++) {

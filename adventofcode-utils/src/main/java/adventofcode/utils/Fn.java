@@ -19,6 +19,7 @@ import adventofcode.utils.function.IntBiFunction;
 import adventofcode.utils.function.IntTriFunction;
 import lombok.experimental.UtilityClass;
 
+//TODO: a lot of this could be organised into lang utils, e.g. StringsEx, CollectionsEx
 @UtilityClass
 public class Fn {
     public static <T> Stream<T> parseVals(String s, String sep, Function<? super String, ? extends T> parser) {
@@ -123,6 +124,22 @@ public class Fn {
 
     public static <T extends Comparable<? super T>> T max(Iterable<T> domain) {
         return max(domain, Function.identity());
+    }
+
+    public static <T> int minInt(Iterable<T> domain, ToIntFunction<T> expr) {
+        Iterator<T> it = domain.iterator();
+        int min = expr.applyAsInt(it.next());
+        while (it.hasNext())
+            min = Math.min(min, expr.applyAsInt(it.next()));
+        return min;
+    }
+
+    public static <T> int maxInt(Iterable<T> domain, ToIntFunction<T> expr) {
+        Iterator<T> it = domain.iterator();
+        int min = expr.applyAsInt(it.next());
+        while (it.hasNext())
+            min = Math.max(min, expr.applyAsInt(it.next()));
+        return min;
     }
 
     public static <T, U extends Comparable<? super U>> T argMin(Iterable<T> domain, Function<? super T, ? extends U> expr) {
