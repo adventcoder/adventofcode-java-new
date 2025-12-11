@@ -3,20 +3,20 @@ package adventofcode.utils.concurrent;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
+import adventofcode.utils.iter.Generator;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class Pipe<T> {
     @FunctionalInterface
-    public static interface SupplierProc<T> {
-        void run(Predicate<? super T> out);
+    public static interface ProducerProc<T> {
+        void call(Predicate<? super T> out);
     }
 
     @FunctionalInterface
     public static interface ConsumerProc<T> {
-        void run(Supplier<? extends T> in);
+        void call(Generator<? extends T> in);
     }
 
     private final BlockingQueue<T> queue;
@@ -27,18 +27,18 @@ public class Pipe<T> {
         queue = new LinkedBlockingQueue<>(capacity);
     }
 
-    public static <T> Pipe<T>.In openSupplier(SupplierProc<T> proc) {
-        return openSupplier(Integer.MAX_VALUE, proc);
+    public static <T> Pipe<T>.In openProducer(ProducerProc<T> proc) {
+        return openProducer(Integer.MAX_VALUE, proc);
     }
 
-    public static <T> Pipe<T>.In openSupplier(int capacity, SupplierProc<T> proc) {
+    public static <T> Pipe<T>.In openProducer(int capacity, ProducerProc<T> proc) {
         Pipe<T> pipe = new Pipe<>(capacity);
         pipe.in.thread = Thread.currentThread();
         pipe.out.thread = new Thread(() -> {
             try {
-                proc.run(pipe.out);
+                proc.call(pipe.out);
             } finally {
-                pipe.out.closeFromChild();
+                pipe.out.closed = true;
             }
         });
         pipe.out.thread.start();
@@ -54,9 +54,9 @@ public class Pipe<T> {
         pipe.out.thread = Thread.currentThread();
         pipe.in.thread = new Thread(() -> {
             try {
-                proc.run(pipe.in);
+                proc.call(pipe.in);
             } finally {
-                pipe.in.closeFromChild();
+                pipe.in.closed = true;
             }
         });
         pipe.in.thread.start();
@@ -67,12 +67,8 @@ public class Pipe<T> {
         private volatile boolean closed = false;
         private Thread thread;
 
-        private void closeFromChild() {
-            closed = true;
-        }
-
         public void close() {
-            closeFromChild();
+            closed = true;
             in.thread.interrupt();
             try {
                 in.thread.join();
@@ -89,6 +85,7 @@ public class Pipe<T> {
         // @throws IllegalStateException this is closed.
         // @throws UncheckedInterruptedException interrutped while waiting for the consumer.
         //
+        @Override
         public boolean test(T val) {
             if (closed)
                 throw new IllegalStateException("closed");
@@ -105,17 +102,13 @@ public class Pipe<T> {
         }
     }
 
-    public class In implements Supplier<T>, AutoCloseable {
+    public class In implements Generator<T>, AutoCloseable {
         private volatile boolean closed = false;
         private Thread thread;
 
-        private void closeFromChild() {
-            closed = true;
-        }
-
         @Override
         public void close() {
-            closeFromChild();
+            closed = true;
             out.thread.interrupt();
             try {
                 out.thread.join();
@@ -124,16 +117,16 @@ public class Pipe<T> {
             }
         }
 
-        // Get a non-null from the producer, or null if all values are consumed.
+        // Get the next non-null from the producer, or null if all values are consumed.
         // Waits for the producer to produce some elements if there are none available. 
         //
-        // @return false if the producer is closed and there are no more elements.
+        // @return null if the producer is closed and there are no more elements.
         //
         // @throws IllegalStateException this is closed.
         // @throws UncheckedInterruptedException interrutped while waiting for the producer.
         //
         @Override
-        public T get() {
+        public T next() {
             if (closed)
                 throw new IllegalStateException("closed");
             if (out.closed && queue.isEmpty())

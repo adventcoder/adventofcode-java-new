@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 
 import lombok.experimental.UtilityClass;
 
+//TODO: Consolidate into one ArraysEx class? need to investigate compile time code generation
 @UtilityClass
 public class ObjectArrays {
     @SuppressWarnings("unchecked")

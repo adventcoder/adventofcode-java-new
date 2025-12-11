@@ -1,10 +1,9 @@
 package adventofcode.utils.geom;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-
-import adventofcode.utils.iter.Iterators;
 
 public class IntervalUnion implements Iterable<Interval> {
     private final NavigableMap<Long, Long> tree = new TreeMap<>();
@@ -33,6 +32,19 @@ public class IntervalUnion implements Iterable<Interval> {
 
     @Override
     public Iterator<Interval> iterator() {
-        return Iterators.map(tree.entrySet().iterator(), entry -> new Interval(entry.getKey(), entry.getValue()));
+        return new Iterator<>() {
+            private Iterator<Map.Entry<Long, Long>> it = tree.entrySet().iterator();
+
+            @Override
+            public boolean hasNext() {
+                return it.hasNext();
+            }
+
+            @Override
+            public Interval next() {
+                Map.Entry<Long, Long> entry = it.next();
+                return new Interval(entry.getKey(), entry.getValue());
+            }
+        };
     }
 }

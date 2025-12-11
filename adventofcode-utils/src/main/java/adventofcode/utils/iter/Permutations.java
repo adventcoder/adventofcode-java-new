@@ -1,12 +1,13 @@
 package adventofcode.utils.iter;
 
 import java.util.AbstractCollection;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.IntStream;
 
 import adventofcode.utils.array.IntArrays;
-import adventofcode.utils.array.ObjectArrays;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class Permutations<T> extends AbstractCollection<List<T>> {
         return new Iterator<>() {
             int[] perm = IntStream.range(0, vals.size()).toArray();
             boolean hasNext = true;
-            T[] arr = ObjectArrays.newInstance(Object.class, vals.size());
+            List<T> curr = new ArrayList<>(vals.size());
 
             @Override
             public boolean hasNext() {
@@ -35,10 +36,12 @@ public class Permutations<T> extends AbstractCollection<List<T>> {
 
             @Override
             public List<T> next() {
+                if (!hasNext) throw new NoSuchElementException();
+                curr.clear();
                 for (int i = 0; i < perm.length; i++)
-                    arr[i] = vals.get(perm[i]);
+                    curr.add(vals.get(perm[i]));
                 hasNext = IntArrays.nextPermutation(perm);
-                return List.of(arr);
+                return curr; // the caller must copy if they wish to mutate
             }
         };
     }

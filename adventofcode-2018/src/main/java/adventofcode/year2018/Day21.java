@@ -1,14 +1,11 @@
 package adventofcode.year2018;
 
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.iter.Iterators;
+import adventofcode.utils.iter.Generator;
 import adventofcode.year2018.utils.Op;
 import adventofcode.year2018.utils.Program;
 
@@ -28,32 +25,32 @@ public class Day21 extends AbstractDay {
 
     @Override
     public Integer part1() {
-        return program.iterator().next();
+        return program.values().next();
     }
 
     @Override
     public Integer part2() {
         Set<Integer> seen = new HashSet<>();
         Integer lastVal = null;
-        for (Integer val : program) {
+        for (Integer val : program.values()) {
             if (!seen.add(val)) break;
             lastVal = val;
         }
         return lastVal;
     }
 
-    private static class ActivationSystem extends Program implements Iterable<Integer> {
+    public static class ActivationSystem extends Program {
         public ActivationSystem(String input) {
             super(input);
         }
 
-        public Iterator<Integer> iterator() {
-            Supplier<Integer> next = new Supplier<>() {
+        public Generator<Integer> values() {
+            return new Generator<>() {
                 int[] mem = new int[6];
                 int ip = 0;
 
                 @Override
-                public Integer get() {
+                public Integer next() {
                     Integer val = null;
                     while (val == null && ip < instructions.size()) {
                         if (ip == 17) {
@@ -84,7 +81,6 @@ public class Day21 extends AbstractDay {
                     return val;
                 }
             };
-            return Iterators.generate(next, Objects::nonNull);
         }
     }
 }
