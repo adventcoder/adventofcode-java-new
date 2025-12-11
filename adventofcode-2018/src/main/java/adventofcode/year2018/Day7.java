@@ -20,19 +20,14 @@ public class Day7 extends AbstractDay {
         main(Day7.class, args);
     }
 
-    private Map<Character, Set<Character>> edges;
-    private Counter<Character> inDegree;
+    private Map<Character, Set<Character>> graph;
 
     @Override
     public void parse(String input) {
-        edges = new DefaultHashMap<>(HashSet::new);
-        inDegree = new Counter<>();
+        graph = new DefaultHashMap<>(HashSet::new);
         for (String line : input.split("\n")) {
             String[] tokens = line.split("\\s+");
-            Character step = tokens[1].charAt(0);
-            Character nextStep = tokens[7].charAt(0);
-            edges.get(step).add(nextStep);
-            inDegree.inc(nextStep);
+            graph.get(tokens[1].charAt(0)).add(tokens[7].charAt(0));
         }
     }
 
@@ -53,7 +48,7 @@ public class Day7 extends AbstractDay {
     //TODO: this is still ugly
     private class Scheduler {
         private final List<Worker> workers = new ArrayList<>();
-        private final Counter<Character> remainingInDegree = new Counter<>();
+        private final Counter<Character> inDegree = new Counter<>();
         private final PriorityQueue<Character> ready = new PriorityQueue<>();
         private final StringBuilder finished = new StringBuilder();
         private int totalTime = 0;
@@ -61,16 +56,18 @@ public class Day7 extends AbstractDay {
         public Scheduler(int numWorkers) {
             while (workers.size() < numWorkers)
                 workers.add(new Worker());
-            remainingInDegree.putAll(inDegree);
-            for (Character step : edges.keySet())
-                if (!remainingInDegree.containsKey(step))
+            for (Character step : graph.keySet())
+                for (Character nextStep : graph.get(step))
+                    inDegree.inc(nextStep);
+            for (Character step : graph.keySet())
+                if (!inDegree.containsKey(step))
                     ready.add(step);
         }
 
         public void run() {
-            do {
+            assignWork();
+            while (work())
                 assignWork();
-            } while (work());
         }
 
         private void assignWork() {
@@ -105,8 +102,8 @@ public class Day7 extends AbstractDay {
         }
 
         private void finish(Character step) {
-            for (Character nextStep : edges.getOrDefault(step, Collections.emptySet()))
-                if (remainingInDegree.dec(nextStep) == 0)
+            for (Character nextStep : graph.getOrDefault(step, Collections.emptySet()))
+                if (inDegree.dec(nextStep) == 0)
                     ready.add(nextStep);
             finished.append(step.charValue());
         }

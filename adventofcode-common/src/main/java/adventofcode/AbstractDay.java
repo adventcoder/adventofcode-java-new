@@ -25,8 +25,8 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
     private final Cache cache = new Cache();
     private final Stopwatch stopwatch = new Stopwatch();
 
-    @Option(names = "--verbose", description = "Enable verbose output")
-    public boolean verbose;
+    @Option(names = "--debug", description = "Enable debug output")
+    public boolean debug;
 
     @Option(names = "--input", description = "Path to input file")
     private File inputFile;
@@ -184,9 +184,9 @@ public abstract class AbstractDay implements Callable<Integer>, Logger {
         return method.getDeclaringClass() != AbstractDay.class;
     }
 
-    public void log(Logger.Level level, String message) {
-        if (verbose)
-            stopwatch.pauseFor(() -> System.out.println("  [" + level + "]" + message));
+    public void debug(Object... args) {
+        if (debug)
+            stopwatch.pauseFor(() -> System.out.println(Logger.format("[DEBUG] ", args)));
     }
 
     public static void main(String[] args) throws Exception {

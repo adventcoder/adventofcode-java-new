@@ -87,7 +87,7 @@ public class Day9 extends AbstractDay {
         try {
             ImageIO.write(img, "png", imageFile);
         } catch (IOException ioe) {
-            warn(ioe.getMessage());
+            ioe.printStackTrace();
         }
     }
 }
