@@ -10,4 +10,10 @@ public class ObjectArrays {
     public static <BaseT, T extends BaseT> T[] newInstance(Class<BaseT> elClass, int size) {
         return (T[]) Array.newInstance(elClass, size);
     }
+
+    public static void swap(Object[] arr, int i, int j) {
+        Object temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
 }

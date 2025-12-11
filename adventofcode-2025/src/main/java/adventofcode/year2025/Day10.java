@@ -2,14 +2,14 @@ package adventofcode.year2025;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.DoubleStream;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.array.IntArrays;
-import it.unimi.dsi.fastutil.Pair;
-import it.unimi.dsi.fastutil.ints.IntObjectPair;
+import adventofcode.utils.array.ObjectArrays;
 
 @Puzzle(day = 10, name = "Factory")
 public class Day10 extends AbstractDay {
@@ -36,12 +36,10 @@ public class Day10 extends AbstractDay {
         int total = 0;
         for (Machine m : machines) {
             int leastButtons = Integer.MAX_VALUE;
-            var sol = solveGF2(m.buttons, m.diagram);
-            int n = 1 << sol.right().length;
-            for (int x = 0; x < n; x++) {
-                int mask = getSol(sol, x);
-                leastButtons = Math.min(leastButtons, Integer.bitCount(mask));
-            }
+            AffineSpaceGF2 sol = Objects.requireNonNull(solveGF2(m.buttons, m.diagram));
+            int n = 1 << sol.basis.length;
+            for (int i = 0; i < n; i++)
+                leastButtons = Math.min(leastButtons, Integer.bitCount(sol.get(i)));
             total += leastButtons;
         }
         return total;
@@ -50,23 +48,125 @@ public class Day10 extends AbstractDay {
     @Override
     public Integer part2() {
         for (Machine m : machines) {
-            var sol = solve(m.buttons, m.joltages, 1e-9);
-            System.out.println("particular: " + Arrays.toString(sol.left()));
-            System.out.println("nullspace: " + Arrays.deepToString(sol.right()));
+            // buttons: [[3], [1, 3], [2], [2, 3], [0, 2], [0, 1]]
+            // joltages: [3, 5, 4, 7]
+            // particular: [2, 5, 1, 0, 3, 0]
+            // nullspace: [[-1, 0, -1, 1, 0, 0], [1, -1, 1, 0, -1, 1]]
+            //
+            // [a] = [2] + [-1  1] [d]
+            // [b]   [5]   [ 0 -1] [f]
+            // [c]   [1]   [-1  1]
+            // [d]   [0]   [ 1  0]
+            // [e]   [3]   [ 0 -1]
+            // [f]   [0]   [ 0  1]
+            //
+            // Minimize: 11 - d + f
+            // 
+            // Constraints: 
+            // 2 - d + f >= 0
+            // 5     - f >= 0
+            // 1 - d + f >= 0
+            //     d     >= 0
+            // 3     - f >= 0
+            //         f >= 0
+            //
+            AffineSpace sol = Objects.requireNonNull(solve(m.buttons, m.joltages));
+            System.out.println("buttons: " + Arrays.deepToString(m.buttons));
+            System.out.println("joltages: " + Arrays.toString(m.joltages()));
+            System.out.println("particular: " + Arrays.toString(sol.origin));
+            System.out.println("nullspace: " + Arrays.deepToString(sol.basis));
+            System.out.println();
         }
         return null;
     }
 
-    public int getSol(IntObjectPair<int[]> sol, int x) {
-        int result = sol.leftInt();
-        for (int i = 0; i < sol.right().length; i++) {
-            if ((x & (1 << i)) != 0)
-                result ^= sol.right()[i];
+    public record Machine(int[] diagram, int[][] buttons, int[] joltages) {
+        public static Machine parse(String s) {
+            String[] tokens = s.trim().split("\\s+");
+            int[] diagram = parseDiagram(tokens[0]);
+            int[][] buttons = Arrays.stream(tokens, 1, tokens.length - 1)
+                .map(tok -> Fn.parseInts(Fn.strip(tok, "(", ")"), ","))
+                .toArray(int[][]::new);
+            int[] joltages = Fn.parseInts(Fn.strip(tokens[tokens.length - 1], "{", "}"), ",");
+            return new Machine(diagram, buttons, joltages);
         }
-        return result;
+
+        private static int[] parseDiagram(String s) {
+            return Fn.strip(s, "[", "]").chars()
+                .map(c -> c == '#' ? 1 : 0)
+                .toArray();
+        }
     }
 
-    private IntObjectPair<int[]> solveGF2(int[][] buttons, int[] diagram) {
+    public AffineSpace solve(int[][] buttons, int[] joltages) {
+        // Build augmented matrix, rows are bit vectors
+        int[][] lhs = new int[joltages.length][buttons.length];
+        for (int x = 0; x < buttons.length; x++)
+            for (int y : buttons[x])
+                lhs[y][x] = 1;
+        int[] rhs = new int[joltages.length];
+        for (int y = 0; y < joltages.length; y++)
+            rhs[y] = joltages[y];
+
+        // Row reduce
+        int[] pivotCols = new int[Math.min(joltages.length, buttons.length)];
+        int[] freeCols = new int[buttons.length];
+        int rank = 0;
+        int nullity = 0;
+        for (int x = 0; x < buttons.length; x++) {
+            boolean foundPivot = false;
+            for (int y = rank; y < joltages.length; y++) {
+                if (lhs[y][x] != 0) {
+                    ObjectArrays.swap(lhs, rank, y);
+                    IntArrays.swap(rhs, rank, y);
+                    foundPivot = true;
+                    break;
+                }
+            }
+            if (!foundPivot) {
+                freeCols[nullity++] = x;
+            } else {
+                if (lhs[rank][x] < 0) {
+                    for (int i = x; i < buttons.length; i++) lhs[rank][i] *= -1;
+                    rhs[rank] *= -1;
+                }
+                for (int y = 0; y < joltages.length; y++) {
+                    if (y == rank) continue;
+                    if (lhs[y][x] < 0) {
+                        for (int i = x; i < buttons.length; i++) lhs[y][i] += lhs[rank][i];
+                        rhs[y] += rhs[rank];
+                    } else if (lhs[y][x] > 0) {
+                        for (int i = x; i < buttons.length; i++) lhs[y][i] -= lhs[rank][i];
+                        rhs[y] -= rhs[rank];
+                    }
+                }
+                pivotCols[rank++] = x;
+            }
+        }
+
+        // Check valid solution
+        for (int y = rank; y < joltages.length; y++)
+            if (IntStream.of(lhs[y]).allMatch(n -> n == 0) && rhs[y] != 0)
+                return null;
+
+        // Build solution space
+        int[] particular = new int[buttons.length];
+        int[][] nullspace = new int[nullity][buttons.length];
+        for (int y = 0; y < rank; y++) {
+            particular[pivotCols[y]] = rhs[y];
+            for (int nx = 0; nx < nullity; nx++)
+                nullspace[nx][pivotCols[y]] = -lhs[y][freeCols[nx]];
+        }
+        for (int nx = 0; nx < nullity; nx++)
+            nullspace[nx][freeCols[nx]] = 1;
+
+        return new AffineSpace(particular, nullspace);
+    }
+
+    public record AffineSpace(int[] origin, int[][] basis) {
+    }
+
+    public AffineSpaceGF2 solveGF2(int[][] buttons, int[] diagram) {
         // Build augmented matrix, rows are bit vectors
         int[] rhs = diagram.clone();
         int[] lhs = new int[diagram.length];
@@ -106,7 +206,7 @@ public class Day10 extends AbstractDay {
         // Check valid solution
         for (int y = rank; y < diagram.length; y++)
             if (lhs[y] == 0 && rhs[y] != 0)
-                throw new IllegalArgumentException("no solution");
+                return null;
 
         // Build solution space
         int particular = 0;
@@ -121,88 +221,17 @@ public class Day10 extends AbstractDay {
         for (int nx = 0; nx < nullity; nx++)
             nullspace[nx] |= (1 << freeCols[nx]);
 
-        return IntObjectPair.of(particular, nullspace);
+        return new AffineSpaceGF2(particular, nullspace);
     }
 
-       private Pair<double[], double[][]> solve(int[][] buttons, int[] joltages, double epsilon) {
-        // Build augmented matrix, rows are bit vectors
-        double[][] lhs = new double[joltages.length][buttons.length];
-        for (int x = 0; x < buttons.length; x++)
-            for (int y : buttons[x])
-                lhs[y][x] = 1.0;
-        double[] rhs = new double[joltages.length];
-        for (int y = 0; y < joltages.length; y++)
-            rhs[y] = joltages[y];
-
-        // Row reduce
-        int[] pivotCols = new int[Math.min(joltages.length, buttons.length)];
-        int[] freeCols = new int[buttons.length];
-        int rank = 0;
-        int nullity = 0;
-        for (int x = 0; x < buttons.length; x++) {
-            boolean foundPivot = false;
-            for (int y = rank; y < joltages.length; y++) {
-                if (Math.abs(lhs[y][x]) > epsilon) {
-                    double[] lhsTemp = lhs[rank]; lhs[rank] = lhs[y]; lhs[y] = lhsTemp;
-                    double rhsTemp = rhs[rank]; rhs[rank] = rhs[y]; rhs[y] = rhsTemp;
-                    foundPivot = true;
-                    break;
-                }
+    public record AffineSpaceGF2(int origin, int[] basis) {
+        public int get(int x) {
+            int result = origin;
+            for (int i = 0; i < basis.length; i++) {
+                if ((x & (1 << i)) != 0)
+                    result ^= basis[i];
             }
-            if (!foundPivot) {
-                freeCols[nullity++] = x;
-            } else {
-                double factor = lhs[rank][x];
-                for (int i = x; i < buttons.length; i++)
-                    lhs[rank][i] /= factor;
-                rhs[rank] /= factor;
-
-                for (int y = 0; y < joltages.length; y++) {
-                    if (y == rank) continue;
-                    if (Math.abs(lhs[y][x]) > epsilon) {
-                        for (int i = x; i < buttons.length; i++)
-                            lhs[y][i] -= lhs[rank][i];
-                        rhs[y] -= rhs[rank];
-                    }
-                }
-                pivotCols[rank++] = x;
-            }
-        }
-
-        // Check valid solution
-        for (int y = rank; y < joltages.length; y++)
-            if (DoubleStream.of(lhs[y]).allMatch(x -> Math.abs(x) <= epsilon) && Math.abs(rhs[y]) > epsilon)
-                throw new IllegalArgumentException("no solution");
-
-        // Build solution space
-        double[] particular = new double[buttons.length];
-        double[][] nullspace = new double[nullity][buttons.length];
-        for (int y = 0; y < rank; y++) {
-            particular[pivotCols[y]] = rhs[y];
-            for (int nx = 0; nx < nullity; nx++)
-                nullspace[nx][pivotCols[y]] = Math.abs(lhs[y][freeCols[nx]]);
-        }
-        for (int nx = 0; nx < nullity; nx++)
-            nullspace[nx][freeCols[nx]] = 1;
-
-        return Pair.of(particular, nullspace);
-    }
-
-    public record Machine(int[] diagram, int[][] buttons, int[] joltages) {
-        public static Machine parse(String s) {
-            String[] tokens = s.trim().split("\\s+");
-            int[] diagram = parseDiagram(tokens[0]);
-            int[][] buttons = Arrays.stream(tokens, 1, tokens.length - 1)
-                .map(tok -> Fn.parseInts(Fn.strip(tok, "(", ")"), ","))
-                .toArray(int[][]::new);
-            int[] joltages = Fn.parseInts(Fn.strip(tokens[tokens.length - 1], "{", "}"), ",");
-            return new Machine(diagram, buttons, joltages);
-        }
-
-        private static int[] parseDiagram(String s) {
-            return Fn.strip(s, "[", "]").chars()
-                .map(c -> c == '#' ? 1 : 0)
-                .toArray();
+            return result;
         }
     }
 }
