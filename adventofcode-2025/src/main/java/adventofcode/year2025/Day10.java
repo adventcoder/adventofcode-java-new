@@ -3,6 +3,7 @@ package adventofcode.year2025;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
@@ -10,18 +11,14 @@ import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.array.IntArrays;
 import adventofcode.utils.array.ObjectArrays;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntIntPair;
+import it.unimi.dsi.fastutil.ints.IntList;
 
 @Puzzle(day = 10, name = "Factory")
 public class Day10 extends AbstractDay {
     public static void main(String[] args) throws Exception {
         main(Day10.class, args);
-    }
-
-    @Override
-    protected String getInput() {
-        return "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}\n" +
-            "[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}\n" +
-            "[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}";
     }
 
     private List<Machine> machines;
@@ -35,49 +32,29 @@ public class Day10 extends AbstractDay {
     public Integer part1() {
         int total = 0;
         for (Machine m : machines) {
-            int leastButtons = Integer.MAX_VALUE;
-            AffineSpaceGF2 sol = Objects.requireNonNull(solveGF2(m.buttons, m.diagram));
-            int n = 1 << sol.basis.length;
-            for (int i = 0; i < n; i++)
-                leastButtons = Math.min(leastButtons, Integer.bitCount(sol.get(i)));
-            total += leastButtons;
+            AffineSpaceGF2 sol = solveGF2(m.buttons, m.diagram);
+            if (sol != null)
+                total += sol.minimizeBitCount();
         }
         return total;
     }
 
     @Override
     public Integer part2() {
+        int total = 0;
         for (Machine m : machines) {
-            // buttons: [[3], [1, 3], [2], [2, 3], [0, 2], [0, 1]]
-            // joltages: [3, 5, 4, 7]
-            // particular: [2, 5, 1, 0, 3, 0]
-            // nullspace: [[-1, 0, -1, 1, 0, 0], [1, -1, 1, 0, -1, 1]]
-            //
-            // [a] = [2] + [-1  1] [d]
-            // [b]   [5]   [ 0 -1] [f]
-            // [c]   [1]   [-1  1]
-            // [d]   [0]   [ 1  0]
-            // [e]   [3]   [ 0 -1]
-            // [f]   [0]   [ 0  1]
-            //
-            // Minimize: 11 - d + f
-            // 
-            // Constraints: 
-            // 2 - d + f >= 0
-            // 5     - f >= 0
-            // 1 - d + f >= 0
-            //     d     >= 0
-            // 3     - f >= 0
-            //         f >= 0
-            //
-            AffineSpace sol = Objects.requireNonNull(solve(m.buttons, m.joltages));
             System.out.println("buttons: " + Arrays.deepToString(m.buttons));
             System.out.println("joltages: " + Arrays.toString(m.joltages()));
-            System.out.println("particular: " + Arrays.toString(sol.origin));
-            System.out.println("nullspace: " + Arrays.deepToString(sol.basis));
+            AffineSpace sol = solve(m.buttons, m.joltages);
+            if (sol == null) System.out.println("OH NO>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"); //TODO
+            if (sol != null) {
+                System.out.println("particular: " + Arrays.toString(sol.origin));
+                System.out.println("nullspace: " + Arrays.deepToString(sol.basis));
+                total += sol.minimizeSum();
+            }
             System.out.println();
         }
-        return null;
+        return total;
     }
 
     public record Machine(int[] diagram, int[][] buttons, int[] joltages) {
@@ -164,6 +141,58 @@ public class Day10 extends AbstractDay {
     }
 
     public record AffineSpace(int[] origin, int[][] basis) {
+        public int minimizeSum() {
+            return minimizeSum(new IntArrayList(), IntArrays.sum(origin));
+        }
+
+        private int minimizeSum(IntList params, int partialSum) {
+            if (params.size() == basis.length) {
+                return partialSum;
+            }
+            int minSum = Integer.MAX_VALUE;
+            int basisSum = IntArrays.sum(basis[params.size()]);
+            IntIntPair bounds = computeNextBounds(params);
+            for (int t = bounds.leftInt(); t <= bounds.rightInt(); t++) {
+                if (partialSum + t*basisSum >= minSum) continue; // prune branch
+                params.add(t);
+                minSum = Math.min(minSum, minimizeSum(params, partialSum + t*basisSum));
+                params.removeInt(params.size() - 1);
+            }
+            return minSum;
+        }
+
+        private IntIntPair computeNextBounds(IntList prefix) {
+            //TODO: this is from chat gpt
+            int k = prefix.size();
+            int n = origin.length;
+
+            int lo = Integer.MIN_VALUE;
+            int hi = Integer.MAX_VALUE;
+
+            for (int i = 0; i < n; i++) {
+                // compute remainingOrigin[i]
+                int remaining = origin[i];
+                for (int j = 0; j < prefix.size(); j++)
+                    remaining += basis[j][i] * prefix.getInt(j);
+
+                int a = basis[k][i]; // coefficient of next parameter
+
+                if (a == 0) continue;
+
+                // remaining + a*t >= 0
+                int rhs = -remaining;
+
+                if (a > 0) {
+                    int lb = -Math.floorDiv(-rhs, a);
+                    lo = Math.max(lo, lb);
+                } else {
+                    int ub = Math.floorDiv(rhs, a);
+                    hi = Math.min(hi, ub);
+                }
+            }
+
+            return IntIntPair.of(lo, hi);
+        }
     }
 
     public AffineSpaceGF2 solveGF2(int[][] buttons, int[] diagram) {
@@ -225,6 +254,14 @@ public class Day10 extends AbstractDay {
     }
 
     public record AffineSpaceGF2(int origin, int[] basis) {
+        public int minimizeBitCount() {
+            int leastCount = Integer.MAX_VALUE;
+            int n = 1 << basis.length;
+            for (int i = 0; i < n; i++)
+                leastCount = Math.min(leastCount, Integer.bitCount(get(i)));
+            return leastCount;
+        }
+
         public int get(int x) {
             int result = origin;
             for (int i = 0; i < basis.length; i++) {
