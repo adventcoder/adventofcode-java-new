@@ -9,39 +9,37 @@ import java.util.stream.StreamSupport;
 public interface Generator<T> extends Enumerable<T>, Iterable<T> {
     T next();
 
-    default boolean cond(T look) {
-        return look != null;
-    }
-
-    default Stream<T> stream() {
-        return StreamSupport.stream(spliterator(), false);
-    }
-
+    @Override
     default void forEach(Consumer<? super T> action) {
         T look = next();
-        while (cond(look)) {
+        while (look != null) {
             action.accept(look);
             look = next();
         }
     }
 
+    @Override
     default Iterator<T> iterator() {
         return new Iterator<>() {
-            T look = next();
+            T look = Generator.this.next();
 
             @Override
             public boolean hasNext() {
-                return cond(look);
+                return look != null;
             }
 
             @Override
             public T next() {
-                if (!cond(look))
+                if (!hasNext())
                     throw new NoSuchElementException();
                 T curr = look;
-                look = next();
+                look = Generator.this.next();
                 return curr;
             }
         };
+    }
+
+    default Stream<T> stream() {
+        return StreamSupport.stream(spliterator(), false);
     }
 }
