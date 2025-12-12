@@ -1,5 +1,6 @@
 package adventofcode.year2025;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -11,7 +12,6 @@ import adventofcode.utils.IntMath;
 import adventofcode.utils.array.IntArrays;
 import adventofcode.utils.array.ObjectArrays;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntIntPair;
 import it.unimi.dsi.fastutil.ints.IntList;
 
 @Puzzle(day = 10, name = "Factory")
@@ -19,6 +19,15 @@ public class Day10 extends AbstractDay {
     public static void main(String[] args) throws Exception {
         main(Day10.class, args);
     }
+
+//     @Override
+//     protected String getInput() throws IOException {
+//         return """
+// [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+// [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
+// [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}
+// """;
+//     }
 
     private List<Machine> machines;
 
@@ -29,66 +38,89 @@ public class Day10 extends AbstractDay {
 
     @Override
     public Integer part1() {
-        // buttons: [[1, 2, 3, 4, 5], [0, 4], [0, 1, 2], [3]]
-        // joltages: [20, 26, 26, 30, 26, 16]
-        //
-        // 0 1 1 0 | 20
-        // 1 0 1 0 | 26
-        // 1 0 1 0 | 26
-        // 1 0 0 1 | 30
-        // 1 1 0 0 | 26
-        // 1 0 0 0 | 16
-        //
-        // 1 0  1  0 |  26
-        // 0 1  1  0 |  20
-        // 0 0  0  0 |  0
-        // 0 0 -1  1 |  4
-        // 0 1 -1  0 |  0
-        // 0 0 -1  0 | -10
-        //
-        // 1 0  1  0 |  26
-        // 0 1  1  0 |  20
-        // 0 0  0  0 |  0
-        // 0 0 -1  1 |  4
-        // 0 0 -2  0 | -20
-        // 0 0 -1  0 | -10
-        //
-        // 1 0  0  0 |  16
-        // 0 1  0  0 |  10
-        // 0 0  1  0 |  10
-        // 0 0  0  1 |  14
-        // 0 0  0  0 |  0
-        //
-        // [a b c d]^T = [16 10 10 14]^T
-        //
         int total = 0;
         for (Machine m : machines) {
             AffineSpaceGF2 sol = solveGF2(m.buttons, m.diagram);
-            if (sol != null)
-                total += sol.minimizeBitCount();
+            if (sol == null) continue;
+            total += sol.minimizeBitCount();
         }
         return total;
     }
 
     @Override
     public Integer part2() {
+        // buttons: [[1, 2, 4, 6, 7], [1, 3, 4, 5, 6, 7], [1, 4, 6], [0, 3, 4, 5, 6], [0, 4, 7], [0, 5, 6], [0, 1, 2, 4, 5, 7], [0, 2, 3, 4, 5, 6, 7], [2, 3, 5], [0, 5]]
+        // joltages: [45, 36, 41, 26, 53, 54, 45, 36]
+        // particular: [78, 8, -28, 96, -28, 26, 86, 0, 0, 0]
+        // basis: [[-4, 0, 4, -4, 0, 0, 0, 4, 0, 0], [-2, 0, 4, -4, 4, 2, -2, 0, 4, 0], [2, 0, 0, 0, 0, -2, -2, 0, 0, 4]]
+        // scale: 4
+        //
+        // -4 -2  2 |-78     -4 t - 2 u + 2 v >= -78
+        //  0  0  0 | -8                    0 >= -8
+        //  4  4  0 | 28      4 t + 4 u       >= 28
+        // -4 -4  0 |-96     -4 t - 4 u       >= 96
+        //  0  4  0 | 28            4 u       >= 28
+        //  0  2 -2 |-26            2 u - 2 v >= -26
+        //  0 -2 -2 |-86           -2 u - 2 v >= -86
+        //  4  0 -2 |  0      4 t       - 2 v >= 0
+        //  0  4  0 |  0            4 u       >= 0
+        //  0  0  4 |  0                  4 v >= 0
+        //
+        //  4  4  0 | 28
+        //  4  0 -2 |  0
+        // -4 -2  2 |-78
+        // -4 -4  0 |-96
+        //  0  4  0 | 28
+        //  0  2 -2 |-26
+        //  0 -2 -2 |-86
+        //  0  4  0 |  0
+        //  0  0  4 |  0
+        //  0  0  0 | -8
+        //
+        //  1  0  0 |  0   t>=0
+        // -1  0  0 |-17   t<=17
+        //  0  1  0 |  7   u>=7
+        //  0 -1  0 |-43   u<=43
+        //  0  0  1 |  0   v>=0
+        //
+        //             t
+        //  4  0 | 28 -4
+        //  0 -2 |  0 -4
+        // -2  2 |-78  4
+        // -4  0 |-96  4
+        //  4  0 | 28  0
+        //  2 -2 |-26  0
+        // -2 -2 |-86  0
+        //  4  0 |  0  0
+        //  0  4 |  0  0
+        //  0  0 | -8  0
+        //
+        //  1  0 |-13  0   u >= max(-13,7-t,7,0)
+        //  1  0 |  7 -1
+        //  1  0 |  7  0
+        //  1  0 |  0  0
+        // -1  0 |-41  1   u <=min(-41+t,-39,-28+t,-43)
+        // -1  0 |-39  0
+        // -1  0 |-28  1
+        // -1  0 |-43  0
+        //  0 -1 |  0 -2
+        //  0  1 |  0  0
+        //  0  0 | -8  0
+        //
         int total = 0;
         for (Machine m : machines) {
             AffineSpace sol = solve(m.buttons, m.joltages);
-            if (sol != null) {
-                System.out.println("buttons: " + Arrays.deepToString(m.buttons));
-                System.out.println("joltages: " + Arrays.toString(m.joltages()));
-                System.out.println("particular: " + Arrays.toString(sol.origin));
-                System.out.println("nullspace: " + Arrays.deepToString(sol.basis));
-                System.out.println("scale: " + sol.scale);
-                System.out.println();
-                Integer minSum = sol.minimizeSum();
-                if (minSum == null) {
-                    System.out.println("oh no!");
-                    break;
-                }
-                total += minSum;
-            }
+            if (sol == null) continue;
+            if (sol.basis.length < 3) continue;
+            System.out.println("buttons: " + Arrays.deepToString(m.buttons));
+            System.out.println("joltages: " + Arrays.toString(m.joltages()));
+            System.out.println("particular: " + Arrays.toString(sol.origin));
+            System.out.println("nullspace: " + Arrays.deepToString(sol.basis));
+            System.out.println("scale: " + sol.scale);
+            System.out.println();
+            // Integer minSum = sol.minimizeSum();
+            // if (minSum != null)
+            //     total += minSum;
         }
         return total;
     }
@@ -188,62 +220,114 @@ public class Day10 extends AbstractDay {
     }
 
     public record AffineSpace(int[] origin, int[][] basis, int scale) {
-        public Integer minimizeSum() {
-            // i think i should keep track of all row sums individually, and also need to check they are all divisible by scale at the end
-            return minimizeSum(new IntArrayList(), IntArrays.sum(origin));
+        // buttons: [[3], [1, 3], [2], [2, 3], [0, 2], [0, 1]]
+        // joltages: [3, 5, 4, 7]
+        // particular: [2, 5, 1, 0, 3, 0]
+        // nullspace: [[-1, 0, -1, 1, 0, 0], [1, -1, 1, 0, -1, 1]]
+        //
+        // m [a] = [2] + [-1  1] [d], m=1
+        //   [b]   [5]   [ 0 -1] [f]
+        //   [c]   [1]   [-1  1]
+        //   [d]   [0]   [ 1  0]
+        //   [e]   [3]   [ 0 -1]
+        //   [f]   [0]   [ 0  1]
+        //
+        // 2 - d + f >= 0
+        // 5     - f >= 0
+        // 1 - d + f >= 0
+        //     d     >= 0
+        // 3     - f >= 0
+        //         f >= 0
+        //
+        // sum = 11 - d + f
+        //
+        // Eliminate f by combining all lo/hi pairs:
+        //
+        // lo            hi
+        // f >= d - 2    f <= 5
+        // f >= d - 1    f <= 3
+        // f >= 0
+        //
+        // combined                 inequalities without f
+        // d - 2 <= 5     d <= 7    d >= 0
+        // d - 1 <= 5     d <= 6
+        //     0 <= 5  => d <= 5
+        // d - 2 <= 3     d <= 4
+        // d - 1 <= 3
+        //     0 <= 3
+        //
+        // Since d is negative in the sum to minimize choose the min upper bound: d=4
+        //
+        // Back substitude to find f:
+        //
+        // f >= 4 - 2 = 2    f <= 5
+        // f >= 4 - 1 = 3    f <= 3
+        // f >= 0
+        //
+        // Since f is positive in the sum to minimize choose the max lower bound: f=3
+        //
+        // sum = 11 - 4 + 3 = 10
+        //
+        public void minimizeSum(int[] params) {
+            if (basis.length == 0) return;
+            int xLast = basis.length - 1;
+            eliminate(xLast).minimizeSum(params);
+            int val = IntArrays.sum(basis[xLast]);
+            if (val > 0) {
+                // find the max lower bound doing back subtitution of params
+                int max = Integer.MIN_VALUE;
+                for (int y = 0; y < origin.length; y++) {
+                    if (basis[xLast][y] > 0) {
+                        // 1 + 2 d + 3 f >= 0
+                        //             f >= ceil((-1 - 2 d)/3)
+                        int lb = origin[y];
+                        for (int x = 0; x < xLast; x++)
+                            lb += params[x] * basis[x][y];
+                        max = Math.max(max, -Math.floorDiv(lb, basis[xLast][y]));
+                    }
+                }
+                params[xLast] = max;
+            } else if (val < 0) {
+                // find the min upper bound doing back subtitution of params
+                int min = Integer.MAX_VALUE;
+                for (int y = 0; y < origin.length; y++) {
+                    if (basis[xLast][y] < 0) {
+                        // 1 + 2 d - 3 f >= 0
+                        //             f <= floor((1 + 2 d)/3)
+                        int ub = origin[y];
+                        for (int x = 0; x < xLast; x++)
+                            ub += params[x] * basis[x][y];
+                        min = Math.min(min, Math.floorDiv(ub, basis[xLast][y]));
+                    }
+                }
+                params[xLast] = min;
+            }
         }
 
-        private Integer minimizeSum(IntList params, int partialSum) {
-            if (params.size() == basis.length) {
-                System.out.println(partialSum);
-                return partialSum % scale == 0 ? partialSum / scale : null;
-            }
-            Integer minSum = null;
-            int basisSum = IntArrays.sum(basis[params.size()]);
-            IntIntPair bounds = computeNextBounds(params);
-            System.out.println(bounds);
-            for (int t = bounds.leftInt(); t <= bounds.rightInt(); t++) {
-                if (minSum != null && partialSum + t*basisSum >= minSum) continue; // prune branch
-                params.add(t);
-                Integer sum = minimizeSum(params, partialSum + t*basisSum);
-                if (sum != null && (minSum == null || sum < minSum))
-                    minSum = sum;
-                params.removeInt(params.size() - 1);
-            }
-            return minSum;
-        }
-
-        private IntIntPair computeNextBounds(IntList prefix) {
-            //TODO: this is from chat gpt, the scale shouldn't affect the bounds
-            int k = prefix.size();
-            int n = origin.length;
-
-            int lo = Integer.MIN_VALUE;
-            int hi = Integer.MAX_VALUE;
-
-            for (int i = 0; i < n; i++) {
-                // compute remainingOrigin[i]
-                int remaining = origin[i];
-                for (int j = 0; j < prefix.size(); j++)
-                    remaining += basis[j][i] * prefix.getInt(j);
-
-                int a = basis[k][i]; // coefficient of next parameter
-
-                if (a == 0) continue;
-
-                // remaining + a*t >= 0
-                int rhs = -remaining;
-
-                if (a > 0) {
-                    int lb = -Math.floorDiv(-rhs, a);
-                    lo = Math.max(lo, lb);
-                } else {
-                    int ub = Math.floorDiv(rhs, a);
-                    hi = Math.min(hi, ub);
+        private AffineSpace eliminate(int xElim) {
+            IntList newOrigin = new IntArrayList();
+            List<int[]> newBasis = new ArrayList<>();
+            // add derived constrains from the eliminated column
+            for (int y1 = 0; y1 < basis.length; y1++) {
+                for (int y2 = 0; y2 < basis.length; y2++) {
+                    // y1 is a lower bound, y2 is an upper bound
+                    //   lower:  2 - d + f >= 0   (f >= d - 2)
+                    //   upper: -5     - f >= 0   (f <= 5)
+                    // derived:  7 - d     >= 0   (d <= 7)
+                    if (basis[xElim][y1] > 0 && basis[xElim][y2] < 0) {
+                        newBasis.add(null); //TODO
+                        newOrigin.add(origin[y1] - origin[y2]);
+                    }
                 }
             }
-
-            return IntIntPair.of(lo, hi);
+            // also add constraints not referencing the eliminated colum
+            for (int y = 0; y < basis.length; y++) {
+                if (basis[xElim][y] == 0) {
+                    newBasis.add(null); //TODO
+                    newOrigin.add(origin[y]);
+                }
+            }
+            return new AffineSpace(newOrigin.toIntArray(), newBasis.toArray(int[][]::new), scale);
         }
     }
 
