@@ -2,13 +2,12 @@ package adventofcode.year2025;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
+import adventofcode.utils.IntMath;
 import adventofcode.utils.array.IntArrays;
 import adventofcode.utils.array.ObjectArrays;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -30,6 +29,38 @@ public class Day10 extends AbstractDay {
 
     @Override
     public Integer part1() {
+        // buttons: [[1, 2, 3, 4, 5], [0, 4], [0, 1, 2], [3]]
+        // joltages: [20, 26, 26, 30, 26, 16]
+        //
+        // 0 1 1 0 | 20
+        // 1 0 1 0 | 26
+        // 1 0 1 0 | 26
+        // 1 0 0 1 | 30
+        // 1 1 0 0 | 26
+        // 1 0 0 0 | 16
+        //
+        // 1 0  1  0 |  26
+        // 0 1  1  0 |  20
+        // 0 0  0  0 |  0
+        // 0 0 -1  1 |  4
+        // 0 1 -1  0 |  0
+        // 0 0 -1  0 | -10
+        //
+        // 1 0  1  0 |  26
+        // 0 1  1  0 |  20
+        // 0 0  0  0 |  0
+        // 0 0 -1  1 |  4
+        // 0 0 -2  0 | -20
+        // 0 0 -1  0 | -10
+        //
+        // 1 0  0  0 |  16
+        // 0 1  0  0 |  10
+        // 0 0  1  0 |  10
+        // 0 0  0  1 |  14
+        // 0 0  0  0 |  0
+        //
+        // [a b c d]^T = [16 10 10 14]^T
+        //
         int total = 0;
         for (Machine m : machines) {
             AffineSpaceGF2 sol = solveGF2(m.buttons, m.diagram);
@@ -43,16 +74,21 @@ public class Day10 extends AbstractDay {
     public Integer part2() {
         int total = 0;
         for (Machine m : machines) {
-            System.out.println("buttons: " + Arrays.deepToString(m.buttons));
-            System.out.println("joltages: " + Arrays.toString(m.joltages()));
             AffineSpace sol = solve(m.buttons, m.joltages);
-            if (sol == null) System.out.println("OH NO>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"); //TODO
             if (sol != null) {
+                System.out.println("buttons: " + Arrays.deepToString(m.buttons));
+                System.out.println("joltages: " + Arrays.toString(m.joltages()));
                 System.out.println("particular: " + Arrays.toString(sol.origin));
                 System.out.println("nullspace: " + Arrays.deepToString(sol.basis));
-                total += sol.minimizeSum();
+                System.out.println("scale: " + sol.scale);
+                System.out.println();
+                Integer minSum = sol.minimizeSum();
+                if (minSum == null) {
+                    System.out.println("oh no!");
+                    break;
+                }
+                total += minSum;
             }
-            System.out.println();
         }
         return total;
     }
@@ -103,18 +139,17 @@ public class Day10 extends AbstractDay {
             if (!foundPivot) {
                 freeCols[nullity++] = x;
             } else {
-                if (lhs[rank][x] < 0) {
-                    for (int i = x; i < buttons.length; i++) lhs[rank][i] *= -1;
-                    rhs[rank] *= -1;
-                }
                 for (int y = 0; y < joltages.length; y++) {
                     if (y == rank) continue;
-                    if (lhs[y][x] < 0) {
-                        for (int i = x; i < buttons.length; i++) lhs[y][i] += lhs[rank][i];
-                        rhs[y] += rhs[rank];
-                    } else if (lhs[y][x] > 0) {
-                        for (int i = x; i < buttons.length; i++) lhs[y][i] -= lhs[rank][i];
-                        rhs[y] -= rhs[rank];
+                    if (lhs[y][x] != 0) {
+                        int d = IntMath.gcd(lhs[rank][x], lhs[y][x]);
+                        int a = lhs[rank][x] / d;
+                        int b = lhs[y][x] / d;
+                        if (y < rank)
+                            lhs[y][pivotCols[y]] *= a;
+                        for (int i = x; i < buttons.length; i++)
+                            lhs[y][i] = a*lhs[y][i] - b*lhs[rank][i];
+                        rhs[y] = a*rhs[y] - b*rhs[rank];
                     }
                 }
                 pivotCols[rank++] = x;
@@ -126,6 +161,18 @@ public class Day10 extends AbstractDay {
             if (IntStream.of(lhs[y]).allMatch(n -> n == 0) && rhs[y] != 0)
                 return null;
 
+        // normalise pivots
+        int m = 1;
+        for (int y = 0; y < rank; y++)
+            m = IntMath.lcm(m, lhs[y][pivotCols[y]]);
+        for (int y = 0; y < rank; y++) {
+            int factor = m / lhs[y][pivotCols[y]];
+            lhs[y][pivotCols[y]] *= factor;
+            for (int nx = 0; nx < nullity; nx++)
+                lhs[y][freeCols[nx]] *= factor;
+            rhs[y] *= factor;
+        }
+
         // Build solution space
         int[] particular = new int[buttons.length];
         int[][] nullspace = new int[nullity][buttons.length];
@@ -135,34 +182,39 @@ public class Day10 extends AbstractDay {
                 nullspace[nx][pivotCols[y]] = -lhs[y][freeCols[nx]];
         }
         for (int nx = 0; nx < nullity; nx++)
-            nullspace[nx][freeCols[nx]] = 1;
+            nullspace[nx][freeCols[nx]] = m;
 
-        return new AffineSpace(particular, nullspace);
+        return new AffineSpace(particular, nullspace, m);
     }
 
-    public record AffineSpace(int[] origin, int[][] basis) {
-        public int minimizeSum() {
+    public record AffineSpace(int[] origin, int[][] basis, int scale) {
+        public Integer minimizeSum() {
+            // i think i should keep track of all row sums individually, and also need to check they are all divisible by scale at the end
             return minimizeSum(new IntArrayList(), IntArrays.sum(origin));
         }
 
-        private int minimizeSum(IntList params, int partialSum) {
+        private Integer minimizeSum(IntList params, int partialSum) {
             if (params.size() == basis.length) {
-                return partialSum;
+                System.out.println(partialSum);
+                return partialSum % scale == 0 ? partialSum / scale : null;
             }
-            int minSum = Integer.MAX_VALUE;
+            Integer minSum = null;
             int basisSum = IntArrays.sum(basis[params.size()]);
             IntIntPair bounds = computeNextBounds(params);
+            System.out.println(bounds);
             for (int t = bounds.leftInt(); t <= bounds.rightInt(); t++) {
-                if (partialSum + t*basisSum >= minSum) continue; // prune branch
+                if (minSum != null && partialSum + t*basisSum >= minSum) continue; // prune branch
                 params.add(t);
-                minSum = Math.min(minSum, minimizeSum(params, partialSum + t*basisSum));
+                Integer sum = minimizeSum(params, partialSum + t*basisSum);
+                if (sum != null && (minSum == null || sum < minSum))
+                    minSum = sum;
                 params.removeInt(params.size() - 1);
             }
             return minSum;
         }
 
         private IntIntPair computeNextBounds(IntList prefix) {
-            //TODO: this is from chat gpt
+            //TODO: this is from chat gpt, the scale shouldn't affect the bounds
             int k = prefix.size();
             int n = origin.length;
 
