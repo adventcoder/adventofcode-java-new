@@ -17,6 +17,8 @@ import java.util.stream.Stream;
 
 import adventofcode.utils.function.IntBiFunction;
 import adventofcode.utils.function.IntTriFunction;
+import adventofcode.utils.function.LongBiFunction;
+import adventofcode.utils.function.LongTriFunction;
 import lombok.experimental.UtilityClass;
 
 //TODO: a lot of this could be organised into lang utils, e.g. StringsEx, CollectionsEx
@@ -54,6 +56,21 @@ public class Fn {
         int x = Integer.parseInt(tokens[0].trim());
         int y = Integer.parseInt(tokens[1].trim());
         int z = Integer.parseInt(tokens[2].trim());
+        return generator.apply(x, y, z);
+    }
+
+    public static <T> T parseLongPair(String s, String sep, LongBiFunction<? extends T> generator) {
+        String[] tokens = s.split(sep, 2);
+        long x = Long.parseLong(tokens[0].trim());
+        long y = Long.parseLong(tokens[1].trim());
+        return generator.apply(x, y);
+    }
+
+    public static <T> T parseLongTriple(String s, String sep, LongTriFunction<? extends T> generator) {
+        String[] tokens = s.split(sep, 3);
+        long x = Long.parseLong(tokens[0].trim());
+        long y = Long.parseLong(tokens[1].trim());
+        long z = Long.parseLong(tokens[2].trim());
         return generator.apply(x, y, z);
     }
 
@@ -208,15 +225,15 @@ public class Fn {
         return true;
     }
 
-    public static <T> int bisectLeft(List<T> list, T x, Comparator<T> cmp) {
+    public static <T, U> int bisectLeft(List<T> list, U x, Function<? super T, ? extends U> key, Comparator<? super U> cmp) {
         if (list.isEmpty()) return 0;
-        int firstIndex = bsearchFirst(0, list.size() - 1, i -> cmp.compare(list.get(i), x) >= 0 ? 0 : -1);
+        int firstIndex = bsearchFirst(0, list.size() - 1, i -> cmp.compare(key.apply(list.get(i)), x) >= 0 ? 0 : -1);
         return firstIndex >= 0 ? firstIndex : -firstIndex - 1;
     }
 
-    public static <T> int bisectRight(List<T> list, T x, Comparator<T> cmp) {
+    public static <T, U> int bisectRight(List<T> list, U x, Function<? super T, ? extends U> key, Comparator<? super U> cmp) {
         if (list.isEmpty()) return 0;
-        int lastIndex = bsearchLast(0, list.size() - 1, i -> cmp.compare(list.get(i), x) <= 0 ? 0 : 1);
+        int lastIndex = bsearchLast(0, list.size() - 1, i -> cmp.compare(key.apply(list.get(i)), x) <= 0 ? 0 : 1);
         return lastIndex >= 0 ? lastIndex + 1 : -lastIndex - 1;
     }
 
