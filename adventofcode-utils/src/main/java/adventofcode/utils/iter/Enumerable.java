@@ -18,6 +18,10 @@ import java.util.stream.Collectors;
 public interface Enumerable<T> {
     void forEach(Consumer<? super T> action);
 
+    static <T> Enumerable<T> empty() {
+        return action -> {};
+    }
+
     default <A, R> R collect(Collector<? super T, A, R> coll) {
         A acc = coll.supplier().get();
         forEach(t -> coll.accumulator().accept(acc, t));
