@@ -2,9 +2,13 @@ package adventofcode.year2025;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -13,7 +17,11 @@ import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.IntMath;
 import adventofcode.utils.array.IntArrays;
+import adventofcode.utils.array.ObjectArrays;
 import adventofcode.utils.iter.Enumerable;
+import adventofcode.year2025.Day10.AffineSpaceGF2;
+import it.unimi.dsi.fastutil.objects.ObjectDoublePair;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
 @Puzzle(day = 10, name = "Factory")
 public class Day10 extends AbstractDay {
@@ -21,14 +29,15 @@ public class Day10 extends AbstractDay {
         main(Day10.class, args);
     }
 
-    @Override
-    protected String getInput() {
-        return """
-[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
-[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
-[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}
-""";
-    }
+    // @Override
+    // protected String getInput() {
+    //     List<String> lines = new ArrayList<>();
+    //     lines.add("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
+    //     lines.add("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
+    //     lines.add("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
+    //     lines.add("[....] (1,2) (2,3) (1,2,3) (0,2) (0,1) (0,1,3) {31,43,187,161}");
+    //     return String.join("\n", lines);
+    // }
 
     private List<Machine> machines;
 
@@ -52,10 +61,10 @@ public class Day10 extends AbstractDay {
     public Integer part2() {
         int total = 0;
         for (Machine machine : machines) {
-            int n = minimizeSum(machine.buttons, machine.joltages);
-            System.out.println("answer: " + n);
-            System.out.println();
-            total += n;
+            System.out.println("=====================");
+            System.out.println("buttons: " + Arrays.deepToString(machine.buttons));
+            System.out.println("joltages: " + Arrays.toString(machine.joltages));
+            System.out.println("sol: " + Arrays.toString(minimizeSumApprox(machine.buttons, machine.joltages)));
         }
         return total;
     }
@@ -78,144 +87,108 @@ public class Day10 extends AbstractDay {
         }
     }
 
-    public int minimizeSum(int[][] buttons, int[] joltages) {
-        // Build constraints
-        List<Inequality> ineqs = new ArrayList<>();
+    private double[] minimizeSumApprox(int[][] buttons, int[] joltages) {
+        // Build augmented matrix
+        int[][] M = new int[joltages.length + 2][buttons.length + 1];
         for (int x = 0; x < buttons.length; x++) {
-            int[] lhs = new int[buttons.length];
-            lhs[x] = 1;
-            ineqs.add(new Inequality(lhs, 0));
-        }
-        int[][] lower = new int[joltages.length][buttons.length];
-        int[][] upper = new int[joltages.length][buttons.length];
-        for (int x = 0; x < buttons.length; x++) {
-            for (int y : buttons[x]) {
-                lower[y][x] = 1;
-                upper[y][x] = -1;
-            }
+            for (int y : buttons[x])
+                M[y][x] = 1;
+            M[joltages.length][x] = -1; // Phase II objective
+            M[joltages.length + 1][x] = buttons[x].length; // Phase I objective
         }
         for (int y = 0; y < joltages.length; y++) {
-            ineqs.add(new Inequality(lower[y], joltages[y]));
-            ineqs.add(new Inequality(upper[y], -joltages[y]));
+            M[y][buttons.length] = joltages[y];
+        }
+        M[joltages.length + 1][buttons.length] = IntArrays.sum(joltages);
+
+        // Phase I: Find BFS
+        int[] pivotCols = new int[Math.min(joltages.length, buttons.length)];
+        int rank = 0;
+        while (M[joltages.length + 1][buttons.length] > 0) {
+            int pivotCol = findPivotCol(M[joltages.length + 1], buttons.length);
+            if (pivotCol < 0)
+                throw new IllegalArgumentException("infeasible");
+            int pivotRow = findPivotRow(M, pivotCol, buttons.length, joltages.length);
+            if (pivotRow < 0)
+                throw new IllegalArgumentException("unbounded");
+            if (pivotRow >= rank) {
+                ObjectArrays.swap(M, rank, pivotRow);
+                pivotRow = rank++;
+            }
+            pivotCols[pivotRow] = pivotCol;
+            pivot(M, pivotCol, pivotRow, buttons.length + 1, joltages.length + 2);
         }
 
-        Set<Integer> remaining = IntStream.range(0, buttons.length).boxed().collect(Collectors.toSet());
-        return solutions(ineqs, buttons.length, remaining)
-            .mapToInt(sol -> IntArrays.sum(sol))
-            .min();
+        // Phase II: Minimise sum
+        while (true) {
+            int pivotCol = findPivotCol(M[joltages.length], buttons.length);
+            if (pivotCol < 0)
+                break;
+            int pivotRow = findPivotRow(M, pivotCol, buttons.length, rank);
+            if (pivotRow < 0)
+                throw new IllegalArgumentException("unbounded");
+            pivotCols[pivotRow] = pivotCol;
+            pivot(M, pivotCol, pivotRow, buttons.length + 1, joltages.length + 1);
+        }
+
+        // All nearest integer solutions
+        double[] result = new double[buttons.length];
+        for (int y = 0; y < rank; y++) {
+            int x = pivotCols[y];
+            result[y] = (double) M[y][buttons.length] / M[y][x];
+        }
+        return result;
     }
 
-    private Enumerable<int[]> solutions(List<Inequality> ineqs, int n, Set<Integer> remaining) {
-        if (remaining.isEmpty())
-            return action -> action.accept(new int[n]);
-
-        int i = Fn.argMin(remaining, j -> countPairs(ineqs, j));
-        Set<Integer> newRemaining = new HashSet<>(remaining);
-        newRemaining.remove(i);
-
-        List<Inequality> lower = new ArrayList<>();
-        List<Inequality> upper = new ArrayList<>();
-        List<Inequality> free = new ArrayList<>();
-        for (Inequality ineq : ineqs) {
-            if (ineq.left[i] > 0) {
-                lower.add(ineq);
-            } else if (ineq.left[i] < 0) {
-                upper.add(ineq);
-            } else {
-                free.add(ineq);
-            }
-        }
-
-        // Eliminate variable i, and add derived constraints
-        for (Inequality a : lower) {
-            for (Inequality b : upper) {
-                // a1 x + b1 y + c1 z >= d1, c1>0
-                // a2 x + b2 y + c2 z >= d2, c2<0
-                //
-                // -c1 c2 z >= -c2 d1 + c2 a1 x + c2 b1 y
-                // -c1 c2 z <= -c1 d2 + c1 a2 x + c1 b2 y
-                //
-                // (c1 a2-c2 a1) x + (c1 b2-c2 b1) y >= (c1 d2-c2 d1)
-                //
-                int d = IntMath.gcd(a.left[i], b.left[i]);
-                int A = a.left[i] / d;
-                int B = b.left[i] / d;
-                int[] left = new int[n];
-                for (int j : newRemaining)
-                    left[j] = A*b.left[j] - B*a.left[j];
-                int right = A*b.right - B*a.right;
-                if (IntStream.of(left).allMatch(val -> val == 0)) {
-                    // Check consistency
-                    if (right > 0)
-                        return Enumerable.empty();
-                } else {
-                    boolean found = false;
-                    for (int k = 0; k < free.size(); k++) {
-                        Inequality existing = free.get(k);
-                        if (Arrays.equals(existing.left, left)) {
-                            if (right > existing.right)
-                                free.set(k, new Inequality(left, right));
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found)
-                        free.add(new Inequality(left, right));
-                }
-            }
-        }
-
-        // Recursive solve
-        return action -> {
-            // Back substitute the solution for variables < i.
-            solutions(free, n, newRemaining).forEach(sol -> {
-                int lb = Integer.MIN_VALUE;
-                for (Inequality ineq : lower) {
-                    int total = ineq.right;
-                    for (int j : newRemaining)
-                        total -= ineq.left[j]*sol[j];
-                    lb = Math.max(lb, -Math.floorDiv(-total, ineq.left[i]));
-                }
-
-                int ub = Integer.MAX_VALUE;
-                for (Inequality ineq : upper) {
-                    int total = -ineq.right;
-                    for (int j : newRemaining)
-                        total += ineq.left[j]*sol[j];
-                    ub = Math.min(ub, Math.floorDiv(total, -ineq.left[i]));
-                }
-
-                for (int x = lb; x <= ub; x++) {
-                    sol[i] = x;
-                    action.accept(sol);
-                }
-            });
-        };
+    private int findPivotCol(int[] obj, int width) {
+        for (int x = 0; x < width; x++)
+            if (obj[x] > 0) return x;
+        return -1;
     }
 
-    private int countPairs(List<Inequality> ineqs, int i) {
-        int lower = 0;
-        int upper = 0;
-        for (Inequality ineq : ineqs) {
-            if (ineq.left[i] > 0) {
-                lower++;
-            } else if (ineq.left[i] < 0) {
-                upper++;
+    private int findPivotRow(int[][] M, int pivotCol, int width, int height) {
+        int pivotRow = -1;
+        double minRatio = Double.POSITIVE_INFINITY;
+        for (int y = 0; y < height; y++) {
+            if (M[y][pivotCol] <= 0) continue;
+            double ratio = (double) M[y][width] / M[y][pivotCol];
+            if (pivotRow < 0 || ratio < minRatio) {
+                pivotRow = y;
+                minRatio = ratio;
             }
         }
-        return lower * upper;
+        return pivotRow;
     }
 
-    public record Inequality(int[] left, int right) {
+    private void pivot(int[][] M, int pivotCol, int pivotRow, int width, int height) {
+        for (int y = 0; y < height; y++) {
+            if (y == pivotRow || M[y][pivotCol] == 0) continue;
+            int c = IntMath.gcd(M[pivotRow][pivotCol], M[y][pivotCol]);
+            int a = M[pivotRow][pivotCol] / c;
+            int b = M[y][pivotCol] / c;
+            for (int x = 0; x < width; x++)
+                M[y][x] = a*M[y][x] - b*M[pivotRow][x];
+        }
+    }
+
+    private void print(int[][] M, int width) {
+        for (int[] row : M) {
+            String[] lhs = IntStream.of(row)
+                .limit(width)
+                .mapToObj(x -> String.format("%2d", x))
+                .toArray(String[]::new);
+            String rhs = String.format("%2d", row[width]);
+            System.out.println(String.join(" ", lhs) + " | " + rhs);
+        }
     }
 
     public AffineSpaceGF2 solveGF2(int[][] buttons, int[] diagram) {
         // Build augmented matrix, rows are bit vectors
-        int[] rhs = diagram.clone();
         int[] lhs = new int[diagram.length];
         for (int x = 0; x < buttons.length; x++)
             for (int y : buttons[x])
                 lhs[y] |= (1 << x);
+        int[] rhs = diagram.clone();
 
         // Row reduce
         int[] pivotCols = new int[Math.min(diagram.length, buttons.length)];
@@ -236,11 +209,9 @@ public class Day10 extends AbstractDay {
                 freeCols[nullity++] = x;
             } else {
                 for (int y = 0; y < diagram.length; y++) {
-                    if (y == rank) continue;
-                    if ((lhs[y] & (1 << x)) != 0) {
-                        lhs[y] ^= lhs[rank];
-                        rhs[y] ^= rhs[rank];
-                    }
+                    if (y == rank || (lhs[y] & (1 << x)) == 0) continue;
+                    lhs[y] ^= lhs[rank];
+                    rhs[y] ^= rhs[rank];
                 }
                 pivotCols[rank++] = x;
             }
@@ -248,8 +219,8 @@ public class Day10 extends AbstractDay {
 
         // Check valid solution
         for (int y = rank; y < diagram.length; y++)
-            if (lhs[y] == 0 && rhs[y] != 0)
-                return null;
+            if (rhs[y] != 0)
+                throw new IllegalArgumentException("infeasible");
 
         // Build solution space
         int particular = 0;
