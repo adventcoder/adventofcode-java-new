@@ -10,6 +10,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import adventofcode.AbstractDay;
@@ -61,10 +62,22 @@ public class Day10 extends AbstractDay {
     public Integer part2() {
         int total = 0;
         for (Machine machine : machines) {
-            System.out.println("=====================");
-            System.out.println("buttons: " + Arrays.deepToString(machine.buttons));
-            System.out.println("joltages: " + Arrays.toString(machine.joltages));
-            System.out.println("sol: " + Arrays.toString(minimizeSumApprox(machine.buttons, machine.joltages)));
+            double[] sol = minimizeSumApprox(machine.buttons, machine.joltages);
+            int numBranches = 1;
+            for (double x : sol) {
+                int lo = (int) Math.floor(x);
+                int hi = (int) Math.ceil(x);
+                if (lo != hi)
+                    numBranches *= 2;
+            }
+            if (numBranches > 1) {
+                System.out.println("buttons: " + Arrays.deepToString(machine.buttons));
+                System.out.println("joltages: " + Arrays.toString(machine.joltages));
+                System.out.println("sol: " + Arrays.toString(sol));
+                System.out.println("sum: " + DoubleStream.of(sol).sum());
+                System.out.println("numBranches: " + numBranches);
+                System.out.println();
+            }
         }
         return total;
     }
@@ -85,6 +98,10 @@ public class Day10 extends AbstractDay {
                 .map(c -> c == '#' ? 1 : 0)
                 .toArray();
         }
+    }
+
+    private int[] minimizeSum(int[][] buttons, int[] joltages) {
+        return null;
     }
 
     private double[] minimizeSumApprox(int[][] buttons, int[] joltages) {
@@ -135,7 +152,7 @@ public class Day10 extends AbstractDay {
         double[] result = new double[buttons.length];
         for (int y = 0; y < rank; y++) {
             int x = pivotCols[y];
-            result[y] = (double) M[y][buttons.length] / M[y][x];
+            result[x] = (double) M[y][buttons.length] / M[y][x];
         }
         return result;
     }
