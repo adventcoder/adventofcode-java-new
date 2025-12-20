@@ -2,14 +2,7 @@ package adventofcode.year2025;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
@@ -19,10 +12,6 @@ import adventofcode.utils.Fn;
 import adventofcode.utils.IntMath;
 import adventofcode.utils.array.IntArrays;
 import adventofcode.utils.array.ObjectArrays;
-import adventofcode.utils.iter.Enumerable;
-import adventofcode.year2025.Day10.AffineSpaceGF2;
-import it.unimi.dsi.fastutil.objects.ObjectDoublePair;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
 @Puzzle(day = 10, name = "Factory")
 public class Day10 extends AbstractDay {
@@ -30,15 +19,15 @@ public class Day10 extends AbstractDay {
         main(Day10.class, args);
     }
 
-    // @Override
-    // protected String getInput() {
-    //     List<String> lines = new ArrayList<>();
-    //     lines.add("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
-    //     lines.add("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
-    //     lines.add("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
-    //     lines.add("[....] (1,2) (2,3) (1,2,3) (0,2) (0,1) (0,1,3) {31,43,187,161}");
-    //     return String.join("\n", lines);
-    // }
+    @Override
+    protected String getInput() {
+        List<String> lines = new ArrayList<>();
+        // lines.add("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
+        // lines.add("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
+        // lines.add("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
+        lines.add("[....] (1,2) (2,3) (1,2,3) (0,2) (0,1) (0,1,3) {31,43,187,161}");
+        return String.join("\n", lines);
+    }
 
     private List<Machine> machines;
 
@@ -50,32 +39,23 @@ public class Day10 extends AbstractDay {
     @Override
     public Integer part1() {
         int total = 0;
-        for (Machine m : machines) {
-            AffineSpaceGF2 sol = solveGF2(m.buttons, m.diagram);
-            if (sol == null) continue;
-            total += sol.minimizeBitCount();
-        }
+        for (Machine m : machines)
+            total += findMinimumCount(m.buttons, m.diagram);
         return total;
     }
 
     @Override
     public Integer part2() {
         int total = 0;
-        for (Machine machine : machines) {
-            double[] sol = minimizeSumApprox(machine.buttons, machine.joltages);
-            int numBranches = 1;
-            for (double x : sol) {
-                int lo = (int) Math.floor(x);
-                int hi = (int) Math.ceil(x);
-                if (lo != hi)
-                    numBranches *= 2;
-            }
-            if (numBranches > 1) {
-                System.out.println("buttons: " + Arrays.deepToString(machine.buttons));
-                System.out.println("joltages: " + Arrays.toString(machine.joltages));
-                System.out.println("sol: " + Arrays.toString(sol));
-                System.out.println("sum: " + DoubleStream.of(sol).sum());
-                System.out.println("numBranches: " + numBranches);
+        for (Machine m : machines) {
+            double[] sol = solveLP(m.buttons, m.joltages);
+            if (DoubleStream.of(sol).allMatch(x -> Math.floor(x) == Math.ceil(x))) {
+                total += DoubleStream.of(sol).mapToInt(x -> (int) x).sum();
+            } else {
+                System.out.println("buttons: " + Arrays.deepToString(m.buttons));
+                System.out.println("joltages: " + Arrays.toString(m.joltages));
+                System.out.println("solLP: " + Arrays.toString(sol));
+                System.out.println("sumLP: " + DoubleStream.of(sol).sum());
                 System.out.println();
             }
         }
@@ -100,11 +80,36 @@ public class Day10 extends AbstractDay {
         }
     }
 
-    private int[] minimizeSum(int[][] buttons, int[] joltages) {
-        return null;
-    }
+    // private int solveILP(int[][] buttons, int[] joltages) {
+    //     int leastIntegerSum = Integer.MAX_VALUE;
 
-    private double[] minimizeSumApprox(int[][] buttons, int[] joltages) {
+    //     Deque<List<Constraint>> queue = new ArrayDeque<>();
+    //     queue.add(List.of());
+    //     while (!queue.isEmpty()) {
+    //         List<Constraint> cons = queue.pop();
+
+    //         double[] sol = solveLP(buttons, joltages, cons);
+    //         if (sol == null) continue; // infeasible
+
+    //         double sum = DoubleStream.of(sol).sum();
+    //         if (sum >= leastIntegerSum) continue; // prune
+
+    //         int k = chooseFractionalVariable(sol);
+    //         if (k < 0) {
+    //             leastIntegerSum = (int) sum;
+    //         } else {
+    //             List<int[]> newCons = new ArrayList<>(cons);
+    //             newCons.add(Constraint.upperBound(k, (int) Math.floor(sol[k])));
+    //             queue.add(newCons);
+    //             cons.add(Constraint.lowerBound(k, (int) Math.ceil(sol[k])));
+    //             queue.add(cons);
+    //         }
+    //     }
+
+    //     return leastIntegerSum;
+    // }
+
+    private double[] solveLP(int[][] buttons, int[] joltages) {
         // Build augmented matrix
         int[][] M = new int[joltages.length + 2][buttons.length + 1];
         for (int x = 0; x < buttons.length; x++) {
@@ -199,6 +204,15 @@ public class Day10 extends AbstractDay {
         }
     }
 
+    private int findMinimumCount(int[][] buttons, int[] diagram) {
+        AffineSpaceGF2 sol = solveGF2(buttons, diagram);
+        int leastCount = Integer.MAX_VALUE;
+        int n = 1 << sol.basis.length;
+        for (int i = 0; i < n; i++)
+            leastCount = Math.min(leastCount, Integer.bitCount(sol.get(i)));
+        return leastCount;
+    }
+
     public AffineSpaceGF2 solveGF2(int[][] buttons, int[] diagram) {
         // Build augmented matrix, rows are bit vectors
         int[] lhs = new int[diagram.length];
@@ -237,7 +251,7 @@ public class Day10 extends AbstractDay {
         // Check valid solution
         for (int y = rank; y < diagram.length; y++)
             if (rhs[y] != 0)
-                throw new IllegalArgumentException("infeasible");
+                return null;
 
         // Build solution space
         int particular = 0;
@@ -256,14 +270,6 @@ public class Day10 extends AbstractDay {
     }
 
     public record AffineSpaceGF2(int origin, int[] basis) {
-        public int minimizeBitCount() {
-            int leastCount = Integer.MAX_VALUE;
-            int n = 1 << basis.length;
-            for (int i = 0; i < n; i++)
-                leastCount = Math.min(leastCount, Integer.bitCount(get(i)));
-            return leastCount;
-        }
-
         public int get(int x) {
             int result = origin;
             for (int i = 0; i < basis.length; i++) {
