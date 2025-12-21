@@ -95,6 +95,14 @@ public class IntArrays {
         return maxIndex;
     }
 
+    public static int dot(int[] arr1, int[] arr2) {
+        int n = Math.min(arr1.length, arr2.length);
+        int result = 0;
+        for (int i = 0; i < n; i++)
+            result += arr1[i] * arr2[i];
+        return result;
+    }
+
     public static void swap(int[] arr, int i, int j) {
         int t = arr[i];
         arr[i] = arr[j];

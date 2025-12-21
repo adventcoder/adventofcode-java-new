@@ -22,6 +22,14 @@ public interface Enumerable<T> {
         return action -> {};
     }
 
+    @SafeVarargs
+    static <T> Enumerable<T> of(T... vals) {
+        return action -> {
+            for (T val : vals)
+                action.accept(val);
+        };
+    }
+
     default <A, R> R collect(Collector<? super T, A, R> coll) {
         A acc = coll.supplier().get();
         forEach(t -> coll.accumulator().accept(acc, t));
