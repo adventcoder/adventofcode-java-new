@@ -19,16 +19,6 @@ public class Day10 extends AbstractDay {
         main(Day10.class, args);
     }
 
-    // @Override
-    // protected String getInput() {
-    //     List<String> lines = new ArrayList<>();
-    //     lines.add("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
-    //     lines.add("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
-    //     lines.add("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
-    //     lines.add("[....] (1,2) (2,3) (1,2,3) (0,2) (0,1) (0,1,3) {31,43,187,161}");
-    //     return String.join("\n", lines);
-    // }
-
     private List<Machine> machines;
 
     @Override
@@ -47,13 +37,8 @@ public class Day10 extends AbstractDay {
     @Override
     public Integer part2() {
         int total = 0;
-        for (Machine m : machines) {
-            // System.out.println("buttons: " + Arrays.deepToString(m.buttons));
-            // System.out.println("joltages: " + Arrays.toString(m.joltages));
-            int sum = minimizeSum(m.buttons, m.joltages);
-            // System.out.println(sum);
-            total += sum;
-        }
+        for (Machine m : machines)
+            total += findMinimumSum(m.buttons, m.joltages);
         return total;
     }
 
@@ -75,12 +60,11 @@ public class Day10 extends AbstractDay {
         }
     }
 
-    private int minimizeSum(int[][] buttons, int[] joltages) {
+    private int findMinimumSum(int[][] buttons, int[] joltages) {
         AffineSpace space = solve(buttons, joltages);
-        // System.out.println("particular: " + Arrays.toString(space.origin));
-        // System.out.println("nullspace: " + Arrays.deepToString(space.basis));
-        // System.out.println("factors: " + Arrays.toString(space.factors));
-        return space.nonnegativeSubspace()
+        // I just do a brute force search over the feasible region, though I could probably branch and bound.
+        // I already do recursive branching, but I have figure out a lower bound on the sum over each for loop for pruning.
+        return space.nonnegative()
             .map(space::getIntegral)
             .filter(Objects::nonNull)
             .mapToInt(IntArrays::sum)
@@ -122,9 +106,7 @@ public class Day10 extends AbstractDay {
                     int c = IntMath.gcd(mat[rank][x], mat[y][x]);
                     int a = mat[rank][x] / c;
                     int b = mat[y][x] / c;
-                    if (y < rank)
-                        mat[y][pivotCols[y]] *= a;
-                    for (int i = x; i < buttons.length + 1; i++)
+                    for (int i = 0; i < buttons.length + 1; i++)
                         mat[y][i] = a*mat[y][i] - b*mat[rank][i];
                 }
                 pivotCols[rank++] = x;
@@ -154,7 +136,7 @@ public class Day10 extends AbstractDay {
         return new AffineSpace(particular, nullspace, factors);
     }
 
-    // diag(factors) x = origin + dot(nullspace, params)
+    // diag(factors) x = origin + dot(basis, t)
     public record AffineSpace(int[] origin, int[][] basis, int[] factors) {
         public int[] getIntegral(int[] params) {
             int[] vec = origin.clone();
@@ -169,7 +151,7 @@ public class Day10 extends AbstractDay {
             return vec;
         }
 
-        public Enumerable<int[]> nonnegativeSubspace() {
+        public Enumerable<int[]> nonnegative() {
             List<int[]> ineqs = new ArrayList<>();
             for (int x = 0; x < origin.length; x++) {
                 int[] ineq = new int[basis.length + 1];
@@ -267,11 +249,11 @@ public class Day10 extends AbstractDay {
     }
 
     private int findMinimumCount(int[][] buttons, int[] diagram) {
-        AffineSpaceGF2 sol = solveGF2(buttons, diagram);
+        AffineSpaceGF2 space = solveGF2(buttons, diagram);
         int leastCount = Integer.MAX_VALUE;
-        int n = 1 << sol.basis.length;
+        int n = 1 << space.basis.length;
         for (int i = 0; i < n; i++)
-            leastCount = Math.min(leastCount, Integer.bitCount(sol.get(i)));
+            leastCount = Math.min(leastCount, Integer.bitCount(space.get(i)));
         return leastCount;
     }
 
