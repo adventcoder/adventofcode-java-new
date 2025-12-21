@@ -5,7 +5,7 @@ import java.util.PrimitiveIterator;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import adventofcode.utils.array.IntArrays;
+import adventofcode.utils.lang.IntArrays;
 
 @Puzzle(day = 8, name = "Memory Maneuver")
 public class Day8 extends AbstractDay {

@@ -11,8 +11,8 @@ import java.util.Objects;
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
-import adventofcode.utils.array.IntArrays;
 import adventofcode.utils.collect.DefaultHashMap;
+import adventofcode.utils.lang.IntArrays;
 import lombok.AllArgsConstructor;
 
 @Puzzle(day = 4, name = "Repose Record")

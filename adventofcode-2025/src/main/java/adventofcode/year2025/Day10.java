@@ -9,9 +9,9 @@ import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
 import adventofcode.utils.Fn;
 import adventofcode.utils.IntMath;
-import adventofcode.utils.array.IntArrays;
-import adventofcode.utils.array.ObjectArrays;
 import adventofcode.utils.iter.Enumerable;
+import adventofcode.utils.lang.IntArrays;
+import adventofcode.utils.lang.ObjectArrays;
 
 @Puzzle(day = 10, name = "Factory")
 public class Day10 extends AbstractDay {

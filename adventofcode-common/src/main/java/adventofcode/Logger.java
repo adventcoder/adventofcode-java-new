@@ -1,6 +1,6 @@
 package adventofcode;
 
-import adventofcode.utils.ObjectsEx;
+import adventofcode.utils.lang.ObjectsEx;
 
 public interface Logger {
     void debug(Object... args);

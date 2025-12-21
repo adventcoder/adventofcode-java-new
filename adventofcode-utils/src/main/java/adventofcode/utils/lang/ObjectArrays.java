@@ -1,4 +1,4 @@
-package adventofcode.utils.array;
+package adventofcode.utils.lang;
 
 import java.lang.reflect.Array;
 import java.util.function.Function;

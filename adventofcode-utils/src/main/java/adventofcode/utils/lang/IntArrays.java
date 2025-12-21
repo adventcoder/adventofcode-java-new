@@ -1,4 +1,4 @@
-package adventofcode.utils.array;
+package adventofcode.utils.lang;
 
 import java.util.PrimitiveIterator;
 import java.util.function.IntBinaryOperator;

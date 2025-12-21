@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.IntStream;
 
-import adventofcode.utils.array.IntArrays;
+import adventofcode.utils.lang.IntArrays;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

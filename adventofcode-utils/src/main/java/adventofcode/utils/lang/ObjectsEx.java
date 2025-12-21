@@ -1,4 +1,4 @@
-package adventofcode.utils;
+package adventofcode.utils.lang;
 
 import java.util.Arrays;
 import java.util.Objects;

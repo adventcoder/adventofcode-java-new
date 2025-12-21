@@ -2,8 +2,8 @@ package adventofcode.year2017;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
-import adventofcode.utils.array.IntArrays;
 import adventofcode.utils.collect.Range;
+import adventofcode.utils.lang.IntArrays;
 import lombok.AllArgsConstructor;
 import picocli.CommandLine.Option;
 

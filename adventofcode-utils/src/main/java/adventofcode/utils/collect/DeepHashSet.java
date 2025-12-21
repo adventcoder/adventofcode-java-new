@@ -1,6 +1,6 @@
 package adventofcode.utils.collect;
 
-import adventofcode.utils.ObjectsEx;
+import adventofcode.utils.lang.ObjectsEx;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 
 public class DeepHashSet<K> extends ObjectOpenCustomHashSet<K> {
