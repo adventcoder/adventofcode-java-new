@@ -61,9 +61,12 @@ public class Day10 extends AbstractDay {
     }
 
     private int findMinimumSum(int[][] buttons, int[] joltages) {
+        // System.out.println();
+        // System.out.println("buttons: " + Arrays.deepToString(buttons));
+        // System.out.println("joltages: " + Arrays.toString(joltages));
         AffineSpace space = solve(buttons, joltages);
-        // I just do a brute force search over the feasible region, though I could probably branch and bound.
-        // I already do recursive branching, but I have figure out a lower bound on the sum over each for loop for pruning.
+        // I just do a brute force search over the boundary, though I could probably branch and bound.
+        // I already do recursive branching, but I have figure out a lower bound on the sum over each for loop for pruning, if (lowerbound(S) >= knownMinimum) prune
         return space.nonnegative()
             .map(space::getIntegral)
             .filter(Objects::nonNull)
@@ -116,7 +119,7 @@ public class Day10 extends AbstractDay {
         // Check valid solution
         for (int y = rank; y < joltages.length; y++)
             if (mat[y][buttons.length] != 0)
-                return null;
+                throw new IllegalArgumentException("inconsistent");
 
         // Build solution space
         int[] factors = new int[buttons.length];
@@ -160,92 +163,121 @@ public class Day10 extends AbstractDay {
                 ineq[basis.length] = -origin[x];
                 ineqs.add(ineq);
             }
-            return feasibleRegion(ineqs, basis.length);
+            return new Polytope(ineqs, basis.length).boundary();
         }
     }
 
-    private static Enumerable<int[]> feasibleRegion(List<int[]> ineqs, int size) {
-        int pivotCol = findPivotCol(ineqs, size);
-        if (pivotCol < 0) {
-            for (int[] row : ineqs)
-                if (row[size] > 0)
-                    return Enumerable.empty();
-            return Enumerable.of(new int[size]);
-        } else {
-            List<int[]> lower = new ArrayList<>();
-            List<int[]> upper = new ArrayList<>();
-            List<int[]> free = new ArrayList<>();
-            for (int[] ineq : ineqs) {
-                if (ineq[pivotCol] > 0) {
-                    lower.add(ineq);
-                } else if (ineq[pivotCol] < 0) {
-                    upper.add(ineq);
-                } else {
-                    free.add(ineq);
-                }
-            }
-            for (int[] a : lower) {
-                for (int[] b : upper) {
-                    // a1 x + b1 y + c1 z >= d1, c1>0
-                    // a2 x + b2 y + c2 z >= d2, c2<0
-                    //
-                    // C1 = c1/gcd(c1,c2)
-                    // C2 = c2/gcd(c1,c2)
-                    //
-                    // (C1 a2-C2 a1) x + (C1 b2-C2 b1) y >= (C1 d2-C2 d1)
-                    //
-                    int d = IntMath.gcd(a[pivotCol], b[pivotCol]);
-                    int A = a[pivotCol] / d;
-                    int B = b[pivotCol] / d;
-                    int[] c = new int[size + 1];
-                    for (int i = 0; i < size + 1; i++)
-                        c[i] = A*b[i] - B*a[i];
-                    free.add(c);
-                }
-            }
-            Enumerable<int[]> parent = feasibleRegion(free, size);
-            return action -> {
-                parent.forEach(params -> {
-                    int lb = Integer.MIN_VALUE;
-                    for (int[] ineq : lower) {
-                        int n = ineq[size] - IntArrays.dot(ineq, params);
-                        int d = ineq[pivotCol];
-                        lb = Math.max(lb, -Math.floorDiv(-n, d));
-                    }
-                    int ub = Integer.MAX_VALUE;
-                    for (int[] ineq : upper) {
-                        int n = IntArrays.dot(ineq, params) - ineq[size];
-                        int d = -ineq[pivotCol];
-                        ub = Math.min(ub, Math.floorDiv(n, d));
-                    }
-                    // System.out.println("params[" + pivotCol + "] : " + lb + " - " + ub);
-                    for (int x = lb; x <= ub; x++) {
-                        params[pivotCol] = x;
-                        action.accept(params);
-                        params[pivotCol] = 0;
-                    }
-                });
-            };
-        }
-    }
+    private static class Polytope {
+        private final int size;
+        private final List<Slice> slices = new ArrayList<>();
 
-    private static int findPivotCol(List<int[]> ineqs, int size) {
-        int pivotCol = -1;
-        int leastPairs = Integer.MAX_VALUE;
-        for (int x = 0; x < size; x++) {
-            int lower = 0;
-            int upper = 0;
-            for (int[] ineq : ineqs) {
-                if (ineq[x] > 0) lower++;
-                else if (ineq[x] < 0) upper++;
-            }
-            int pairs = lower * upper;
-            if (pairs != 0 && pairs < leastPairs) {
-                pivotCol = x;
-                leastPairs = pairs;
+        public Polytope(List<int[]> ineqs, int size) {
+            this.size = size;
+            addSlices(ineqs);
+        }
+
+        private void addSlices(List<int[]> ineqs) {
+            int pivotCol = findPivotCol(ineqs, size);
+            if (pivotCol < 0) {
+                for (int[] row : ineqs)
+                    if (row[size] > 0)
+                        throw new IllegalArgumentException("infeasible");
+            } else {
+                List<int[]> lower = new ArrayList<>();
+                List<int[]> upper = new ArrayList<>();
+                List<int[]> free = new ArrayList<>();
+                for (int[] ineq : ineqs) {
+                    if (ineq[pivotCol] > 0) {
+                        lower.add(ineq);
+                    } else if (ineq[pivotCol] < 0) {
+                        upper.add(ineq);
+                    } else {
+                        free.add(ineq);
+                    }
+                }
+                for (int[] a : lower) {
+                    for (int[] b : upper) {
+                        // a1 x + b1 y + c1 z >= d1, c1>0
+                        // a2 x + b2 y + c2 z >= d2, c2<0
+                        //
+                        // C1 = c1/gcd(c1,c2)
+                        // C2 = c2/gcd(c1,c2)
+                        //
+                        // (C1 a2-C2 a1) x + (C1 b2-C2 b1) y >= (C1 d2-C2 d1)
+                        //
+                        int d = IntMath.gcd(a[pivotCol], b[pivotCol]);
+                        int A = a[pivotCol] / d;
+                        int B = b[pivotCol] / d;
+                        int[] c = new int[size + 1];
+                        for (int i = 0; i < size + 1; i++)
+                            c[i] = A*b[i] - B*a[i];
+                        free.add(c);
+                    }
+                }
+                addSlices(free);
+                slices.add(new Slice(pivotCol, lower, upper));
             }
         }
-        return pivotCol;
+
+        private static int findPivotCol(List<int[]> ineqs, int size) {
+            int pivotCol = -1;
+            int leastPairs = Integer.MAX_VALUE;
+            for (int x = 0; x < size; x++) {
+                int lower = 0;
+                int upper = 0;
+                for (int[] ineq : ineqs) {
+                    if (ineq[x] > 0) lower++;
+                    else if (ineq[x] < 0) upper++;
+                }
+                int pairs = lower * upper;
+                if (pairs != 0 && pairs < leastPairs) {
+                    pivotCol = x;
+                    leastPairs = pairs;
+                }
+            }
+            return pivotCol;
+        }
+
+        public Enumerable<int[]> boundary() {
+            Enumerable<int[]> curr = Enumerable.of(new int[size]);
+            for (Slice slice : slices) {
+                Enumerable<int[]> parent = curr;
+                curr = action -> {
+                    parent.forEach(known -> {
+                        int lo = slice.lowerBound(known);
+                        int hi = slice.upperBound(known);
+                        for (int x = lo; x <= hi; x++) {
+                            known[slice.pivotCol] = x;
+                            action.accept(known);
+                            known[slice.pivotCol] = 0;
+                        }
+                    });
+                };
+            }
+            return curr;
+        }
+
+        public record Slice(int pivotCol, List<int[]> lower, List<int[]> upper) {
+            public int lowerBound(int[] known) {
+                int lb = Integer.MIN_VALUE;
+                for (int[] ineq : lower) {
+                    int n = ineq[known.length] - IntArrays.dot(ineq, known);
+                    int d = ineq[pivotCol];
+                    lb = Math.max(lb, -Math.floorDiv(-n, d));
+                }
+                return lb;
+            }
+
+            public int upperBound(int[] known) {
+                int ub = Integer.MAX_VALUE;
+                for (int[] ineq : upper) {
+                    int n = IntArrays.dot(ineq, known) - ineq[known.length];
+                    int d = -ineq[pivotCol];
+                    ub = Math.min(ub, Math.floorDiv(n, d));
+                }
+                return ub;
+            }
+        }
     }
 
     private int findMinimumCount(int[][] buttons, int[] diagram) {
@@ -295,7 +327,7 @@ public class Day10 extends AbstractDay {
         // Check valid solution
         for (int y = rank; y < diagram.length; y++)
             if (rhs[y] != 0)
-                return null;
+                throw new IllegalArgumentException("inconsistent");
 
         // Build solution space
         int particular = 0;
