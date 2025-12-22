@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.DoubleStream;
 
 import adventofcode.AbstractDay;
 import adventofcode.Puzzle;
@@ -12,6 +13,7 @@ import adventofcode.utils.IntMath;
 import adventofcode.utils.iter.Enumerable;
 import adventofcode.utils.lang.IntArrays;
 import adventofcode.utils.lang.ObjectArrays;
+import it.unimi.dsi.fastutil.Pair;
 
 @Puzzle(day = 10, name = "Factory")
 public class Day10 extends AbstractDay {
@@ -169,7 +171,9 @@ public class Day10 extends AbstractDay {
 
     private static class Polytope {
         private final int size;
-        private final List<Slice> slices = new ArrayList<>();
+        private final List<Integer> pivotCols = new ArrayList<>();
+        private final List<List<int[]>> lowerBounds = new ArrayList<>();
+        private final List<List<int[]>> upperBounds = new ArrayList<>();
 
         public Polytope(List<int[]> ineqs, int size) {
             this.size = size;
@@ -215,7 +219,9 @@ public class Day10 extends AbstractDay {
                     }
                 }
                 addSlices(free);
-                slices.add(new Slice(pivotCol, lower, upper));
+                lowerBounds.add(lower);
+                upperBounds.add(upper);
+                pivotCols.add(pivotCol);
             }
         }
 
@@ -238,45 +244,91 @@ public class Day10 extends AbstractDay {
             return pivotCol;
         }
 
-        public Enumerable<int[]> boundary() {
+        // lower bound for bnb, when the first "start" values of params are known
+        // this is the exact LP lower bound
+        public double minimizeSum(int[] params, int start) {
+            return DoubleStream.of(bounds(params, start).left()).sum();
+        }
+
+        // finds the lowest/highest possible value attainable in each dimension
+        public Pair<double[], double[]> bounds(int[] params, int start) {
+            double[] lower = new double[size];
+            double[] upper = new double[size];
+            for (int i = 0; i < start; i++) {
+                int pivotCol = pivotCols.get(i);
+                lower[pivotCol] = params[pivotCol];
+                upper[pivotCol] = params[pivotCol];
+            }
+            for (int i = start; i < size; i++) {
+                List<Integer> knownCols = pivotCols.subList(0, i);
+                int pivotCol = pivotCols.get(i);
+
+                double lb = Double.NEGATIVE_INFINITY;
+                for (int[] ineq : lowerBounds.get(i)) {
+                    double n = ineq[size];
+                    for (int x : knownCols) {
+                        if (ineq[x] > 0) {
+                            n -= ineq[x] * lower[x]; //TODO: check if this is the correct bound
+                        } else if (ineq[x] < 0) {
+                            n -= ineq[x] * upper[x]; //TODO: check if this is the correct bound
+                        }
+                    }
+                    lb = Math.max(lb, (double) n / ineq[pivotCol]);
+                }
+                lower[pivotCol] = lb;
+
+                double ub = Double.POSITIVE_INFINITY;
+                for (int[] ineq : upperBounds.get(i)) {
+                    double n = ineq[size];
+                    for (int x : knownCols)
+                        if (ineq[x] > 0) {
+                            n -= ineq[x] * lower[x]; //TODO: check if this is the correct bound
+                        } else if (ineq[x] < 0) {
+                            n -= ineq[x] * upper[x]; //TODO: check if this is the correct bound
+                        }
+                    ub = Math.min(ub, (double) n / ineq[pivotCol]);
+                }
+            }
+
+            return Pair.of(lower, upper);
+        }
+
+        private Enumerable<int[]> boundary() {
             Enumerable<int[]> curr = Enumerable.of(new int[size]);
-            for (Slice slice : slices) {
+            for (int i = 0; i < size; i++) {
+                int pivotCol = pivotCols.get(i);
+                List<Integer> knownCols = pivotCols.subList(0, i);
+                List<int[]> lower = lowerBounds.get(i);
+                List<int[]> upper = upperBounds.get(i);
+
                 Enumerable<int[]> parent = curr;
                 curr = action -> {
-                    parent.forEach(known -> {
-                        int lo = slice.lowerBound(known);
-                        int hi = slice.upperBound(known);
-                        for (int x = lo; x <= hi; x++) {
-                            known[slice.pivotCol] = x;
-                            action.accept(known);
-                            known[slice.pivotCol] = 0;
+                    parent.forEach(params -> {
+                        int lb = Integer.MIN_VALUE;
+                        for (int[] ineq : lower) {
+                            int num = ineq[size];
+                            for (int x : knownCols)
+                                num -= ineq[x] * params[x];
+                            lb = Math.max(lb, -Math.floorDiv(num, -ineq[pivotCol]));
+                        }
+            
+                        int ub = Integer.MAX_VALUE;
+                        for (int[] ineq : upper) {
+                            int num = ineq[size];
+                            for (int x : knownCols)
+                                num -= ineq[x] * params[x];
+                            ub = Math.min(ub, Math.floorDiv(num, ineq[pivotCol]));
+                        }
+
+                        for (int x = lb; x <= ub; x++) {
+                            params[pivotCol] = x;
+                            action.accept(params);
+                            params[pivotCol] = 0;
                         }
                     });
                 };
             }
             return curr;
-        }
-
-        public record Slice(int pivotCol, List<int[]> lower, List<int[]> upper) {
-            public int lowerBound(int[] known) {
-                int lb = Integer.MIN_VALUE;
-                for (int[] ineq : lower) {
-                    int n = ineq[known.length] - IntArrays.dot(ineq, known);
-                    int d = ineq[pivotCol];
-                    lb = Math.max(lb, -Math.floorDiv(-n, d));
-                }
-                return lb;
-            }
-
-            public int upperBound(int[] known) {
-                int ub = Integer.MAX_VALUE;
-                for (int[] ineq : upper) {
-                    int n = IntArrays.dot(ineq, known) - ineq[known.length];
-                    int d = -ineq[pivotCol];
-                    ub = Math.min(ub, Math.floorDiv(n, d));
-                }
-                return ub;
-            }
         }
     }
 
